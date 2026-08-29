@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { HealthModule } from './health/health.module.js';
+import { StorageModule } from './storage/storage.module.js';
 import { typeOrmConfig } from './config/typeorm.config.js';
 
 @Module({
@@ -13,6 +14,7 @@ import { typeOrmConfig } from './config/typeorm.config.js';
       useFactory: typeOrmConfig,
     }),
     HealthModule,
+    StorageModule,
   ],
 })
 export class AppModule implements OnModuleInit {
