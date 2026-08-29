@@ -29,15 +29,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Every domain lives directly under `backend/src/<module>/` — there is no intermediate `modules/` folder. Planned modules: `auth`, `users`, `pages`, `versions`, `media`, `search`, `comments`, `integrations`, `webhooks`, `admin`, `health`, plus a cross-cutting `common/` for global guards/decorators/interceptors/filters.
 
-Each module follows the same internal layout:
-- `services/` — business logic; orchestrates `persistances/` and `mapper/`
-- `persistances/` — TypeORM entities
-- `dto/in/` and `dto/out/` — request DTOs (validated with class-validator) and response DTOs (the raw entity is never returned from a controller)
+Each module follows the same internal layout (e.g. `equipment/`):
+- `dto/` — request/response DTOs (validated with class-validator; the raw entity is never returned from a controller)
+- `entities/` — TypeORM entities
+- `filter/` — module-specific exception filters
 - `mapper/` — entity ↔ DTO conversion
-- `filters/` — module-specific exception filters
-- `exceptions/` — custom business exceptions
+- `persistence/` — repository layer, wraps TypeORM repositories for `entities/`
+- `services/` — business logic; orchestrates `persistence/` and `mapper/`
 - `<module>.controller.ts` — HTTP layer only, operates exclusively on DTOs
 - `<module>.module.ts`
+
+## Testing policy
+
+No spec/test files (`*.spec.ts`, `*.e2e-spec.ts`) are written for this project — don't add them, and remove any that show up.
 
 ## Frontend structure (planned)
 
@@ -55,3 +59,13 @@ Each module follows the same internal layout:
 ## Full API surface and backlog
 
 `README.md` contains the complete endpoint table (§7) and the ticket-by-ticket backlog (§6, tickets `BE-xxx`/`FE-xxx`/`OPS-xxx` grouped into EPIC-01 through EPIC-17) with acceptance criteria per ticket. Treat each ticket's AC as the spec for that piece of work — e.g. duplicate slug at the same tree level → 409, wrong password → 401, deleting a page with children requires `?cascade=true`, etc. The current branch (`EPIC-01`) corresponds to the first epic (Setup & Infra: Nest init, TypeORM/MySQL config, Minio config, docker-compose).
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
