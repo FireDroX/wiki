@@ -6,6 +6,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Pre-implementation.** `backend/` and `frontend/` are empty directories; `.env`, `.env.example`, `.gitignore`, and `docker-compose.yml` are empty placeholders. The only real content is `README.md`, which serves as the full cahier des charges (spec) and backlog for **OpenWiki**, a self-hosted collaborative wiki (a WikiJS clone). Until scaffolding exists, there are no build/lint/test commands to run — check `README.md` and this file for the intended structure before creating new code, and update both as the project is bootstrapped.
 
+## Versioning
+
+`package.json` version (root and each package, kept in sync) follows `0.<epic>.<ticket>`:
+- The middle number is the current EPIC number — bump it (and reset the last number to `0`) when starting the first ticket of a new EPIC (e.g. `0.1.x` → `0.2.0` when moving from EPIC-01 to EPIC-02).
+- The last number increments by one per ticket completed within the current EPIC — one bump per commit/ticket, not per EPIC.
+- e.g. currently on EPIC-01, 3rd ticket completed → `0.1.3`.
+
+`GET /health` returns this version (read from `package.json` at runtime) so the frontend can display it later.
+
 ## Stack (planned)
 
 - **Backend**: NestJS (TypeScript), TypeORM, MySQL 8
