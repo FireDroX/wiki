@@ -34,6 +34,8 @@ export class UsersExceptionFilter implements ExceptionFilter {
     switch (exception.name) {
       case 'UserNotFoundException':
         return { statusCode: HttpStatus.NOT_FOUND, error: exception.message };
+      case 'ValidationException':
+        return { statusCode: HttpStatus.BAD_REQUEST, error: exception.message };
       default:
         return {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,

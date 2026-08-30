@@ -1,8 +1,16 @@
-import { Controller, Get, UseFilters, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Patch,
+  UseFilters,
+  UseGuards,
+} from '@nestjs/common';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import { ResponseDto } from '../common/dto/response.dto.js';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
 import type { AuthenticatedUser } from '../common/strategies/jwt.strategy.js';
+import { UpdateProfileDto } from './dto/in/update-profile.dto.js';
 import { UserResponseDto } from './dto/out/user-response.dto.js';
 import { UsersExceptionFilter } from './filter/users-exception.filter.js';
 import { UserMapper } from './mapper/user.mapper.js';
@@ -19,6 +27,16 @@ export class UsersController {
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<ResponseDto<UserResponseDto>> {
     const entity = await this.usersService.findById(user.id);
+    return UserMapper.toMeResponse(entity);
+  }
+
+  @Patch('me')
+  @UseGuards(JwtAuthGuard)
+  async updateMe(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: UpdateProfileDto,
+  ): Promise<ResponseDto<UserResponseDto>> {
+    const entity = await this.usersService.updateProfile(user.id, dto);
     return UserMapper.toMeResponse(entity);
   }
 }

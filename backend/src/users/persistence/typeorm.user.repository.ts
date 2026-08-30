@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from '../dto/in/create-user.dto.js';
+import { UpdateProfileDto } from '../dto/in/update-profile.dto.js';
 import { User } from '../entities/user.entity.js';
 import { UserRepository } from './user.repository.js';
 
@@ -22,5 +23,18 @@ export class TypeormUserRepository implements UserRepository {
   async create(data: CreateUserDto): Promise<User> {
     const user = this.repository.create(data);
     return this.repository.save(user);
+  }
+
+  async update(id: string, data: UpdateProfileDto): Promise<User> {
+    const patch: Partial<User> = {};
+    if (data.displayName !== undefined) {
+      patch.displayName = data.displayName;
+    }
+    if (data.avatarUrl !== undefined) {
+      patch.avatarUrl = data.avatarUrl;
+    }
+
+    await this.repository.update(id, patch);
+    return (await this.findById(id)) as User;
   }
 }
