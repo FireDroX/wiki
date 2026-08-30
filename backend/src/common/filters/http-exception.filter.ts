@@ -2,8 +2,10 @@ import {
   ArgumentsHost,
   Catch,
   ExceptionFilter,
+  ForbiddenException,
   HttpException,
   HttpStatus,
+  UnauthorizedException,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { ErrorResponseDto } from '../dto/error-response.dto.js';
@@ -12,6 +14,14 @@ import { ErrorResponseDto } from '../dto/error-response.dto.js';
 export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
     const response = host.switchToHttp().getResponse<Response>();
+
+    if (
+      exception instanceof UnauthorizedException ||
+      exception instanceof ForbiddenException
+    ) {
+      response.status(exception.getStatus()).json(exception.getResponse());
+      return;
+    }
 
     const statusCode =
       exception instanceof HttpException
