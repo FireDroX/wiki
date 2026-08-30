@@ -17,6 +17,7 @@
 
 # Test coverage
 **/coverage/
+**/mockups.html
 
 # Editor / OS
 .vscode/

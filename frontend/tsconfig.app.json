@@ -8,9 +8,9 @@
     "allowArbitraryExtensions": true,
     "skipLibCheck": true,
 
-    /* Path aliases */
+    /* Path aliases (mirrors package.json "imports") */
     "paths": {
-      "@/*": ["./src/*"]
+      "#*": ["./src/*"]
     },
 
     /* Bundler mode */
