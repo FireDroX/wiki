@@ -2,8 +2,11 @@ import { Logger, Module, OnModuleInit } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import { AuthModule } from './auth/auth.module.js';
+import { JwtAuthModule } from './common/jwt-auth.module.js';
 import { HealthModule } from './health/health.module.js';
 import { StorageModule } from './storage/storage.module.js';
+import { UsersModule } from './users/users.module.js';
 import { typeOrmConfig } from './config/typeorm.config.js';
 
 @Module({
@@ -13,8 +16,11 @@ import { typeOrmConfig } from './config/typeorm.config.js';
       inject: [ConfigService],
       useFactory: typeOrmConfig,
     }),
+    JwtAuthModule,
     HealthModule,
     StorageModule,
+    UsersModule,
+    AuthModule,
   ],
 })
 export class AppModule implements OnModuleInit {

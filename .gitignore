@@ -26,3 +26,9 @@ Thumbs.db
 
 # TypeScript incremental build info
 **/*.tsbuildinfo
+
+# Graphify
+graphify-out/
+
+# Claude
+.claude/

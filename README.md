@@ -172,6 +172,32 @@ Chaque module vit directement sous `src/` (pas de dossier `modules/` intermédia
 | config   | json               | webhook URL, secret, options |
 | isActive | boolean            |                              |
 
+### McpApiKey
+
+| Champ       | Type              | Notes                                   |
+| ----------- | ----------------- | --------------------------------------- |
+| id          | uuid              | PK                                      |
+| name        | varchar           | libellé de la clé                       |
+| keyHash     | varchar           | hash de la clé, jamais stockée en clair |
+| scopes      | json              | ex. `["pages:write", "tags:read"]`      |
+| createdById | uuid              | FK → User (admin)                       |
+| lastUsedAt  | datetime nullable |                                         |
+| revokedAt   | datetime nullable |                                         |
+| createdAt   | datetime          |                                         |
+
+### McpAuditLog
+
+| Champ        | Type             | Notes                  |
+| ------------ | ---------------- | ---------------------- |
+| id           | uuid             | PK                     |
+| apiKeyId     | uuid             | FK → McpApiKey         |
+| toolName     | varchar          | ex. `wiki_create_page` |
+| input        | json             | tronqué si volumineux  |
+| output       | json             | tronqué si volumineux  |
+| success      | boolean          |                        |
+| errorMessage | varchar nullable |                        |
+| createdAt    | datetime         |                        |
+
 ---
 
 ## 5. Découpage en Epics
@@ -193,6 +219,7 @@ Chaque module vit directement sous `src/` (pas de dossier `modules/` intermédia
 15. **EPIC-15** — Frontend : Recherche
 16. **EPIC-16** — Frontend : Administration
 17. **EPIC-17** — Tests & CI/CD
+18. **EPIC-18** — Intégration MCP (pilotage par IA)
 
 ---
 
@@ -592,6 +619,62 @@ Chaque module vit directement sous `src/` (pas de dossier `modules/` intermédia
 
 ---
 
+### EPIC-18 — Intégration MCP (pilotage par IA)
+
+**BE-090 — Entité Tag/PageTag + endpoints CRUD**
+
+- Description : prérequis manquant du modèle de données initial. `POST /tags`, `GET /tags`, `POST /pages/:id/tags`, `DELETE /pages/:id/tags/:tagId`, `DELETE /tags/:id`.
+- AC : nom de tag dupliqué → 409, suppression d'un tag cascade sur `page_tag`.
+
+**BE-091 — Setup serveur MCP (socle)**
+
+- Description : module `mcp/`, SDK `@modelcontextprotocol/sdk`, endpoint `POST /mcp` (+ `GET /mcp` pour SSE), registry central des tools.
+- AC : un client MCP peut se connecter et lister les tools via `tools/list`.
+
+**BE-092 — Authentification MCP par clé API à scopes**
+
+- Description : entité `McpApiKey` (name, keyHash, scopes, revokedAt), guard dédié, gestion via `POST/GET/DELETE /admin/mcp/api-keys` (admin uniquement).
+- AC : la clé en clair n'est affichée qu'une seule fois à la création ; clé révoquée rejetée par le guard.
+
+**BE-093 — Tools MCP : gestion des pages**
+
+- Tools : `wiki_create_page`, `wiki_update_page`, `wiki_get_page`, `wiki_list_pages`, `wiki_delete_page`, `wiki_publish_page`.
+- Scopes : `pages:read` / `pages:write`.
+
+**BE-094 — Tools MCP : gestion des tags**
+
+- Tools : `wiki_create_tag`, `wiki_list_tags`, `wiki_tag_page`, `wiki_untag_page`.
+- Scopes : `tags:read` / `tags:write`.
+
+**BE-095 — Tools MCP : gestion des utilisateurs**
+
+- Tools : `wiki_create_user`, `wiki_list_users`, `wiki_update_user_role`.
+- AC : jamais de mot de passe en clair renvoyé ; tools invisibles sans le scope `users:write`/`users:read`.
+
+**BE-096 — Tools MCP : upload de médias**
+
+- Tools : `wiki_upload_image` (fichier transmis en base64, décodé et validé comme BE-041), `wiki_get_media_url`.
+- Scopes : `media:read` / `media:write`.
+
+**BE-097 — Tool MCP : recherche**
+
+- Tool : `wiki_search`. Scope : `search:read` (ou `pages:read`).
+
+**BE-098 — Journal d'audit des actions MCP**
+
+- Description : entité `McpAuditLog` (apiKeyId, toolName, input, output, success, errorMessage), interceptor générique autour de chaque appel de tool, `GET /admin/mcp/audit-log`.
+- AC : chaque appel (succès ou échec) est loggé ; contenu tronqué pour éviter de gonfler la table.
+
+**FE-070 — Page gestion des clés API MCP**
+
+- Description : `Table` des clés (nom, scopes, dernière utilisation, statut), `Dialog` de création avec sélection des scopes, révélation unique de la clé en clair, révocation via `AlertDialog`.
+
+**FE-071 — Page journal d'activité MCP**
+
+- Description : `Table` paginée des appels (clé, tool, statut, date), filtrable par clé API, détail complet (input/output JSON) au clic sur une ligne.
+
+---
+
 ## 7. Récapitulatif complet des endpoints API
 
 ### Auth
@@ -642,6 +725,16 @@ Chaque module vit directement sous `src/` (pas de dossier `modules/` intermédia
 | GET     | /media/:id/url | selon visibilité | URL présignée     |
 | DELETE  | /media/:id     | éditeur+         | Supprimer         |
 
+### Tags
+
+| Méthode | Route                  | Auth     | Description                |
+| ------- | ---------------------- | -------- | -------------------------- |
+| POST    | /tags                  | éditeur+ | Créer un tag               |
+| GET     | /tags                  | non      | Lister les tags            |
+| POST    | /pages/:id/tags        | éditeur+ | Associer un tag à une page |
+| DELETE  | /pages/:id/tags/:tagId | éditeur+ | Retirer un tag d'une page  |
+| DELETE  | /tags/:id              | admin    | Supprimer un tag           |
+
 ### Recherche
 
 | Méthode | Route      | Auth             | Description         |
@@ -665,6 +758,16 @@ Chaque module vit directement sous `src/` (pas de dossier `modules/` intermédia
 | POST    | /webhooks/n8n/:integrationId | secret | Entrée depuis n8n       |
 | GET     | /admin/export                | admin  | Export/backup ZIP       |
 
+### MCP (pilotage par IA)
+
+| Méthode   | Route                   | Auth                 | Description                                         |
+| --------- | ----------------------- | -------------------- | --------------------------------------------------- |
+| POST /GET | /mcp                    | clé API MCP (scopes) | Transport MCP (JSON-RPC), expose les tools `wiki_*` |
+| POST      | /admin/mcp/api-keys     | admin                | Créer une clé API MCP                               |
+| GET       | /admin/mcp/api-keys     | admin                | Lister les clés API MCP                             |
+| DELETE    | /admin/mcp/api-keys/:id | admin                | Révoquer une clé                                    |
+| GET       | /admin/mcp/audit-log    | admin                | Journal des actions effectuées par les IA           |
+
 ---
 
 ## 8. Suggestion d'ordre de développement
@@ -677,4 +780,5 @@ Chaque module vit directement sous `src/` (pas de dossier `modules/` intermédia
 6. EPIC-06 (Recherche) + EPIC-15 (Frontend recherche)
 7. EPIC-07 (Commentaires)
 8. EPIC-08 / EPIC-09 (Discord / n8n) + EPIC-16 (Admin)
-9. EPIC-17 (Tests & CI/CD) — en continu dès le début, formalisé à la fin
+9. EPIC-18 (MCP) — une fois les modules Pages/Tags/Users/Média/Recherche stabilisés, car les tools MCP les enveloppent sans dupliquer leur logique
+10. EPIC-17 (Tests & CI/CD) — en continu dès le début, formalisé à la fin

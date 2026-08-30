@@ -1,57 +1,108 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Ce fichier donne à Claude Code (claude.ai/code) le contexte nécessaire pour travailler sur ce dépôt.
 
-## Project status
+## graphify
 
-**Pre-implementation.** `backend/` and `frontend/` are empty directories; `.env`, `.env.example`, `.gitignore`, and `docker-compose.yml` are empty placeholders. The only real content is `README.md`, which serves as the full cahier des charges (spec) and backlog for **OpenWiki**, a self-hosted collaborative wiki (a WikiJS clone). Until scaffolding exists, there are no build/lint/test commands to run — check `README.md` and this file for the intended structure before creating new code, and update both as the project is bootstrapped.
+Ce dépôt a un graphe de connaissance à `graphify-out/` :
+
+- Pour toute question sur le code, lancer d'abord `graphify query "<question>"` si `graphify-out/graph.json` existe. `graphify path "<A>" "<B>"` pour des relations, `graphify explain "<concept>"` pour un concept ciblé. Ça retourne un sous-graphe scopé, généralement bien plus petit que `GRAPH_REPORT.md` ou du grep brut.
+- Si `graphify-out/wiki/index.md` existe, l'utiliser pour la navigation large plutôt que parcourir les sources à la main.
+- Lire `graphify-out/GRAPH_REPORT.md` seulement pour une revue d'architecture globale, ou quand query/path/explain ne remontent pas assez de contexte.
+- Après une modif de code, lancer `graphify update .` pour garder le graphe à jour (AST-only, pas de coût API).
+
+## Projet
+
+**OpenWiki** — wiki collaboratif auto-hébergé (clone de WikiJS). pnpm workspace avec deux packages à la racine : `backend/` (NestJS + TypeORM + MySQL 8) et `frontend/` (React + TypeScript + Vite + TailwindCSS + shadcn/ui — pas encore scaffoldé, répertoire vide). `README.md` est le cahier des charges complet et le backlog (voir §6/§7). La branche courante (`EPIC-02`) correspond au deuxième epic du backlog (Authentification & Utilisateurs).
+
+## Commandes
+
+**Toujours lancer l'app depuis `backend/`** (`cd backend`) via ses scripts `package.json` — jamais `nest start`, `node dist/...` etc. directement depuis la racine.
+
+**Utiliser `pnpm run <script>`** (`packageManager: "pnpm@..."`, `pnpm-workspace.yaml` — `npm run` n'est pas le gestionnaire de ce dépôt). En revanche, surveiller la sortie de `pnpm add`/`pnpm install` : ajouter une dépendance avec un build-script natif (ex. `bcrypt`) déclenche `[ERR_PNPM_IGNORED_BUILDS]`, un prompt d'approbation qui bloque la commande dans cet environnement — préférer une lib pure JS équivalente quand elle existe (ex. `bcryptjs` plutôt que `bcrypt`) plutôt que de débloquer le build-script. L'utilisateur a en général déjà ses propres serveurs de dev qui tournent en dehors de Claude Code (backend `:3000`, frontend `:5173` plus tard) — vérifier ces ports (`netstat`) avant d'en lancer un nouveau plutôt que de supposer qu'ils sont down.
+
+**Tuer tout process lancé soi-même une fois la tâche terminée** (serveur de dev lancé pour vérifier un changement, script one-off, etc.) — ne rien laisser tourner en arrière-plan. `TaskStop` sur une tâche ne tue pas forcément le process `node` sous-jacent dans cet environnement (vécu plusieurs fois cette session) — vérifier avec `netstat -ano | grep ":3000"` et `taskkill //F //PID <pid>` si le port est toujours occupé après l'arrêt de la tâche. Ne jamais tuer un process qu'on n'a pas lancé.
+
+```bash
+# MySQL + Minio (requis par le backend)
+docker compose up -d
+
+# Backend dev server (watch mode)
+cd backend && pnpm run start:dev
+
+cd backend && pnpm run build
+```
+
+Backend seul (`backend/`) :
+
+```bash
+pnpm run lint                # eslint --fix
+pnpm run start:prod          # node dist/main (build requis avant)
+
+pnpm run migration:run       # applique les migrations TypeORM en attente
+pnpm run migration:revert    # annule la dernière migration
+pnpm run migration:generate  # diff entities vs DB (via tsx, hors contexte Nest)
+```
+
+Config : deux fichiers `.env` séparés (chacun avec un `.env.example` à copier) :
+
+- racine du dépôt — `MYSQL_ROOT_PASSWORD`/`MYSQL_DATABASE`, `MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY` pour `docker-compose.yml`.
+- `backend/.env` — `PORT`, `FRONTEND_URL` (origine CORS), `DB_HOST`/`DB_PORT`/`DB_USERNAME`/`DB_PASSWORD`/`DB_DATABASE`, `MINIO_ENDPOINT`/`MINIO_PORT`/`MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY`/`MINIO_BUCKET`/`MINIO_USE_SSL`. Lu via `@nestjs/config` dans `app.module.ts`, et directement via `dotenv` dans `src/config/data-source.ts` pour le CLI TypeORM.
 
 ## Versioning
 
-`package.json` version (root and each package, kept in sync) follows `0.<epic>.<ticket>`:
-- The middle number is the current EPIC number — bump it (and reset the last number to `0`) when starting the first ticket of a new EPIC (e.g. `0.1.x` → `0.2.0` when moving from EPIC-01 to EPIC-02).
-- The last number increments by one per ticket completed within the current EPIC — one bump per commit/ticket, not per EPIC.
-- e.g. currently on EPIC-01, 3rd ticket completed → `0.1.3`.
+`package.json` version (racine et chaque package, gardées synchronisées) suit `0.<epic>.<ticket>` :
+- Le nombre du milieu est le numéro d'EPIC courant — l'incrémenter (et remettre le dernier nombre à `0`) au démarrage du premier ticket d'un nouvel EPIC (ex. `0.1.x` → `0.2.0` en passant d'EPIC-01 à EPIC-02).
+- Le dernier nombre s'incrémente de un par ticket terminé dans l'EPIC courant — un bump par commit/ticket, pas par EPIC.
+- ex. EPIC-02, 2ème ticket terminé → `0.2.2`.
 
-`GET /health` returns this version (read from `package.json` at runtime) so the frontend can display it later.
+`GET /health` retourne cette version (lue depuis `package.json` à l'exécution) pour que le frontend puisse l'afficher plus tard. Cet endpoint reste un JSON nu (`{ status, version }`), pas enveloppé par `ResponseDto` — c'est un healthcheck consommé par des outils d'infra, pas par le frontend applicatif.
 
-## Stack (planned)
+## Architecture backend (`backend/src`)
 
-- **Backend**: NestJS (TypeScript), TypeORM, MySQL 8
-- **Frontend**: React + TypeScript + Vite, TailwindCSS + shadcn/ui
-- **Storage**: Minio (S3-compatible) for media/attachments
-- **Auth**: JWT (access + refresh token)
-- **Integrations**: Discord (webhooks/bot), n8n (inbound/outbound webhooks)
-- **Search**: MySQL FULLTEXT for v1 (Meilisearch is a possible v2 migration)
-- **Infra**: `docker-compose.yml` running mysql, minio, backend, frontend
+NestJS, un module par domaine, directement sous `src/` — **pas** de dossier `modules/` intermédiaire. Modules prévus : `auth`, `users`, `pages`, `versions`, `media`, `search`, `comments`, `integrations`, `webhooks`, `admin`, `health`, plus `common/` (transverse : filtres/DTOs/exceptions/constantes globaux, pas de guards/décorateurs pour l'instant).
 
-## Backend module structure (per README, to be followed when scaffolding)
+Chaque module suit le même découpage en couches — pour une nouvelle feature, suivre le découpage de fichiers du module `auth`/`users` plutôt qu'en inventer un nouveau :
 
-Every domain lives directly under `backend/src/<module>/` — there is no intermediate `modules/` folder. Planned modules: `auth`, `users`, `pages`, `versions`, `media`, `search`, `comments`, `integrations`, `webhooks`, `admin`, `health`, plus a cross-cutting `common/` for global guards/decorators/interceptors/filters.
+- `<module>.controller.ts` — HTTP uniquement, pas de logique métier ; délègue directement à un service. Routes protégées : `@UseGuards(JwtAuthGuard, RolesGuard)` + `@Roles(...)` (à venir, BE-014) et `@UseFilters(<Module>ExceptionFilter)`.
+- `services/*.service.ts` — logique métier **et validation** (pas de `class-validator`/`ValidationPipe` global câblé — voir `dto/in`) ; lève des exceptions de domaine depuis `common/exceptions/<domain>/*.exception.ts` (ou `common/exceptions/validation.exception.ts` pour une erreur de validation générique). Les garder spécifiques (ex. `EmailAlreadyExistsException`, pas une `HttpException` générique) — le filtre d'exception du module dispatch sur `exception.name` ; une exception générique ou mal nommée tombe dans le `default:` (500).
+- `dto/in/*.dto.ts` / `dto/out/*.dto.ts` — classes simples, **pas de décorateurs `class-validator`**. Un fichier `dto/out` peut être une simple `interface` plutôt qu'une `class` quand c'est une forme de donnée nue jamais instanciée directement et seulement enveloppée dans une réponse (ex. `auth/dto/out/user-response.dto.ts` `UserResponseDto`, retourné dans un `ResponseDto<UserResponseDto>`).
+- `entities/*.entity.ts` — entités TypeORM ; le schéma DB est possédé par les migrations, **jamais** `synchronize: true` (hardcodé `false` dans `config/typeorm.config.ts`) et pas la sortie de `migration:generate` prise telle quelle sans relecture.
+- `persistence/` — repository **port** (interface, ex. `user.repository.ts`) + adapter TypeORM (`typeorm.user.repository.ts`), injecté via un **token string littéral** (ex. `@Inject('UsersRepository')`) bindé dans les `providers` du module (`{ provide: 'UsersRepository', useClass: TypeormUserRepository }`) — pas de `Symbol`, pas de `abstract class`, pas de constante exportée pour le nom du token (littéral inline aux deux sites). ⚠️ Choisir un token **différent** de `` `${EntityName}Repository` `` (ex. `'UsersRepository'` au pluriel pour l'entité `User`) : `@nestjs/typeorm` enregistre déjà un provider sous ce nom exact pour `@InjectRepository(Entity)`, et réutiliser la même string écrase silencieusement ce provider avec le vôtre → dépendance circulaire sur lui-même (`UnknownDependenciesException` au démarrage).
+- `mapper/*.mapper.ts` — classe statique traduisant entities <-> DTOs, et construisant les objets d'enveloppe de réponse (`new ResponseDto(...)`) retournés au controller.
+- `filter/*.exception.filter.ts` — filtre `@Catch()` (sans type précisé) par module, dispatchant sur `exception.name` vers `{ statusCode, error }`, avec un `default:` qui retombe sur 500.
 
-Each module follows the same internal layout:
-- `services/` — business logic; orchestrates `persistances/` and `mapper/`
-- `persistances/` — TypeORM entities
-- `dto/in/` and `dto/out/` — request DTOs (validated with class-validator) and response DTOs (the raw entity is never returned from a controller)
-- `mapper/` — entity ↔ DTO conversion
-- `filters/` — module-specific exception filters
-- `exceptions/` — custom business exceptions
-- `<module>.controller.ts` — HTTP layer only, operates exclusively on DTOs
-- `<module>.module.ts`
+**Enveloppe de réponse (`common/`)** : `common/dto/response.dto.ts` exporte `ResponseDto<T>` (`{ status: ApiStatus, data: T | null }`, construit via `new ResponseDto(data)`) ; `common/enums/api-status.enum.ts` exporte `ApiStatus`. Les endpoints retournent `{ status: 'success', data: ... }` en succès (via `ResponseDto`, construit par le mapper) et `{ error: '<message>' }` (avec un statut HTTP approprié) en échec, via le filtre d'exception du module — `common/filters/http-exception.filter.ts` est le filtre global de secours (`@UseGlobalFilters` dans `main.ts`) pour tout ce qu'aucun filtre de module n'attrape. Les messages d'erreur sont en anglais (convention déjà posée par les tickets `BE-0xx`).
 
-## Frontend structure (planned)
+**`common/variables.global.ts`** centralise les constantes transverses (`EMAIL_REGEX`, `MIN_PASSWORD_LENGTH`, `DISPLAY_NAME_MIN_LENGTH`, `DISPLAY_NAME_MAX_LENGTH`, etc.) — ajouter les nouvelles constantes de validation partagées ici plutôt que de les redéclarer localement dans un service.
 
-`frontend/src/`: `pages/` (routes), `components/`, `features/` (auth, pages, editor, search, admin), `lib/`, `main.tsx`.
+Auth : JWT (access + refresh token), retournés dans le **corps** de la réponse par `POST /auth/login`/`POST /auth/refresh` (pas de cookie `httpOnly`) — c'est le contrat déjà fixé par le backlog (README §7). `JwtAuthGuard`/`RolesGuard`/`@Roles(...)` restent à implémenter (BE-014).
 
-## Core domain model (see README.md §4 for full field lists)
+Base de données : MySQL 8 via `@nestjs/typeorm`, tous les changements de schéma passent par des migrations dans `src/migrations/` (SQL brut via `queryRunner.query`, pas le query builder — voir les migrations existantes). `src/config/data-source.ts` est un `DataSource` standalone séparé utilisé seulement par le CLI TypeORM (les migrations tournent hors du contexte Nest, contre `src/**/*.entity.ts` directement, pas `dist/`).
 
-- **Page** has a `currentVersionId` pointer; editing a page **never mutates an existing `PageVersion`** — it always inserts a new version and repoints `currentVersionId`. Version history is append-only. Rollback (`POST /pages/:id/versions/:versionId/restore`) creates a *new* version from old content rather than deleting anything.
-- **Page** tree is self-referential via `parentId`; moving a page must reject cycles (a page becoming its own ancestor).
-- **Attachment** rows point at Minio object keys (`pages/{pageId}/{uuid}-{filename}`); files are not public by default — access is via presigned URLs (`GET /media/:id/url`).
-- **User.role** is `admin | editor | reader`; route protection is via `JwtAuthGuard` + `RolesGuard` + `@Roles(...)` decorator (401 unauthenticated, 403 wrong role).
-- **IntegrationConfig** (`discord` | `n8n`) holds webhook URL/secret/options as JSON; Discord notifications are fire-and-forget (a failed webhook post must never block the triggering action).
-- Visibility (`public | private`) and publish state (`isPublished`) gate reads across pages, search, media, and comments — "selon visibilité" in the endpoint table means the response set must be filtered by the requesting user's access.
+Stockage médias : Minio (S3-compatible) via `storage/services/storage.service.ts`, bucket auto-créé au démarrage (`onModuleInit`) si absent.
+
+## Architecture frontend (`frontend/src`, à scaffolder)
+
+`pages/` (routes), `components/`, `features/` (auth, pages, editor, search, admin), `lib/`, `main.tsx`. Rien n'existe encore — au moment du scaffolding, suivre la même logique de couches que le backend côté appels API (wrapper fetch par domaine, enveloppe `ResponseDto`/`ApiStatus` reflétée côté client) plutôt que d'inventer une structure différente.
+
+## Core domain model (voir README.md §4 pour la liste complète des champs)
+
+- **Page** a un pointeur `currentVersionId` ; éditer une page **ne modifie jamais** une `PageVersion` existante — insère toujours une nouvelle version et repointe `currentVersionId`. L'historique est append-only. Le rollback (`POST /pages/:id/versions/:versionId/restore`) crée une *nouvelle* version à partir de l'ancien contenu plutôt que de supprimer quoi que ce soit.
+- L'arbre de **Page** est auto-référencé via `parentId` ; déplacer une page doit rejeter les cycles (une page devenant son propre ancêtre).
+- Les lignes **Attachment** pointent vers des clés d'objet Minio (`pages/{pageId}/{uuid}-{filename}`) ; les fichiers ne sont pas publics par défaut — accès via URLs présignées (`GET /media/:id/url`).
+- **User.role** est `admin | editor | reader` ; la protection de route passe par `JwtAuthGuard` + `RolesGuard` + décorateur `@Roles(...)` (401 non authentifié, 403 mauvais rôle).
+- **IntegrationConfig** (`discord` | `n8n`) porte l'URL webhook/secret/options en JSON ; les notifications Discord sont fire-and-forget (un échec d'envoi ne doit jamais bloquer l'action déclenchante).
+- La visibilité (`public | private`) et l'état de publication (`isPublished`) filtrent les lectures sur pages, recherche, médias et commentaires — "selon visibilité" dans le tableau des endpoints signifie que l'ensemble de réponse doit être filtré selon les droits de l'utilisateur demandeur.
 
 ## Full API surface and backlog
 
-`README.md` contains the complete endpoint table (§7) and the ticket-by-ticket backlog (§6, tickets `BE-xxx`/`FE-xxx`/`OPS-xxx` grouped into EPIC-01 through EPIC-17) with acceptance criteria per ticket. Treat each ticket's AC as the spec for that piece of work — e.g. duplicate slug at the same tree level → 409, wrong password → 401, deleting a page with children requires `?cascade=true`, etc. The current branch (`EPIC-01`) corresponds to the first epic (Setup & Infra: Nest init, TypeORM/MySQL config, Minio config, docker-compose).
+`README.md` contient le tableau complet des endpoints (§7) et le backlog ticket par ticket (§6, tickets `BE-xxx`/`FE-xxx`/`OPS-xxx` groupés en EPIC-01 à EPIC-18) avec les critères d'acceptation par ticket. Traiter les AC de chaque ticket comme la spec de ce morceau de travail — ex. slug dupliqué au même niveau d'arborescence → 409, mauvais mot de passe → 401, suppression d'une page avec enfants nécessite `?cascade=true`, etc.
+
+## Commentaires de code
+
+Pas de commentaires de code. Écrire du code auto-explicite (nommage clair, petites fonctions/classes) plutôt que d'expliquer après coup.
+
+## Tests
+
+Pas de fichiers `*.spec.ts`/`*.e2e-spec.ts` dans ce projet — ne pas en ajouter, même si les critères d'acceptation d'un ticket mentionnent "tests unitaires", et supprimer ceux qui apparaîtraient. N'en ajouter que si explicitement demandé.
