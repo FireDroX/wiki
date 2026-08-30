@@ -13,7 +13,7 @@ Ce dépôt a un graphe de connaissance à `graphify-out/` :
 
 ## Projet
 
-**OpenWiki** — wiki collaboratif auto-hébergé (clone de WikiJS). pnpm workspace avec deux packages à la racine : `backend/` (NestJS + TypeORM + MySQL 8) et `frontend/` (React + TypeScript + Vite + TailwindCSS + shadcn/ui — pas encore scaffoldé, répertoire vide). `README.md` est le cahier des charges complet et le backlog (voir §6/§7). La branche courante (`EPIC-02`) correspond au deuxième epic du backlog (Authentification & Utilisateurs).
+**OpenWiki** — wiki collaboratif auto-hébergé (clone de WikiJS). pnpm workspace avec deux packages à la racine : `backend/` (NestJS + TypeORM + MySQL 8) et `frontend/` (React + TypeScript + Vite — scaffoldé, TailwindCSS/shadcn-ui restent à configurer, voir EPIC-10/FE-002). `README.md` est le cahier des charges complet et le backlog (voir §6/§7). La branche courante (`EPIC-10`) correspond au 3ème epic réellement implémenté du backlog (Frontend : Setup & Layout) — le numéro de version ne suit pas le numéro d'EPIC affiché dans le backlog, voir §Versioning.
 
 ## Commandes
 
@@ -44,17 +44,18 @@ pnpm run migration:revert    # annule la dernière migration
 pnpm run migration:generate  # diff entities vs DB (via tsx, hors contexte Nest)
 ```
 
-Config : deux fichiers `.env` séparés (chacun avec un `.env.example` à copier) :
+Config : trois fichiers `.env` séparés (chacun avec un `.env.example` à copier) :
 
 - racine du dépôt — `MYSQL_ROOT_PASSWORD`/`MYSQL_DATABASE`, `MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY` pour `docker-compose.yml`.
 - `backend/.env` — `PORT`, `FRONTEND_URL` (origine CORS), `DB_HOST`/`DB_PORT`/`DB_USERNAME`/`DB_PASSWORD`/`DB_DATABASE`, `MINIO_ENDPOINT`/`MINIO_PORT`/`MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY`/`MINIO_BUCKET`/`MINIO_USE_SSL`. Lu via `@nestjs/config` dans `app.module.ts`, et directement via `dotenv` dans `src/config/data-source.ts` pour le CLI TypeORM.
+- `frontend/.env` — `VITE_API_URL` (URL de base de l'API backend, préfixe `/api` inclus — le backend a `app.setGlobalPrefix('api')` dans `main.ts` — ex. `http://localhost:3000/api`). Lu via `import.meta.env` (Vite), consommé par `src/lib/api-client.ts`.
 
 ## Versioning
 
-`package.json` version (racine et chaque package, gardées synchronisées) suit `0.<epic>.<ticket>` :
-- Le nombre du milieu est le numéro d'EPIC courant — l'incrémenter (et remettre le dernier nombre à `0`) au démarrage du premier ticket d'un nouvel EPIC (ex. `0.1.x` → `0.2.0` en passant d'EPIC-01 à EPIC-02).
+`package.json` version (racine et chaque package, gardées synchronisées) suit `0.<n>.<ticket>` :
+- Le nombre du milieu **n'est pas le numéro d'EPIC affiché** dans le backlog (README §6) — c'est un compteur qui s'incrémente de 1 à chaque changement d'EPIC, dans l'ordre réel d'implémentation (le dernier nombre repasse à `0` à ce moment-là). Ex. : 1er epic implémenté → `0.1.x`, 2ème epic implémenté (EPIC-02) → `0.2.x`, 3ème epic implémenté (EPIC-10 dans ce dépôt) → `0.3.x`, **pas** `0.10.x`.
 - Le dernier nombre s'incrémente de un par ticket terminé dans l'EPIC courant — un bump par commit/ticket, pas par EPIC.
-- ex. EPIC-02, 2ème ticket terminé → `0.2.2`.
+- ex. 2ème epic implémenté (EPIC-02), 2ème ticket terminé → `0.2.2`. 3ème epic implémenté (EPIC-10), 1er ticket terminé → `0.3.1`.
 
 `GET /health` retourne cette version (lue depuis `package.json` à l'exécution) pour que le frontend puisse l'afficher plus tard. Cet endpoint reste un JSON nu (`{ status, version }`), pas enveloppé par `ResponseDto` — c'est un healthcheck consommé par des outils d'infra, pas par le frontend applicatif.
 
@@ -82,9 +83,20 @@ Base de données : MySQL 8 via `@nestjs/typeorm`, tous les changements de schém
 
 Stockage médias : Minio (S3-compatible) via `storage/services/storage.service.ts`, bucket auto-créé au démarrage (`onModuleInit`) si absent.
 
-## Architecture frontend (`frontend/src`, à scaffolder)
+## Architecture frontend (`frontend/src`)
 
-`pages/` (routes), `components/`, `features/` (auth, pages, editor, search, admin), `lib/`, `main.tsx`. Rien n'existe encore — au moment du scaffolding, suivre la même logique de couches que le backend côté appels API (wrapper fetch par domaine, enveloppe `ResponseDto`/`ApiStatus` reflétée côté client) plutôt que d'inventer une structure différente.
+Structure plate directement sous `src/` — **pas** de dossier `features/` :
+
+- `api/` — fonctions d'appel API par domaine, utilisent l'instance de `lib/api-client.ts`.
+- `assets/` — images, fonts, etc.
+- `components/` — un sous-dossier par page pour les composants spécifiques à cette page, plus les composants génériques réutilisables à la racine ; `components/ui` accueillera les composants shadcn générés (**ne pas éditer à la main**, FE-002) et `components/layout` le layout global (Sidebar/Topbar/Breadcrumb, FE-003).
+- `hooks/` — hooks React réutilisables.
+- `lib/` — setup d'intégrations tierces ; `api-client.ts` est l'instance axios centralisée (interception 401 → refresh token automatique à venir, FE-004).
+- `pages/` — un composant par route, câblées dans `main.tsx` via `react-router-dom` (`createBrowserRouter`).
+- `schemas/` — schémas `zod` (validation de formulaires, parsing de réponses API).
+- `utils/` — fonctions utilitaires pures (ex. `cn`), sans dépendance à une lib tierce (à la différence de `lib/`).
+
+Suivre la même logique de couches que le backend côté appels API (wrapper par domaine dans `api/`, enveloppe `ResponseDto`/`ApiStatus` reflétée côté client) plutôt que d'inventer une structure différente.
 
 ## Core domain model (voir README.md §4 pour la liste complète des champs)
 
