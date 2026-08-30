@@ -25,6 +25,11 @@ export class AuthExceptionFilter implements ExceptionFilter {
         return { statusCode: HttpStatus.CONFLICT, error: exception.message };
       case 'ValidationException':
         return { statusCode: HttpStatus.BAD_REQUEST, error: exception.message };
+      case 'InvalidCredentialsException':
+        return {
+          statusCode: HttpStatus.UNAUTHORIZED,
+          error: exception.message,
+        };
       default:
         return {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
