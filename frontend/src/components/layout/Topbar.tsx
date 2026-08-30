@@ -1,5 +1,5 @@
 import { LogOut, Menu, Search, Shield, User } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 import { Avatar, AvatarFallback } from '#components/ui/avatar'
 import { Button } from '#components/ui/button'
 import {
