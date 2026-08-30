@@ -12,11 +12,6 @@ export interface RegisterPayload {
   displayName: string
 }
 
-export interface TokenPair {
-  accessToken: string
-  refreshToken: string
-}
-
 export const UserRole = {
   Admin: 'admin',
   Editor: 'editor',
@@ -32,12 +27,15 @@ export interface AuthUser {
   role: UserRole
 }
 
-export async function login(payload: LoginPayload): Promise<TokenPair> {
-  const { data } = await apiClient.post<ResponseDto<TokenPair>>('/auth/login', payload)
-  return data.data
+export async function login(payload: LoginPayload): Promise<void> {
+  await apiClient.post<ResponseDto<null>>('/auth/login', payload)
 }
 
 export async function register(payload: RegisterPayload): Promise<AuthUser> {
   const { data } = await apiClient.post<ResponseDto<AuthUser>>('/auth/register', payload)
   return data.data
+}
+
+export async function logout(): Promise<void> {
+  await apiClient.post<ResponseDto<null>>('/auth/logout')
 }

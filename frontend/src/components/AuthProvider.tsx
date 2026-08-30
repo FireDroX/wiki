@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import * as authApi from '#api/auth'
 import { getMe } from '#api/users'
 import type { AuthUser, LoginPayload, RegisterPayload } from '#api/auth'
-import { clearTokens, getAccessToken, setTokens } from '#lib/auth-storage'
+import { AUTH_LOGOUT_EVENT } from '#lib/api-client'
 import { AuthContext, type AuthStatus } from '#hooks/useAuth'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -10,24 +10,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>('loading')
 
   useEffect(() => {
-    if (!getAccessToken()) {
-      setStatus('unauthenticated')
-      return
-    }
     getMe()
       .then((currentUser) => {
         setUser(currentUser)
         setStatus('authenticated')
       })
       .catch(() => {
-        clearTokens()
         setStatus('unauthenticated')
       })
   }, [])
 
+  useEffect(() => {
+    function handleAuthLogout() {
+      setUser(null)
+      setStatus('unauthenticated')
+    }
+    window.addEventListener(AUTH_LOGOUT_EVENT, handleAuthLogout)
+    return () => window.removeEventListener(AUTH_LOGOUT_EVENT, handleAuthLogout)
+  }, [])
+
   async function login(payload: LoginPayload) {
-    const tokens = await authApi.login(payload)
-    setTokens(tokens.accessToken, tokens.refreshToken)
+    await authApi.login(payload)
     const currentUser = await getMe()
     setUser(currentUser)
     setStatus('authenticated')
@@ -38,10 +41,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await login({ email: payload.email, password: payload.password })
   }
 
-  function logout() {
-    clearTokens()
+  async function logout() {
     setUser(null)
     setStatus('unauthenticated')
+    await authApi.logout().catch(() => {})
   }
 
   return (

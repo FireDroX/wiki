@@ -16,10 +16,7 @@ import {
 import { User } from '../../users/entities/user.entity.js';
 import { UsersService } from '../../users/services/users.service.js';
 import { LoginDto } from '../dto/in/login.dto.js';
-import { RefreshTokenDto } from '../dto/in/refresh-token.dto.js';
 import { RegisterDto } from '../dto/in/register.dto.js';
-import { AccessTokenResponseDto } from '../dto/out/access-token-response.dto.js';
-import { TokenResponseDto } from '../dto/out/token-response.dto.js';
 
 const SALT_ROUNDS = 10;
 const MYSQL_DUPLICATE_ENTRY_CODE = 'ER_DUP_ENTRY';
@@ -30,6 +27,11 @@ interface JwtPayload {
   sub: string;
   email: string;
   role: User['role'];
+}
+
+export interface TokenPair {
+  accessToken: string;
+  refreshToken: string;
 }
 
 @Injectable()
@@ -65,17 +67,19 @@ export class AuthService {
     }
   }
 
-  async login(dto: LoginDto): Promise<TokenResponseDto> {
+  async login(dto: LoginDto): Promise<TokenPair> {
     this.validateLogin(dto);
 
     const user = await this.validateUser(dto.email, dto.password);
     return this.generateTokens(user);
   }
 
-  refresh(dto: RefreshTokenDto): AccessTokenResponseDto {
-    this.validateRefresh(dto);
+  refresh(refreshToken: string | undefined): { accessToken: string } {
+    if (!refreshToken) {
+      throw new InvalidRefreshTokenException();
+    }
 
-    const payload = this.verifyRefreshToken(dto.refreshToken);
+    const payload = this.verifyRefreshToken(refreshToken);
     const accessToken = this.generateAccessToken({
       sub: payload.sub,
       email: payload.email,
@@ -93,7 +97,7 @@ export class AuthService {
     return user;
   }
 
-  private generateTokens(user: User): TokenResponseDto {
+  private generateTokens(user: User): TokenPair {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
@@ -138,12 +142,6 @@ export class AuthService {
 
     if (errors.length > 0) {
       throw new ValidationException(errors.join(', '));
-    }
-  }
-
-  private validateRefresh(dto: RefreshTokenDto): void {
-    if (!dto.refreshToken) {
-      throw new ValidationException('refreshToken should not be empty');
     }
   }
 
