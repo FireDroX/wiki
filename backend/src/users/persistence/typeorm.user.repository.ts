@@ -11,6 +11,10 @@ export class TypeormUserRepository implements UserRepository {
     @InjectRepository(User) private readonly repository: Repository<User>,
   ) {}
 
+  findById(id: string): Promise<User | null> {
+    return this.repository.findOneBy({ id });
+  }
+
   findByEmail(email: string): Promise<User | null> {
     return this.repository.findOneBy({ email });
   }
