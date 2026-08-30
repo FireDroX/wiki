@@ -30,6 +30,11 @@ export class AuthExceptionFilter implements ExceptionFilter {
           statusCode: HttpStatus.UNAUTHORIZED,
           error: exception.message,
         };
+      case 'InvalidRefreshTokenException':
+        return {
+          statusCode: HttpStatus.UNAUTHORIZED,
+          error: exception.message,
+        };
       default:
         return {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,

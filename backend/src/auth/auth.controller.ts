@@ -8,7 +8,9 @@ import {
 } from '@nestjs/common';
 import { ResponseDto } from '../common/dto/response.dto.js';
 import { LoginDto } from './dto/in/login.dto.js';
+import { RefreshTokenDto } from './dto/in/refresh-token.dto.js';
 import { RegisterDto } from './dto/in/register.dto.js';
+import { AccessTokenResponseDto } from './dto/out/access-token-response.dto.js';
 import { TokenResponseDto } from './dto/out/token-response.dto.js';
 import { UserResponseDto } from './dto/out/user-response.dto.js';
 import { AuthExceptionFilter } from './filter/auth-exception.filter.js';
@@ -35,5 +37,12 @@ export class AuthController {
   async login(@Body() dto: LoginDto): Promise<ResponseDto<TokenResponseDto>> {
     const tokens = await this.authService.login(dto);
     return TokenMapper.toLoginResponse(tokens);
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  refresh(@Body() dto: RefreshTokenDto): ResponseDto<AccessTokenResponseDto> {
+    const token = this.authService.refresh(dto);
+    return TokenMapper.toRefreshResponse(token);
   }
 }
