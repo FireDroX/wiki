@@ -1,10 +1,11 @@
 {
   "name": "openwiki",
-  "version": "0.2.8",
+  "version": "0.3.5",
   "private": true,
   "packageManager": "pnpm@11.24.0",
   "scripts": {
-    "dev": "pnpm --filter backend start:dev",
+    "back:dev": "pnpm --filter backend start:dev",
+    "front:dev": "pnpm --filter frontend dev",
     "build": "pnpm -r --if-present build",
     "lint": "pnpm -r --if-present lint",
     "test": "pnpm -r --if-present test"

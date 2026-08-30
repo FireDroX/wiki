@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
+import type { Request } from 'express';
+import { Strategy } from 'passport-jwt';
+import { ACCESS_TOKEN_COOKIE } from '../variables.global.js';
 import { UserRole } from '../../users/entities/user.entity.js';
 
 interface JwtAccessPayload {
@@ -20,7 +22,8 @@ export interface AuthenticatedUser {
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(configService: ConfigService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: (req: Request) =>
+        (req.cookies?.[ACCESS_TOKEN_COOKIE] as string | undefined) ?? null,
       ignoreExpiration: false,
       secretOrKey: configService.get<string>('JWT_ACCESS_SECRET')!,
     });

@@ -5,3 +5,5 @@ export const DISPLAY_NAME_MAX_LENGTH = 100;
 export const DEFAULT_PAGE = 1;
 export const DEFAULT_LIMIT = 20;
 export const MAX_LIMIT = 100;
+export const ACCESS_TOKEN_COOKIE = 'accessToken';
+export const REFRESH_TOKEN_COOKIE = 'refreshToken';
