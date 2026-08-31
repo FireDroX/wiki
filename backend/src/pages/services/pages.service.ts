@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { QueryFailedError } from 'typeorm';
 import type { AuthenticatedUser } from '../../common/strategies/jwt.strategy.js';
 import { CircularReferenceException } from '../../common/exceptions/pages/circular-reference.exception.js';
@@ -18,10 +19,15 @@ import {
 import { CreatePageDto } from '../dto/in/create-page.dto.js';
 import { DeletePageQueryDto } from '../dto/in/delete-page-query.dto.js';
 import { MovePageDto } from '../dto/in/move-page.dto.js';
+import { PublishPageDto } from '../dto/in/publish-page.dto.js';
 import { UpdatePageDto } from '../dto/in/update-page.dto.js';
 import { PageTreeNodeDto } from '../dto/out/page-tree-node.dto.js';
 import { PageVersion } from '../entities/page-version.entity.js';
 import { Page, PAGE_VISIBILITIES } from '../entities/page.entity.js';
+import {
+  PAGE_PUBLISHED_EVENT,
+  PagePublishedEvent,
+} from '../events/page-published.event.js';
 import { PageTreeMapper } from '../mapper/page-tree.mapper.js';
 import type { PagesRepository } from '../persistence/page.repository.js';
 
@@ -32,6 +38,7 @@ export class PagesService {
   constructor(
     @Inject('PagesRepository')
     private readonly pagesRepository: PagesRepository,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async createPage(
@@ -226,6 +233,40 @@ export class PagesService {
     }
   }
 
+  async setPublishStatus(
+    id: string,
+    dto: PublishPageDto,
+  ): Promise<{ page: Page; version: PageVersion }> {
+    this.validatePublishPage(dto);
+
+    const page = await this.pagesRepository.findById(id);
+    if (!page || !page.currentVersionId) {
+      throw new PageNotFoundException();
+    }
+
+    const version = await this.pagesRepository.findVersionById(
+      page.currentVersionId,
+    );
+    if (!version) {
+      throw new PageNotFoundException();
+    }
+
+    const wasPublished = page.isPublished;
+    const updated = await this.pagesRepository.updatePublishStatus(
+      page,
+      dto.isPublished,
+    );
+
+    if (!wasPublished && updated.isPublished) {
+      this.eventEmitter.emit(
+        PAGE_PUBLISHED_EVENT,
+        new PagePublishedEvent(updated.id, updated.slug, updated.title),
+      );
+    }
+
+    return { page: updated, version };
+  }
+
   private async deleteRecursive(id: string): Promise<void> {
     const children = await this.pagesRepository.findChildren(id);
     for (const child of children) {
@@ -279,6 +320,12 @@ export class PagesService {
 
     if (errors.length > 0) {
       throw new ValidationException(errors.join(', '));
+    }
+  }
+
+  private validatePublishPage(dto: PublishPageDto): void {
+    if (typeof dto.isPublished !== 'boolean') {
+      throw new ValidationException('isPublished must be a boolean value');
     }
   }
 

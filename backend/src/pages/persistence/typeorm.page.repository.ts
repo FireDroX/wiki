@@ -107,4 +107,9 @@ export class TypeormPagesRepository implements PagesRepository {
   async softDelete(id: string): Promise<void> {
     await this.repository.softDelete(id);
   }
+
+  async updatePublishStatus(page: Page, isPublished: boolean): Promise<Page> {
+    const updated = this.repository.merge(page, { isPublished });
+    return this.repository.save(updated);
+  }
 }

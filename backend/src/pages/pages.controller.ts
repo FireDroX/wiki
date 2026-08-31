@@ -22,6 +22,7 @@ import type { AuthenticatedUser } from '../common/strategies/jwt.strategy.js';
 import { CreatePageDto } from './dto/in/create-page.dto.js';
 import { DeletePageQueryDto } from './dto/in/delete-page-query.dto.js';
 import { MovePageDto } from './dto/in/move-page.dto.js';
+import { PublishPageDto } from './dto/in/publish-page.dto.js';
 import { UpdatePageDto } from './dto/in/update-page.dto.js';
 import { PageDetailResponseDto } from './dto/out/page-detail-response.dto.js';
 import { PageResponseDto } from './dto/out/page-response.dto.js';
@@ -72,6 +73,17 @@ export class PagesController {
     @Body() dto: MovePageDto,
   ): Promise<ResponseDto<PageResponseDto>> {
     const { page, version } = await this.pagesService.movePage(id, dto);
+    return PageMapper.toResponse(page, version);
+  }
+
+  @Patch(':id/publish')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('editor', 'admin')
+  async publish(
+    @Param('id') id: string,
+    @Body() dto: PublishPageDto,
+  ): Promise<ResponseDto<PageResponseDto>> {
+    const { page, version } = await this.pagesService.setPublishStatus(id, dto);
     return PageMapper.toResponse(page, version);
   }
 
