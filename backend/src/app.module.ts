@@ -8,6 +8,7 @@ import { HealthModule } from './health/health.module.js';
 import { PagesModule } from './pages/pages.module.js';
 import { StorageModule } from './storage/storage.module.js';
 import { UsersModule } from './users/users.module.js';
+import { VersionsModule } from './versions/versions.module.js';
 import { typeOrmConfig } from './config/typeorm.config.js';
 
 @Module({
@@ -23,6 +24,7 @@ import { typeOrmConfig } from './config/typeorm.config.js';
     UsersModule,
     AuthModule,
     PagesModule,
+    VersionsModule,
   ],
 })
 export class AppModule implements OnModuleInit {

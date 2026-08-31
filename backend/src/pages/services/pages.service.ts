@@ -6,11 +6,13 @@ import { ParentPageNotFoundException } from '../../common/exceptions/pages/paren
 import { SlugAlreadyExistsException } from '../../common/exceptions/pages/slug-already-exists.exception.js';
 import { ValidationException } from '../../common/exceptions/validation.exception.js';
 import {
+  CHANGE_SUMMARY_MAX_LENGTH,
   SLUG_MAX_LENGTH,
   SLUG_REGEX,
   TITLE_MAX_LENGTH,
 } from '../../common/variables.global.js';
 import { CreatePageDto } from '../dto/in/create-page.dto.js';
+import { UpdatePageDto } from '../dto/in/update-page.dto.js';
 import { PageTreeNodeDto } from '../dto/out/page-tree-node.dto.js';
 import { PageVersion } from '../entities/page-version.entity.js';
 import { Page, PAGE_VISIBILITIES } from '../entities/page.entity.js';
@@ -105,6 +107,37 @@ export class PagesService {
     return { page, version };
   }
 
+  async updatePage(
+    id: string,
+    dto: UpdatePageDto,
+    authorId: string,
+  ): Promise<{ page: Page; version: PageVersion }> {
+    const page = await this.pagesRepository.findById(id);
+    if (!page || !page.currentVersionId) {
+      throw new PageNotFoundException();
+    }
+
+    const currentVersion = await this.pagesRepository.findVersionById(
+      page.currentVersionId,
+    );
+    if (!currentVersion) {
+      throw new PageNotFoundException();
+    }
+
+    this.validateUpdatePage(dto);
+
+    const title = dto.title ?? page.title;
+    const content = dto.content ?? currentVersion.content;
+
+    return this.pagesRepository.updateWithNewVersion({
+      page,
+      title,
+      content,
+      changeSummary: dto.changeSummary ?? null,
+      authorId,
+    });
+  }
+
   private static hasFullAccess(currentUser?: AuthenticatedUser): boolean {
     return currentUser?.role === 'admin' || currentUser?.role === 'editor';
   }
@@ -133,6 +166,37 @@ export class PagesService {
     if (!PAGE_VISIBILITIES.includes(dto.visibility)) {
       errors.push(
         `visibility must be one of the following values: ${PAGE_VISIBILITIES.join(', ')}`,
+      );
+    }
+
+    if (errors.length > 0) {
+      throw new ValidationException(errors.join(', '));
+    }
+  }
+
+  private validateUpdatePage(dto: UpdatePageDto): void {
+    const errors: string[] = [];
+
+    if (
+      dto.title !== undefined &&
+      (!dto.title || dto.title.length > TITLE_MAX_LENGTH)
+    ) {
+      errors.push(
+        `title must be longer than or equal to 1 and shorter than or equal to ${TITLE_MAX_LENGTH} characters`,
+      );
+    }
+
+    if (dto.content !== undefined && typeof dto.content !== 'string') {
+      errors.push('content must be a string');
+    }
+
+    if (
+      dto.changeSummary !== undefined &&
+      (typeof dto.changeSummary !== 'string' ||
+        dto.changeSummary.length > CHANGE_SUMMARY_MAX_LENGTH)
+    ) {
+      errors.push(
+        `changeSummary must be shorter than or equal to ${CHANGE_SUMMARY_MAX_LENGTH} characters`,
       );
     }
 

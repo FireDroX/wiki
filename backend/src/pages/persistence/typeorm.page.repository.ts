@@ -6,6 +6,7 @@ import { Page } from '../entities/page.entity.js';
 import {
   CreatePageWithFirstVersionInput,
   PagesRepository,
+  UpdatePageWithNewVersionInput,
 } from './page.repository.js';
 
 @Injectable()
@@ -64,6 +65,31 @@ export class TypeormPagesRepository implements PagesRepository {
 
       page.currentVersionId = version.id;
       await manager.save(page);
+
+      return { page, version };
+    });
+  }
+
+  async updateWithNewVersion(
+    input: UpdatePageWithNewVersionInput,
+  ): Promise<{ page: Page; version: PageVersion }> {
+    return this.dataSource.transaction(async (manager) => {
+      const version = await manager.save(
+        manager.create(PageVersion, {
+          pageId: input.page.id,
+          content: input.content,
+          title: input.title,
+          authorId: input.authorId,
+          changeSummary: input.changeSummary,
+        }),
+      );
+
+      const page = await manager.save(
+        manager.merge(Page, input.page, {
+          title: input.title,
+          currentVersionId: version.id,
+        }),
+      );
 
       return { page, version };
     });

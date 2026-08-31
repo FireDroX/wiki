@@ -10,6 +10,14 @@ export interface CreatePageWithFirstVersionInput {
   createdById: string;
 }
 
+export interface UpdatePageWithNewVersionInput {
+  page: Page;
+  title: string;
+  content: string;
+  changeSummary: string | null;
+  authorId: string;
+}
+
 export interface PagesRepository {
   findById(id: string): Promise<Page | null>;
   findBySlugAndParent(
@@ -20,5 +28,8 @@ export interface PagesRepository {
   findVersionById(id: string): Promise<PageVersion | null>;
   createWithFirstVersion(
     input: CreatePageWithFirstVersionInput,
+  ): Promise<{ page: Page; version: PageVersion }>;
+  updateWithNewVersion(
+    input: UpdatePageWithNewVersionInput,
   ): Promise<{ page: Page; version: PageVersion }>;
 }

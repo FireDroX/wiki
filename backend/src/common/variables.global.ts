@@ -10,3 +10,4 @@ export const REFRESH_TOKEN_COOKIE = 'refreshToken';
 export const SLUG_REGEX = /^[a-z0-9-]+$/;
 export const SLUG_MAX_LENGTH = 255;
 export const TITLE_MAX_LENGTH = 255;
+export const CHANGE_SUMMARY_MAX_LENGTH = 255;
