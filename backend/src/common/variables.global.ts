@@ -7,3 +7,6 @@ export const DEFAULT_LIMIT = 20;
 export const MAX_LIMIT = 100;
 export const ACCESS_TOKEN_COOKIE = 'accessToken';
 export const REFRESH_TOKEN_COOKIE = 'refreshToken';
+export const SLUG_REGEX = /^[a-z0-9-]+$/;
+export const SLUG_MAX_LENGTH = 255;
+export const TITLE_MAX_LENGTH = 255;

@@ -1,0 +1,22 @@
+import { PageVersion } from '../entities/page-version.entity.js';
+import { Page, PageVisibility } from '../entities/page.entity.js';
+
+export interface CreatePageWithFirstVersionInput {
+  slug: string;
+  title: string;
+  content: string;
+  parentId: string | null;
+  visibility: PageVisibility;
+  createdById: string;
+}
+
+export interface PagesRepository {
+  findById(id: string): Promise<Page | null>;
+  findBySlugAndParent(
+    slug: string,
+    parentId: string | null,
+  ): Promise<Page | null>;
+  createWithFirstVersion(
+    input: CreatePageWithFirstVersionInput,
+  ): Promise<{ page: Page; version: PageVersion }>;
+}
