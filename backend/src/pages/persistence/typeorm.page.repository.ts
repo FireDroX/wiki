@@ -12,11 +12,17 @@ import {
 export class TypeormPagesRepository implements PagesRepository {
   constructor(
     @InjectRepository(Page) private readonly repository: Repository<Page>,
+    @InjectRepository(PageVersion)
+    private readonly versionRepository: Repository<PageVersion>,
     private readonly dataSource: DataSource,
   ) {}
 
   findById(id: string): Promise<Page | null> {
     return this.repository.findOneBy({ id });
+  }
+
+  findVersionById(id: string): Promise<PageVersion | null> {
+    return this.versionRepository.findOneBy({ id });
   }
 
   findBySlugAndParent(

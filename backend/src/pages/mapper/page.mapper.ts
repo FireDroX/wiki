@@ -1,4 +1,5 @@
 import { ResponseDto } from '../../common/dto/response.dto.js';
+import { PageDetailResponseDto } from '../dto/out/page-detail-response.dto.js';
 import { PageResponseDto } from '../dto/out/page-response.dto.js';
 import { PageVersion } from '../entities/page-version.entity.js';
 import { Page } from '../entities/page.entity.js';
@@ -25,5 +26,28 @@ export class PageMapper {
     version: PageVersion,
   ): ResponseDto<PageResponseDto> {
     return new ResponseDto(PageMapper.toPageResponseDto(page, version));
+  }
+
+  static toPageDetailResponseDto(
+    page: Page,
+    version: PageVersion,
+  ): PageDetailResponseDto {
+    return {
+      id: page.id,
+      slug: page.slug,
+      title: page.title,
+      content: version.content,
+      visibility: page.visibility,
+      isPublished: page.isPublished,
+      parentId: page.parentId,
+      updatedAt: page.updatedAt,
+    };
+  }
+
+  static toDetailResponse(
+    page: Page,
+    version: PageVersion,
+  ): ResponseDto<PageDetailResponseDto> {
+    return new ResponseDto(PageMapper.toPageDetailResponseDto(page, version));
   }
 }

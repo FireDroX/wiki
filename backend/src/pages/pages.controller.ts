@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   UseFilters,
   UseGuards,
@@ -16,6 +17,7 @@ import { OptionalJwtAuthGuard } from '../common/guards/optional-jwt-auth.guard.j
 import { RolesGuard } from '../common/guards/roles.guard.js';
 import type { AuthenticatedUser } from '../common/strategies/jwt.strategy.js';
 import { CreatePageDto } from './dto/in/create-page.dto.js';
+import { PageDetailResponseDto } from './dto/out/page-detail-response.dto.js';
 import { PageResponseDto } from './dto/out/page-response.dto.js';
 import { PageTreeNodeDto } from './dto/out/page-tree-node.dto.js';
 import { PagesExceptionFilter } from './filter/pages-exception.filter.js';
@@ -46,5 +48,15 @@ export class PagesController {
   ): Promise<ResponseDto<PageTreeNodeDto[]>> {
     const tree = await this.pagesService.getTree(user);
     return new ResponseDto(tree);
+  }
+
+  @Get('*path')
+  @UseGuards(OptionalJwtAuthGuard)
+  async getByPath(
+    @Param('path') path: string[],
+    @CurrentUser() user?: AuthenticatedUser,
+  ): Promise<ResponseDto<PageDetailResponseDto>> {
+    const { page, version } = await this.pagesService.findByPath(path, user);
+    return PageMapper.toDetailResponse(page, version);
   }
 }

@@ -1,5 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { AuthenticatedUser } from '../../common/strategies/jwt.strategy.js';
+import { PageAccessForbiddenException } from '../../common/exceptions/pages/page-access-forbidden.exception.js';
+import { PageNotFoundException } from '../../common/exceptions/pages/page-not-found.exception.js';
 import { ParentPageNotFoundException } from '../../common/exceptions/pages/parent-page-not-found.exception.js';
 import { SlugAlreadyExistsException } from '../../common/exceptions/pages/slug-already-exists.exception.js';
 import { ValidationException } from '../../common/exceptions/validation.exception.js';
@@ -56,15 +58,55 @@ export class PagesService {
 
   async getTree(currentUser?: AuthenticatedUser): Promise<PageTreeNodeDto[]> {
     const pages = await this.pagesRepository.findAll();
-    const canSeeAll =
-      currentUser?.role === 'admin' || currentUser?.role === 'editor';
-    const visible = canSeeAll
+    const visible = PagesService.hasFullAccess(currentUser)
       ? pages
       : pages.filter(
           (page) => page.visibility === 'public' && page.isPublished,
         );
 
     return PageTreeMapper.buildTree(visible);
+  }
+
+  async findByPath(
+    segments: string[],
+    currentUser?: AuthenticatedUser,
+  ): Promise<{ page: Page; version: PageVersion }> {
+    if (segments.length === 0) {
+      throw new PageNotFoundException();
+    }
+
+    let parentId: string | null = null;
+    let page: Page | null = null;
+    for (const slug of segments) {
+      page = await this.pagesRepository.findBySlugAndParent(slug, parentId);
+      if (!page) {
+        throw new PageNotFoundException();
+      }
+      parentId = page.id;
+    }
+
+    if (!page || !page.currentVersionId) {
+      throw new PageNotFoundException();
+    }
+
+    const isPubliclyAccessible =
+      page.visibility === 'public' && page.isPublished;
+    if (!isPubliclyAccessible && !PagesService.hasFullAccess(currentUser)) {
+      throw new PageAccessForbiddenException();
+    }
+
+    const version = await this.pagesRepository.findVersionById(
+      page.currentVersionId,
+    );
+    if (!version) {
+      throw new PageNotFoundException();
+    }
+
+    return { page, version };
+  }
+
+  private static hasFullAccess(currentUser?: AuthenticatedUser): boolean {
+    return currentUser?.role === 'admin' || currentUser?.role === 'editor';
   }
 
   private validateCreatePage(dto: CreatePageDto): void {
