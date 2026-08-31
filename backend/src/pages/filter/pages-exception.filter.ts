@@ -36,6 +36,7 @@ export class PagesExceptionFilter implements ExceptionFilter {
       case 'PageNotFoundException':
         return { statusCode: HttpStatus.NOT_FOUND, error: exception.message };
       case 'SlugAlreadyExistsException':
+      case 'CircularReferenceException':
         return { statusCode: HttpStatus.CONFLICT, error: exception.message };
       case 'PageAccessForbiddenException':
         return { statusCode: HttpStatus.FORBIDDEN, error: exception.message };

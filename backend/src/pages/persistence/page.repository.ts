@@ -32,4 +32,5 @@ export interface PagesRepository {
   updateWithNewVersion(
     input: UpdatePageWithNewVersionInput,
   ): Promise<{ page: Page; version: PageVersion }>;
+  updateParent(page: Page, newParentId: string | null): Promise<Page>;
 }

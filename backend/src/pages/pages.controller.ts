@@ -18,6 +18,7 @@ import { OptionalJwtAuthGuard } from '../common/guards/optional-jwt-auth.guard.j
 import { RolesGuard } from '../common/guards/roles.guard.js';
 import type { AuthenticatedUser } from '../common/strategies/jwt.strategy.js';
 import { CreatePageDto } from './dto/in/create-page.dto.js';
+import { MovePageDto } from './dto/in/move-page.dto.js';
 import { UpdatePageDto } from './dto/in/update-page.dto.js';
 import { PageDetailResponseDto } from './dto/out/page-detail-response.dto.js';
 import { PageResponseDto } from './dto/out/page-response.dto.js';
@@ -58,6 +59,17 @@ export class PagesController {
       user.id,
     );
     return PageMapper.toUpdateResponse(page, version);
+  }
+
+  @Patch(':id/move')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('editor', 'admin')
+  async move(
+    @Param('id') id: string,
+    @Body() dto: MovePageDto,
+  ): Promise<ResponseDto<PageResponseDto>> {
+    const { page, version } = await this.pagesService.movePage(id, dto);
+    return PageMapper.toResponse(page, version);
   }
 
   @Get('tree')

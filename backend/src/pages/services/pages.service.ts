@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { AuthenticatedUser } from '../../common/strategies/jwt.strategy.js';
+import { CircularReferenceException } from '../../common/exceptions/pages/circular-reference.exception.js';
 import { PageAccessForbiddenException } from '../../common/exceptions/pages/page-access-forbidden.exception.js';
 import { PageNotFoundException } from '../../common/exceptions/pages/page-not-found.exception.js';
 import { ParentPageNotFoundException } from '../../common/exceptions/pages/parent-page-not-found.exception.js';
@@ -10,8 +11,10 @@ import {
   SLUG_MAX_LENGTH,
   SLUG_REGEX,
   TITLE_MAX_LENGTH,
+  UUID_REGEX,
 } from '../../common/variables.global.js';
 import { CreatePageDto } from '../dto/in/create-page.dto.js';
+import { MovePageDto } from '../dto/in/move-page.dto.js';
 import { UpdatePageDto } from '../dto/in/update-page.dto.js';
 import { PageTreeNodeDto } from '../dto/out/page-tree-node.dto.js';
 import { PageVersion } from '../entities/page-version.entity.js';
@@ -138,6 +141,53 @@ export class PagesService {
     });
   }
 
+  async movePage(
+    id: string,
+    dto: MovePageDto,
+  ): Promise<{ page: Page; version: PageVersion }> {
+    this.validateMovePage(dto);
+
+    const page = await this.pagesRepository.findById(id);
+    if (!page || !page.currentVersionId) {
+      throw new PageNotFoundException();
+    }
+
+    const currentVersion = await this.pagesRepository.findVersionById(
+      page.currentVersionId,
+    );
+    if (!currentVersion) {
+      throw new PageNotFoundException();
+    }
+
+    const newParentId = dto.newParentId;
+    if (newParentId !== null) {
+      let currentId: string | null = newParentId;
+      while (currentId !== null) {
+        if (currentId === id) {
+          throw new CircularReferenceException();
+        }
+        const ancestor: Page | null =
+          await this.pagesRepository.findById(currentId);
+        if (!ancestor) {
+          throw new ParentPageNotFoundException();
+        }
+        currentId = ancestor.parentId;
+      }
+    }
+
+    const existing = await this.pagesRepository.findBySlugAndParent(
+      page.slug,
+      newParentId,
+    );
+    if (existing && existing.id !== page.id) {
+      throw new SlugAlreadyExistsException();
+    }
+
+    const moved = await this.pagesRepository.updateParent(page, newParentId);
+
+    return { page: moved, version: currentVersion };
+  }
+
   private static hasFullAccess(currentUser?: AuthenticatedUser): boolean {
     return currentUser?.role === 'admin' || currentUser?.role === 'editor';
   }
@@ -171,6 +221,15 @@ export class PagesService {
 
     if (errors.length > 0) {
       throw new ValidationException(errors.join(', '));
+    }
+  }
+
+  private validateMovePage(dto: MovePageDto): void {
+    if (
+      dto.newParentId !== null &&
+      (typeof dto.newParentId !== 'string' || !UUID_REGEX.test(dto.newParentId))
+    ) {
+      throw new ValidationException('newParentId must be a UUID');
     }
   }
 

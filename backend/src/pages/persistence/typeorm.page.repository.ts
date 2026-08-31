@@ -94,4 +94,9 @@ export class TypeormPagesRepository implements PagesRepository {
       return { page, version };
     });
   }
+
+  async updateParent(page: Page, newParentId: string | null): Promise<Page> {
+    const updated = this.repository.merge(page, { parentId: newParentId });
+    return this.repository.save(updated);
+  }
 }

@@ -11,3 +11,5 @@ export const SLUG_REGEX = /^[a-z0-9-]+$/;
 export const SLUG_MAX_LENGTH = 255;
 export const TITLE_MAX_LENGTH = 255;
 export const CHANGE_SUMMARY_MAX_LENGTH = 255;
+export const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
