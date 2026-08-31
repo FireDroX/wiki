@@ -1,0 +1,115 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource, IsNull, Repository } from 'typeorm';
+import { PageVersion } from '../entities/page-version.entity.js';
+import { Page } from '../entities/page.entity.js';
+import {
+  CreatePageWithFirstVersionInput,
+  PagesRepository,
+  UpdatePageWithNewVersionInput,
+} from './page.repository.js';
+
+@Injectable()
+export class TypeormPagesRepository implements PagesRepository {
+  constructor(
+    @InjectRepository(Page) private readonly repository: Repository<Page>,
+    @InjectRepository(PageVersion)
+    private readonly versionRepository: Repository<PageVersion>,
+    private readonly dataSource: DataSource,
+  ) {}
+
+  findById(id: string): Promise<Page | null> {
+    return this.repository.findOneBy({ id });
+  }
+
+  findVersionById(id: string): Promise<PageVersion | null> {
+    return this.versionRepository.findOneBy({ id });
+  }
+
+  findBySlugAndParent(
+    slug: string,
+    parentId: string | null,
+  ): Promise<Page | null> {
+    return this.repository.findOneBy({
+      slug,
+      parentId: parentId === null ? IsNull() : parentId,
+    });
+  }
+
+  findAll(): Promise<Page[]> {
+    return this.repository.find({ order: { createdAt: 'ASC' } });
+  }
+
+  async createWithFirstVersion(
+    input: CreatePageWithFirstVersionInput,
+  ): Promise<{ page: Page; version: PageVersion }> {
+    return this.dataSource.transaction(async (manager) => {
+      const page = await manager.save(
+        manager.create(Page, {
+          slug: input.slug,
+          title: input.title,
+          parentId: input.parentId,
+          visibility: input.visibility,
+          createdById: input.createdById,
+        }),
+      );
+
+      const version = await manager.save(
+        manager.create(PageVersion, {
+          pageId: page.id,
+          content: input.content,
+          title: input.title,
+          authorId: input.createdById,
+        }),
+      );
+
+      page.currentVersionId = version.id;
+      await manager.save(page);
+
+      return { page, version };
+    });
+  }
+
+  async updateWithNewVersion(
+    input: UpdatePageWithNewVersionInput,
+  ): Promise<{ page: Page; version: PageVersion }> {
+    return this.dataSource.transaction(async (manager) => {
+      const version = await manager.save(
+        manager.create(PageVersion, {
+          pageId: input.page.id,
+          content: input.content,
+          title: input.title,
+          authorId: input.authorId,
+          changeSummary: input.changeSummary,
+        }),
+      );
+
+      const page = await manager.save(
+        manager.merge(Page, input.page, {
+          title: input.title,
+          currentVersionId: version.id,
+        }),
+      );
+
+      return { page, version };
+    });
+  }
+
+  async updateParent(page: Page, newParentId: string | null): Promise<Page> {
+    const updated = this.repository.merge(page, { parentId: newParentId });
+    return this.repository.save(updated);
+  }
+
+  findChildren(parentId: string): Promise<Page[]> {
+    return this.repository.findBy({ parentId });
+  }
+
+  async softDelete(id: string): Promise<void> {
+    await this.repository.softDelete(id);
+  }
+
+  async updatePublishStatus(page: Page, isPublished: boolean): Promise<Page> {
+    const updated = this.repository.merge(page, { isPublished });
+    return this.repository.save(updated);
+  }
+}

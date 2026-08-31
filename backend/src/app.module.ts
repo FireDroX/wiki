@@ -1,17 +1,21 @@
 import { Logger, Module, OnModuleInit } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { AuthModule } from './auth/auth.module.js';
 import { JwtAuthModule } from './common/jwt-auth.module.js';
 import { HealthModule } from './health/health.module.js';
+import { PagesModule } from './pages/pages.module.js';
 import { StorageModule } from './storage/storage.module.js';
 import { UsersModule } from './users/users.module.js';
+import { VersionsModule } from './versions/versions.module.js';
 import { typeOrmConfig } from './config/typeorm.config.js';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    EventEmitterModule.forRoot(),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: typeOrmConfig,
@@ -21,6 +25,8 @@ import { typeOrmConfig } from './config/typeorm.config.js';
     StorageModule,
     UsersModule,
     AuthModule,
+    PagesModule,
+    VersionsModule,
   ],
 })
 export class AppModule implements OnModuleInit {
