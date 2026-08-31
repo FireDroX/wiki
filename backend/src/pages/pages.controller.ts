@@ -1,12 +1,14 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
   Patch,
   Post,
+  Query,
   UseFilters,
   UseGuards,
 } from '@nestjs/common';
@@ -18,6 +20,7 @@ import { OptionalJwtAuthGuard } from '../common/guards/optional-jwt-auth.guard.j
 import { RolesGuard } from '../common/guards/roles.guard.js';
 import type { AuthenticatedUser } from '../common/strategies/jwt.strategy.js';
 import { CreatePageDto } from './dto/in/create-page.dto.js';
+import { DeletePageQueryDto } from './dto/in/delete-page-query.dto.js';
 import { MovePageDto } from './dto/in/move-page.dto.js';
 import { UpdatePageDto } from './dto/in/update-page.dto.js';
 import { PageDetailResponseDto } from './dto/out/page-detail-response.dto.js';
@@ -70,6 +73,17 @@ export class PagesController {
   ): Promise<ResponseDto<PageResponseDto>> {
     const { page, version } = await this.pagesService.movePage(id, dto);
     return PageMapper.toResponse(page, version);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('editor', 'admin')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(
+    @Param('id') id: string,
+    @Query() query: DeletePageQueryDto,
+  ): Promise<void> {
+    await this.pagesService.deletePage(id, query);
   }
 
   @Get('tree')

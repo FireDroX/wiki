@@ -99,4 +99,12 @@ export class TypeormPagesRepository implements PagesRepository {
     const updated = this.repository.merge(page, { parentId: newParentId });
     return this.repository.save(updated);
   }
+
+  findChildren(parentId: string): Promise<Page[]> {
+    return this.repository.findBy({ parentId });
+  }
+
+  async softDelete(id: string): Promise<void> {
+    await this.repository.softDelete(id);
+  }
 }

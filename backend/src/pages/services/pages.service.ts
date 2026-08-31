@@ -1,7 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { QueryFailedError } from 'typeorm';
 import type { AuthenticatedUser } from '../../common/strategies/jwt.strategy.js';
 import { CircularReferenceException } from '../../common/exceptions/pages/circular-reference.exception.js';
 import { PageAccessForbiddenException } from '../../common/exceptions/pages/page-access-forbidden.exception.js';
+import { PageHasChildrenException } from '../../common/exceptions/pages/page-has-children.exception.js';
 import { PageNotFoundException } from '../../common/exceptions/pages/page-not-found.exception.js';
 import { ParentPageNotFoundException } from '../../common/exceptions/pages/parent-page-not-found.exception.js';
 import { SlugAlreadyExistsException } from '../../common/exceptions/pages/slug-already-exists.exception.js';
@@ -14,6 +16,7 @@ import {
   UUID_REGEX,
 } from '../../common/variables.global.js';
 import { CreatePageDto } from '../dto/in/create-page.dto.js';
+import { DeletePageQueryDto } from '../dto/in/delete-page-query.dto.js';
 import { MovePageDto } from '../dto/in/move-page.dto.js';
 import { UpdatePageDto } from '../dto/in/update-page.dto.js';
 import { PageTreeNodeDto } from '../dto/out/page-tree-node.dto.js';
@@ -21,6 +24,8 @@ import { PageVersion } from '../entities/page-version.entity.js';
 import { Page, PAGE_VISIBILITIES } from '../entities/page.entity.js';
 import { PageTreeMapper } from '../mapper/page-tree.mapper.js';
 import type { PagesRepository } from '../persistence/page.repository.js';
+
+const MYSQL_DUPLICATE_ENTRY_CODE = 'ER_DUP_ENTRY';
 
 @Injectable()
 export class PagesService {
@@ -51,14 +56,21 @@ export class PagesService {
       throw new SlugAlreadyExistsException();
     }
 
-    return this.pagesRepository.createWithFirstVersion({
-      slug: dto.slug,
-      title: dto.title,
-      content: dto.content,
-      parentId,
-      visibility: dto.visibility,
-      createdById,
-    });
+    try {
+      return await this.pagesRepository.createWithFirstVersion({
+        slug: dto.slug,
+        title: dto.title,
+        content: dto.content,
+        parentId,
+        visibility: dto.visibility,
+        createdById,
+      });
+    } catch (error) {
+      if (PagesService.isDuplicateSlugError(error)) {
+        throw new SlugAlreadyExistsException();
+      }
+      throw error;
+    }
   }
 
   async getTree(currentUser?: AuthenticatedUser): Promise<PageTreeNodeDto[]> {
@@ -183,9 +195,55 @@ export class PagesService {
       throw new SlugAlreadyExistsException();
     }
 
-    const moved = await this.pagesRepository.updateParent(page, newParentId);
+    try {
+      const moved = await this.pagesRepository.updateParent(page, newParentId);
+      return { page: moved, version: currentVersion };
+    } catch (error) {
+      if (PagesService.isDuplicateSlugError(error)) {
+        throw new SlugAlreadyExistsException();
+      }
+      throw error;
+    }
+  }
 
-    return { page: moved, version: currentVersion };
+  async deletePage(id: string, query: DeletePageQueryDto): Promise<void> {
+    const page = await this.pagesRepository.findById(id);
+    if (!page) {
+      throw new PageNotFoundException();
+    }
+
+    const cascade = PagesService.parseCascade(query.cascade);
+    const children = await this.pagesRepository.findChildren(id);
+
+    if (children.length > 0 && !cascade) {
+      throw new PageHasChildrenException();
+    }
+
+    if (cascade) {
+      await this.deleteRecursive(id);
+    } else {
+      await this.pagesRepository.softDelete(id);
+    }
+  }
+
+  private async deleteRecursive(id: string): Promise<void> {
+    const children = await this.pagesRepository.findChildren(id);
+    for (const child of children) {
+      await this.deleteRecursive(child.id);
+    }
+    await this.pagesRepository.softDelete(id);
+  }
+
+  private static parseCascade(raw?: string): boolean {
+    return raw === 'true';
+  }
+
+  private static isDuplicateSlugError(error: unknown): boolean {
+    return (
+      error instanceof QueryFailedError &&
+      (error as { driverError?: { code?: string } }).driverError?.code ===
+        MYSQL_DUPLICATE_ENTRY_CODE
+    );
   }
 
   private static hasFullAccess(currentUser?: AuthenticatedUser): boolean {

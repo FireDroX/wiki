@@ -33,4 +33,6 @@ export interface PagesRepository {
     input: UpdatePageWithNewVersionInput,
   ): Promise<{ page: Page; version: PageVersion }>;
   updateParent(page: Page, newParentId: string | null): Promise<Page>;
+  findChildren(parentId: string): Promise<Page[]>;
+  softDelete(id: string): Promise<void>;
 }
