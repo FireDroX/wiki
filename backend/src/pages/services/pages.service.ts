@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import type { AuthenticatedUser } from '../../common/strategies/jwt.strategy.js';
 import { ParentPageNotFoundException } from '../../common/exceptions/pages/parent-page-not-found.exception.js';
 import { SlugAlreadyExistsException } from '../../common/exceptions/pages/slug-already-exists.exception.js';
 import { ValidationException } from '../../common/exceptions/validation.exception.js';
@@ -8,8 +9,10 @@ import {
   TITLE_MAX_LENGTH,
 } from '../../common/variables.global.js';
 import { CreatePageDto } from '../dto/in/create-page.dto.js';
+import { PageTreeNodeDto } from '../dto/out/page-tree-node.dto.js';
 import { PageVersion } from '../entities/page-version.entity.js';
 import { Page, PAGE_VISIBILITIES } from '../entities/page.entity.js';
+import { PageTreeMapper } from '../mapper/page-tree.mapper.js';
 import type { PagesRepository } from '../persistence/page.repository.js';
 
 @Injectable()
@@ -49,6 +52,19 @@ export class PagesService {
       visibility: dto.visibility,
       createdById,
     });
+  }
+
+  async getTree(currentUser?: AuthenticatedUser): Promise<PageTreeNodeDto[]> {
+    const pages = await this.pagesRepository.findAll();
+    const canSeeAll =
+      currentUser?.role === 'admin' || currentUser?.role === 'editor';
+    const visible = canSeeAll
+      ? pages
+      : pages.filter(
+          (page) => page.visibility === 'public' && page.isPublished,
+        );
+
+    return PageTreeMapper.buildTree(visible);
   }
 
   private validateCreatePage(dto: CreatePageDto): void {

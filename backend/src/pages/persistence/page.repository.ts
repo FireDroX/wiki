@@ -16,6 +16,7 @@ export interface PagesRepository {
     slug: string,
     parentId: string | null,
   ): Promise<Page | null>;
+  findAll(): Promise<Page[]>;
   createWithFirstVersion(
     input: CreatePageWithFirstVersionInput,
   ): Promise<{ page: Page; version: PageVersion }>;

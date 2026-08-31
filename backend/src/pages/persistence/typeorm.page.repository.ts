@@ -29,6 +29,10 @@ export class TypeormPagesRepository implements PagesRepository {
     });
   }
 
+  findAll(): Promise<Page[]> {
+    return this.repository.find({ order: { createdAt: 'ASC' } });
+  }
+
   async createWithFirstVersion(
     input: CreatePageWithFirstVersionInput,
   ): Promise<{ page: Page; version: PageVersion }> {
