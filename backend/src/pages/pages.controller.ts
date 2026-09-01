@@ -14,11 +14,16 @@ import {
 } from '@nestjs/common';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
+import { PaginatedResponseDto } from '../common/dto/paginated-response.dto.js';
 import { ResponseDto } from '../common/dto/response.dto.js';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
 import { OptionalJwtAuthGuard } from '../common/guards/optional-jwt-auth.guard.js';
 import { RolesGuard } from '../common/guards/roles.guard.js';
 import type { AuthenticatedUser } from '../common/strategies/jwt.strategy.js';
+import { ListVersionsQueryDto } from '../versions/dto/in/list-versions-query.dto.js';
+import { VersionSummaryResponseDto } from '../versions/dto/out/version-summary-response.dto.js';
+import { VersionMapper } from '../versions/mapper/version.mapper.js';
+import { VersionsService } from '../versions/services/versions.service.js';
 import { CreatePageDto } from './dto/in/create-page.dto.js';
 import { DeletePageQueryDto } from './dto/in/delete-page-query.dto.js';
 import { MovePageDto } from './dto/in/move-page.dto.js';
@@ -35,7 +40,10 @@ import { PagesService } from './services/pages.service.js';
 @Controller('pages')
 @UseFilters(PagesExceptionFilter)
 export class PagesController {
-  constructor(private readonly pagesService: PagesService) {}
+  constructor(
+    private readonly pagesService: PagesService,
+    private readonly versionsService: VersionsService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -105,6 +113,19 @@ export class PagesController {
   ): Promise<ResponseDto<PageTreeNodeDto[]>> {
     const tree = await this.pagesService.getTree(user);
     return new ResponseDto(tree);
+  }
+
+  @Get(':id/versions')
+  @UseGuards(OptionalJwtAuthGuard)
+  async listVersions(
+    @Param('id') id: string,
+    @Query() query: ListVersionsQueryDto,
+    @CurrentUser() user?: AuthenticatedUser,
+  ): Promise<ResponseDto<PaginatedResponseDto<VersionSummaryResponseDto>>> {
+    await this.pagesService.getByIdOrFail(id, user);
+    const { items, total, page, limit } =
+      await this.versionsService.findAllByPage(id, query);
+    return VersionMapper.toPaginatedResponse(items, total, page, limit);
   }
 
   @Get('*path')

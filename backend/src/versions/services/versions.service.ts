@@ -1,10 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { PaginatedResponseDto } from '../../common/dto/paginated-response.dto.js';
 import { ValidationException } from '../../common/exceptions/validation.exception.js';
 import {
   CHANGE_SUMMARY_MAX_LENGTH,
+  DEFAULT_LIMIT,
+  DEFAULT_PAGE,
+  MAX_LIMIT,
   TITLE_MAX_LENGTH,
 } from '../../common/variables.global.js';
 import { PageVersion } from '../../pages/entities/page-version.entity.js';
+import { ListVersionsQueryDto } from '../dto/in/list-versions-query.dto.js';
 import type { VersionsRepository } from '../persistence/version.repository.js';
 
 @Injectable()
@@ -13,6 +18,20 @@ export class VersionsService {
     @Inject('VersionsRepository')
     private readonly versionsRepository: VersionsRepository,
   ) {}
+
+  async findAllByPage(
+    pageId: string,
+    query: ListVersionsQueryDto,
+  ): Promise<PaginatedResponseDto<PageVersion>> {
+    const page = VersionsService.parsePage(query.page);
+    const limit = VersionsService.parseLimit(query.limit);
+    const { items, total } = await this.versionsRepository.findAllByPageId(
+      pageId,
+      page,
+      limit,
+    );
+    return { items, total, page, limit };
+  }
 
   createVersion(
     pageId: string,
@@ -61,5 +80,18 @@ export class VersionsService {
     if (errors.length > 0) {
       throw new ValidationException(errors.join(', '));
     }
+  }
+
+  private static parsePage(raw?: string): number {
+    const parsed = Number(raw);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : DEFAULT_PAGE;
+  }
+
+  private static parseLimit(raw?: string): number {
+    const parsed = Number(raw);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      return DEFAULT_LIMIT;
+    }
+    return Math.min(parsed, MAX_LIMIT);
   }
 }

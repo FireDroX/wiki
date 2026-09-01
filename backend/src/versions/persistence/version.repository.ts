@@ -8,6 +8,16 @@ export interface CreateVersionInput {
   changeSummary: string | null;
 }
 
+export interface FindAllByPageResult {
+  items: PageVersion[];
+  total: number;
+}
+
 export interface VersionsRepository {
   create(input: CreateVersionInput): Promise<PageVersion>;
+  findAllByPageId(
+    pageId: string,
+    page: number,
+    limit: number,
+  ): Promise<FindAllByPageResult>;
 }
