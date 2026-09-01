@@ -19,6 +19,6 @@ export function typeOrmConfig(config: ConfigService): TypeOrmModuleOptions {
     database: config.get<string>('DB_DATABASE'),
     synchronize: false,
     entities: [`${import.meta.dirname}/../**/*.entity.js`],
-    migrations: [`${import.meta.dirname}/../migrations/*.js`],
+    migrations: [`${import.meta.dirname}/../database/migrations/*.js`],
   };
 }

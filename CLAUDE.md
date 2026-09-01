@@ -42,6 +42,7 @@ pnpm run start:prod          # node dist/main (build requis avant)
 pnpm run migration:run       # applique les migrations TypeORM en attente
 pnpm run migration:revert    # annule la dernière migration
 pnpm run migration:generate  # diff entities vs DB (via tsx, hors contexte Nest)
+pnpm run seed:dev            # peuple la DB locale de données factices (dev uniquement)
 ```
 
 Config : trois fichiers `.env` séparés (chacun avec un `.env.example` à copier) :
@@ -79,7 +80,9 @@ Chaque module suit le même découpage en couches — pour une nouvelle feature,
 
 Auth : JWT (access + refresh token), retournés dans le **corps** de la réponse par `POST /auth/login`/`POST /auth/refresh` (pas de cookie `httpOnly`) — c'est le contrat déjà fixé par le backlog (README §7). `JwtAuthGuard`/`RolesGuard`/`@Roles(...)` restent à implémenter (BE-014).
 
-Base de données : MySQL 8 via `@nestjs/typeorm`, tous les changements de schéma passent par des migrations dans `src/migrations/` (SQL brut via `queryRunner.query`, pas le query builder — voir les migrations existantes). `src/config/data-source.ts` est un `DataSource` standalone séparé utilisé seulement par le CLI TypeORM (les migrations tournent hors du contexte Nest, contre `src/**/*.entity.ts` directement, pas `dist/`).
+Base de données : MySQL 8 via `@nestjs/typeorm`, tous les changements de schéma passent par des migrations dans `src/database/migrations/` (SQL brut via `queryRunner.query`, pas le query builder — voir les migrations existantes). `src/config/data-source.ts` est un `DataSource` standalone séparé utilisé seulement par le CLI TypeORM (les migrations tournent hors du contexte Nest, contre `src/**/*.entity.ts` directement, pas `dist/`).
+
+`src/database/dev-seed.ts` peuple la DB locale avec un jeu de données factices (un user admin + une arborescence de pages sur 3 niveaux) via `pnpm run seed:dev` — script `tsx` standalone comme `data-source.ts`, hors contexte Nest, idempotent (skip ce qui existe déjà par email/slug). Usage dev uniquement, jamais exécuté en prod/CI.
 
 Stockage médias : Minio (S3-compatible) via `storage/services/storage.service.ts`, bucket auto-créé au démarrage (`onModuleInit`) si absent.
 

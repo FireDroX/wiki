@@ -1,5 +1,6 @@
 import { Link } from 'react-router'
 import { Sheet, SheetContent, SheetTitle } from '#components/ui/sheet'
+import { PageTree } from '#components/layout/PageTree'
 import { cn } from '#lib/utils'
 
 function SidebarNav() {
@@ -11,6 +12,7 @@ function SidebarNav() {
       >
         Accueil
       </Link>
+      <PageTree />
     </nav>
   )
 }
