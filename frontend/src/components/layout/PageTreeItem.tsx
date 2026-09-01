@@ -6,18 +6,20 @@ import type { PageTreeNode } from '#api/pages'
 
 interface PageTreeItemProps {
   node: PageTreeNode
+  parentPath: string[]
   activeSlug?: string
   isExpanded: (id: string) => boolean
   onToggle: (id: string) => void
 }
 
-export function PageTreeItem({ node, activeSlug, isExpanded, onToggle }: PageTreeItemProps) {
+export function PageTreeItem({ node, parentPath, activeSlug, isExpanded, onToggle }: PageTreeItemProps) {
   const isActive = node.slug === activeSlug
   const hasChildren = node.children.length > 0
+  const fullPath = [...parentPath, node.slug]
 
   const link = (
     <Link
-      to={`/pages/${node.slug}`}
+      to={`/pages/${fullPath.join('/')}`}
       className={cn(
         'flex-1 truncate rounded-md px-2 py-1.5 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
         isActive && 'bg-sidebar-accent font-medium text-sidebar-accent-foreground',
@@ -47,6 +49,7 @@ export function PageTreeItem({ node, activeSlug, isExpanded, onToggle }: PageTre
           <PageTreeItem
             key={child.id}
             node={child}
+            parentPath={fullPath}
             activeSlug={activeSlug}
             isExpanded={isExpanded}
             onToggle={onToggle}

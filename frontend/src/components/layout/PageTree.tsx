@@ -5,7 +5,8 @@ import { PageTreeItem } from '#components/layout/PageTreeItem'
 import { findPathToNode } from '#utils/page-tree'
 
 export function PageTree() {
-  const { slug } = useParams<{ slug?: string }>()
+  const params = useParams()
+  const slug = params['*']?.split('/').filter(Boolean).pop()
   const { tree, status } = usePageTree()
   const [overrides, setOverrides] = useState<Map<string, boolean>>(new Map())
 
@@ -40,7 +41,14 @@ export function PageTree() {
   return (
     <div className="flex flex-col gap-0.5">
       {tree.map((node) => (
-        <PageTreeItem key={node.id} node={node} activeSlug={slug} isExpanded={isExpanded} onToggle={toggle} />
+        <PageTreeItem
+          key={node.id}
+          node={node}
+          parentPath={[]}
+          activeSlug={slug}
+          isExpanded={isExpanded}
+          onToggle={toggle}
+        />
       ))}
     </div>
   )

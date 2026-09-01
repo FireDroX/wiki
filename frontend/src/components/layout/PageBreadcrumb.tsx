@@ -38,16 +38,22 @@ export function PageBreadcrumb({ title, parentId }: PageBreadcrumbProps) {
             <Link to="/">Accueil</Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
-        {ancestors.map((ancestor) => (
-          <Fragment key={ancestor.id}>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to={`/pages/${ancestor.slug}`}>{ancestor.title}</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-          </Fragment>
-        ))}
+        {ancestors.map((ancestor, index) => {
+          const path = ancestors
+            .slice(0, index + 1)
+            .map((node) => node.slug)
+            .join('/')
+          return (
+            <Fragment key={ancestor.id}>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to={`/pages/${path}`}>{ancestor.title}</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+            </Fragment>
+          )
+        })}
         <BreadcrumbSeparator />
         <BreadcrumbItem>
           <BreadcrumbPage>{title}</BreadcrumbPage>

@@ -12,6 +12,7 @@ const DEV_ADMIN_PASSWORD = 'password123';
 interface PageSeed {
   slug: string;
   title: string;
+  content?: string;
   children?: PageSeed[];
 }
 
@@ -19,27 +20,108 @@ const PAGE_TREE_SEED: PageSeed[] = [
   {
     slug: 'documentation',
     title: 'Documentation',
+    content: `# Documentation
+
+Bienvenue dans la documentation d'OpenWiki. Utilisez l'arborescence à gauche pour naviguer entre les sections.`,
     children: [
       {
         slug: 'guide-demarrage',
         title: 'Guide de démarrage',
+        content: `# Guide de démarrage
+
+Ce guide couvre l'installation et la configuration initiale d'OpenWiki.`,
         children: [
-          { slug: 'installation', title: 'Installation' },
-          { slug: 'configuration', title: 'Configuration' },
+          {
+            slug: 'installation',
+            title: 'Installation',
+            content: `# Installation
+
+## Prérequis
+
+- Node.js 20+
+- Docker (pour MySQL et Minio)
+
+## Étapes
+
+1. Cloner le dépôt
+2. Installer les dépendances :
+
+\`\`\`bash
+pnpm install
+\`\`\`
+
+3. Démarrer les services :
+
+\`\`\`bash
+docker compose up -d
+\`\`\`
+
+![Aperçu du tableau de bord](https://placehold.co/480x240?text=Dashboard)`,
+          },
+          {
+            slug: 'configuration',
+            title: 'Configuration',
+            content: `# Configuration
+
+La configuration se fait via trois fichiers \`.env\` distincts (racine, \`backend/\`, \`frontend/\`), chacun avec un \`.env.example\` à copier.`,
+          },
         ],
       },
       {
         slug: 'reference-api',
         title: 'Référence API',
+        content: `# Référence API
+
+Cette section documente l'API REST exposée par le backend.`,
         children: [
-          { slug: 'authentification', title: 'Authentification' },
-          { slug: 'endpoints', title: 'Endpoints' },
+          {
+            slug: 'authentification',
+            title: 'Authentification',
+            content: `# Authentification
+
+L'API utilise des tokens JWT (access + refresh).
+
+\`\`\`js
+const response = await fetch('/api/auth/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ email, password }),
+})
+\`\`\``,
+          },
+          {
+            slug: 'endpoints',
+            title: 'Endpoints',
+            content: `# Endpoints
+
+| Méthode | Route | Description |
+| --- | --- | --- |
+| GET | /pages/tree | Arborescence des pages |
+| GET | /pages/:slug | Détail d'une page |
+| POST | /pages | Créer une page |`,
+          },
         ],
       },
     ],
   },
-  { slug: 'notes-de-version', title: 'Notes de version' },
-  { slug: 'faq', title: 'FAQ' },
+  {
+    slug: 'notes-de-version',
+    title: 'Notes de version',
+    content: `# Notes de version
+
+## 0.5.0
+
+- Navigation et arborescence des pages.`,
+  },
+  {
+    slug: 'faq',
+    title: 'FAQ',
+    content: `# FAQ
+
+**Comment créer une page ?**
+
+Utilisez le bouton "Nouvelle page" depuis la barre latérale.`,
+  },
 ];
 
 const dataSource = new DataSource({
@@ -104,7 +186,7 @@ async function seedPage(
       versionRepository.create({
         pageId: page.id,
         title: seed.title,
-        content: `# ${seed.title}`,
+        content: seed.content ?? `# ${seed.title}`,
         authorId,
       }),
     );
