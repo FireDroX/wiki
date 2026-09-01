@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PaginatedResponseDto } from '../../common/dto/paginated-response.dto.js';
+import { VersionNotFoundException } from '../../common/exceptions/pages/version-not-found.exception.js';
 import { ValidationException } from '../../common/exceptions/validation.exception.js';
 import {
   CHANGE_SUMMARY_MAX_LENGTH,
@@ -31,6 +32,17 @@ export class VersionsService {
       limit,
     );
     return { items, total, page, limit };
+  }
+
+  async findOne(pageId: string, versionId: string): Promise<PageVersion> {
+    const version = await this.versionsRepository.findByIdAndPageId(
+      versionId,
+      pageId,
+    );
+    if (!version) {
+      throw new VersionNotFoundException();
+    }
+    return version;
   }
 
   createVersion(

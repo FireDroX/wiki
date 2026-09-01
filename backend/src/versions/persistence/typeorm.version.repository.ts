@@ -33,4 +33,8 @@ export class TypeormVersionsRepository implements VersionsRepository {
     });
     return { items, total };
   }
+
+  findByIdAndPageId(id: string, pageId: string): Promise<PageVersion | null> {
+    return this.repository.findOne({ where: { id, pageId } });
+  }
 }

@@ -20,4 +20,5 @@ export interface VersionsRepository {
     page: number,
     limit: number,
   ): Promise<FindAllByPageResult>;
+  findByIdAndPageId(id: string, pageId: string): Promise<PageVersion | null>;
 }

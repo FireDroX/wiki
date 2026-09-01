@@ -112,6 +112,13 @@ const response = await fetch('/api/auth/login', {
 ## Version 0.6
 
 <details>
+<summary>0.6.3 — 2026-09-01</summary>
+
+- \`GET /pages/:id/versions/:versionId\` : détail d'une version précise, vérifie qu'elle appartient bien à la page.
+
+</details>
+
+<details>
 <summary>0.6.2 — 2026-09-01</summary>
 
 - \`GET /pages/:id/versions\` : historique paginé des versions d'une page, droits alignés sur sa visibilité.

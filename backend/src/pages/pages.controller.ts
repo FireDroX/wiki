@@ -21,6 +21,7 @@ import { OptionalJwtAuthGuard } from '../common/guards/optional-jwt-auth.guard.j
 import { RolesGuard } from '../common/guards/roles.guard.js';
 import type { AuthenticatedUser } from '../common/strategies/jwt.strategy.js';
 import { ListVersionsQueryDto } from '../versions/dto/in/list-versions-query.dto.js';
+import { VersionDetailResponseDto } from '../versions/dto/out/version-detail-response.dto.js';
 import { VersionSummaryResponseDto } from '../versions/dto/out/version-summary-response.dto.js';
 import { VersionMapper } from '../versions/mapper/version.mapper.js';
 import { VersionsService } from '../versions/services/versions.service.js';
@@ -126,6 +127,18 @@ export class PagesController {
     const { items, total, page, limit } =
       await this.versionsService.findAllByPage(id, query);
     return VersionMapper.toPaginatedResponse(items, total, page, limit);
+  }
+
+  @Get(':id/versions/:versionId')
+  @UseGuards(OptionalJwtAuthGuard)
+  async getVersion(
+    @Param('id') id: string,
+    @Param('versionId') versionId: string,
+    @CurrentUser() user?: AuthenticatedUser,
+  ): Promise<ResponseDto<VersionDetailResponseDto>> {
+    await this.pagesService.getByIdOrFail(id, user);
+    const version = await this.versionsService.findOne(id, versionId);
+    return VersionMapper.toDetailResponse(version);
   }
 
   @Get('*path')
