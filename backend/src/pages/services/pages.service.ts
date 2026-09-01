@@ -139,6 +139,26 @@ export class PagesService {
     return page;
   }
 
+  async createNewVersionFromContent(
+    pageId: string,
+    content: string,
+    authorId: string,
+    changeSummary: string | null,
+  ): Promise<{ page: Page; version: PageVersion }> {
+    const page = await this.pagesRepository.findById(pageId);
+    if (!page || !page.currentVersionId) {
+      throw new PageNotFoundException();
+    }
+
+    return this.pagesRepository.updateWithNewVersion({
+      page,
+      title: page.title,
+      content,
+      changeSummary,
+      authorId,
+    });
+  }
+
   async updatePage(
     id: string,
     dto: UpdatePageDto,

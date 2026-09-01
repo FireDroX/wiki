@@ -16,6 +16,8 @@ import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { PaginatedResponseDto } from '../common/dto/paginated-response.dto.js';
 import { ResponseDto } from '../common/dto/response.dto.js';
+import { PageNotFoundException } from '../common/exceptions/pages/page-not-found.exception.js';
+import { VersionNotFoundException } from '../common/exceptions/pages/version-not-found.exception.js';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
 import { OptionalJwtAuthGuard } from '../common/guards/optional-jwt-auth.guard.js';
 import { RolesGuard } from '../common/guards/roles.guard.js';
@@ -154,6 +156,34 @@ export class PagesController {
     await this.pagesService.getByIdOrFail(id, user);
     const diff = await this.versionsService.computeDiff(id, dto.from, dto.to);
     return new ResponseDto(diff);
+  }
+
+  @Post(':id/versions/:versionId/restore')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('editor', 'admin')
+  @HttpCode(HttpStatus.CREATED)
+  async restoreVersion(
+    @Param('id') id: string,
+    @Param('versionId') versionId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<ResponseDto<PageUpdateResponseDto>> {
+    const targetVersion = await this.versionsService.findOne(id, versionId);
+
+    try {
+      const { page, version } =
+        await this.pagesService.createNewVersionFromContent(
+          id,
+          targetVersion.content,
+          user.id,
+          `Restored from version ${versionId}`,
+        );
+      return PageMapper.toUpdateResponse(page, version);
+    } catch (error) {
+      if (error instanceof PageNotFoundException) {
+        throw new VersionNotFoundException();
+      }
+      throw error;
+    }
   }
 
   @Get('*path')

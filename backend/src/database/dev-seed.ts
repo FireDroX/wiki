@@ -112,6 +112,13 @@ const response = await fetch('/api/auth/login', {
 ## Version 0.6
 
 <details>
+<summary>0.6.5 — 2026-09-01</summary>
+
+- \`POST /pages/:id/versions/:versionId/restore\` : rollback vers une ancienne version (crée une nouvelle version, l'historique reste intact).
+
+</details>
+
+<details>
 <summary>0.6.4 — 2026-09-01</summary>
 
 - \`POST /pages/:id/versions/diff\` : diff ligne à ligne entre deux versions (\`from\`/\`to\` en body plutôt qu'en query).
