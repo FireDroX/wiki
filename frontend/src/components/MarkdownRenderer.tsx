@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
+import rehypeRaw from 'rehype-raw'
+import rehypeSanitize from 'rehype-sanitize'
 import remarkGfm from 'remark-gfm'
 import { cn } from '#lib/utils'
 
@@ -60,6 +62,9 @@ const MARKDOWN_BODY_CLASSES = cn(
   '[&_hr]:border-border',
   '[&_img]:max-w-full [&_img]:rounded-md',
   '[&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-border [&_th]:p-2 [&_td]:border [&_td]:border-border [&_td]:p-2',
+  '[&_details]:mt-2 [&_details]:rounded-md [&_details]:border [&_details]:border-border [&_details]:p-3',
+  '[&_summary]:cursor-pointer [&_summary]:select-none [&_summary]:font-medium',
+  '[&_details[open]_summary]:mb-3',
 )
 
 export function MarkdownRenderer({ content }: MarkdownRendererProps) {
@@ -67,6 +72,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
     <div className={MARKDOWN_BODY_CLASSES}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeRaw, rehypeSanitize]}
         components={{
           pre({ children }) {
             return <>{children}</>

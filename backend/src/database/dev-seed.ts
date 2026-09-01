@@ -109,41 +109,84 @@ const response = await fetch('/api/auth/login', {
     title: 'Notes de version',
     content: `# Notes de version
 
-## 0.5.4 — 2026-09-01
+## Version 0.6
+
+<details>
+<summary>0.6.1 — 2026-09-01</summary>
+
+- Entité \`PageVersion\` + migration : index sur \`pageId\` pour accélérer l'historique des versions d'une page.
+
+</details>
+
+## Version 0.5
+
+<details>
+<summary>0.5.4 — 2026-09-01</summary>
 
 - Icônes de dossier/page dans l'arborescence, alignées façon VS Code (chevron avant l'icône).
 - En-tête pleine largeur avec logo OpenWiki.
 - Barre de filtre et bouton "Nouvelle page" (aperçu) dans la barre latérale.
 
-## 0.5.3 — 2026-09-01
+</details>
+
+<details>
+<summary>0.5.3 — 2026-09-01</summary>
 
 - Page de visualisation d'une page : rendu markdown, coloration syntaxique des blocs de code, images.
 - Résolution par chemin complet (arborescence), pas par simple slug.
 - États de chargement, page introuvable (404) et accès refusé (403).
 
-## 0.5.2 — 2026-09-01
+</details>
+
+<details>
+<summary>0.5.2 — 2026-09-01</summary>
 
 - Fournisseur de contexte de l'arborescence des pages et composant fil d'ariane (breadcrumb).
 
-## 0.5.1 — 2026-09-01
+</details>
+
+<details>
+<summary>0.5.1 — 2026-09-01</summary>
 
 - Script de seed de développement et composants d'arborescence des pages côté frontend.
 
-## 0.4.8 — 2026-09-01
+</details>
+
+## Version 0.4
+
+<details>
+<summary>0.4.8 — 2026-09-01</summary>
 
 - Module de gestion des pages : entité, migration, création, modification, déplacement, suppression (cascade), publication et arborescence.
 
-## 0.3.5 — 2026-08-30
+</details>
+
+## Version 0.3
+
+<details>
+<summary>0.3.5 — 2026-08-30</summary>
 
 - Initialisation du frontend (React, Vite, TypeScript) et parcours d'authentification (connexion, inscription, cookies).
 
-## 0.2.8 — 2026-08-30
+</details>
+
+## Version 0.2
+
+<details>
+<summary>0.2.8 — 2026-08-30</summary>
 
 - Authentification et gestion des utilisateurs : inscription, connexion JWT, rafraîchissement de token, profils, pagination.
 
-## 0.1.4 — 2026-08-29
+</details>
 
-- Mise en place du monorepo pnpm (backend/frontend), Docker Compose (MySQL + Minio) et intégration du stockage d'objets.`,
+## Version 0.1
+
+<details>
+<summary>0.1.4 — 2026-08-29</summary>
+
+- Mise en place du monorepo pnpm (backend/frontend), Docker Compose (MySQL + Minio) et intégration du stockage d'objets.
+
+</details>`,
   },
   {
     slug: 'faq',
