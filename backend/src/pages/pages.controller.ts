@@ -20,7 +20,9 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
 import { OptionalJwtAuthGuard } from '../common/guards/optional-jwt-auth.guard.js';
 import { RolesGuard } from '../common/guards/roles.guard.js';
 import type { AuthenticatedUser } from '../common/strategies/jwt.strategy.js';
+import { DiffVersionsDto } from '../versions/dto/in/diff-versions.dto.js';
 import { ListVersionsQueryDto } from '../versions/dto/in/list-versions-query.dto.js';
+import { DiffResponseDto } from '../versions/dto/out/diff-response.dto.js';
 import { VersionDetailResponseDto } from '../versions/dto/out/version-detail-response.dto.js';
 import { VersionSummaryResponseDto } from '../versions/dto/out/version-summary-response.dto.js';
 import { VersionMapper } from '../versions/mapper/version.mapper.js';
@@ -139,6 +141,19 @@ export class PagesController {
     await this.pagesService.getByIdOrFail(id, user);
     const version = await this.versionsService.findOne(id, versionId);
     return VersionMapper.toDetailResponse(version);
+  }
+
+  @Post(':id/versions/diff')
+  @UseGuards(OptionalJwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async diffVersions(
+    @Param('id') id: string,
+    @Body() dto: DiffVersionsDto,
+    @CurrentUser() user?: AuthenticatedUser,
+  ): Promise<ResponseDto<DiffResponseDto>> {
+    await this.pagesService.getByIdOrFail(id, user);
+    const diff = await this.versionsService.computeDiff(id, dto.from, dto.to);
+    return new ResponseDto(diff);
   }
 
   @Get('*path')
