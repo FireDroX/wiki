@@ -13,7 +13,7 @@ Ce dépôt a un graphe de connaissance à `graphify-out/` :
 
 ## Projet
 
-**OpenWiki** — wiki collaboratif auto-hébergé (clone de WikiJS). pnpm workspace avec deux packages à la racine : `backend/` (NestJS + TypeORM + MySQL 8) et `frontend/` (React + TypeScript + Vite — scaffoldé, TailwindCSS/shadcn-ui restent à configurer, voir EPIC-10/FE-002). `README.md` est le cahier des charges complet et le backlog (voir §6/§7). La branche courante (`EPIC-10`) correspond au 3ème epic réellement implémenté du backlog (Frontend : Setup & Layout) — le numéro de version ne suit pas le numéro d'EPIC affiché dans le backlog, voir §Versioning.
+**OpenWiki** — wiki collaboratif auto-hébergé (clone de WikiJS). pnpm workspace avec deux packages à la racine : `backend/` (NestJS + TypeORM + MySQL 8) et `frontend/` (React + TypeScript + Vite — scaffoldé, TailwindCSS/shadcn-ui restent à configurer, voir EPIC-10/FE-002). `README.md` est le cahier des charges complet et le backlog (voir §6/§7). La branche courante (`EPIC-10`) correspond au 3ème epic réellement implémenté du backlog (Frontend : Setup & Layout). Le numéro de version ne suit pas le numéro d'EPIC affiché dans le backlog, et chaque ticket terminé s'accompagne aussi d'une entrée dans la page "Notes de version" — voir §Versioning & changelog.
 
 ## Commandes
 
@@ -51,14 +51,15 @@ Config : trois fichiers `.env` séparés (chacun avec un `.env.example` à copie
 - `backend/.env` — `PORT`, `FRONTEND_URL` (origine CORS), `DB_HOST`/`DB_PORT`/`DB_USERNAME`/`DB_PASSWORD`/`DB_DATABASE`, `MINIO_ENDPOINT`/`MINIO_PORT`/`MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY`/`MINIO_BUCKET`/`MINIO_USE_SSL`. Lu via `@nestjs/config` dans `app.module.ts`, et directement via `dotenv` dans `src/config/data-source.ts` pour le CLI TypeORM.
 - `frontend/.env` — `VITE_API_URL` (URL de base de l'API backend, préfixe `/api` inclus — le backend a `app.setGlobalPrefix('api')` dans `main.ts` — ex. `http://localhost:3000/api`). Lu via `import.meta.env` (Vite), consommé par `src/lib/api-client.ts`.
 
-## Versioning
+## Versioning & changelog
 
-`package.json` version (racine et chaque package, gardées synchronisées) suit `0.<n>.<ticket>` :
-- Le nombre du milieu **n'est pas le numéro d'EPIC affiché** dans le backlog (README §6) — c'est un compteur qui s'incrémente de 1 à chaque changement d'EPIC, dans l'ordre réel d'implémentation (le dernier nombre repasse à `0` à ce moment-là). Ex. : 1er epic implémenté → `0.1.x`, 2ème epic implémenté (EPIC-02) → `0.2.x`, 3ème epic implémenté (EPIC-10 dans ce dépôt) → `0.3.x`, **pas** `0.10.x`.
+`package.json` version (racine et chaque package, gardées synchronisées) continue de suivre `0.<n>.<ticket>` :
+- Le nombre du milieu **n'est pas le numéro d'EPIC affiché** dans le backlog (README §6) — c'est un compteur qui s'incrémente de 1 à chaque changement d'EPIC, dans l'ordre réel d'implémentation (le dernier nombre repasse à `0` à ce moment-là).
 - Le dernier nombre s'incrémente de un par ticket terminé dans l'EPIC courant — un bump par commit/ticket, pas par EPIC.
-- ex. 2ème epic implémenté (EPIC-02), 2ème ticket terminé → `0.2.2`. 3ème epic implémenté (EPIC-10), 1er ticket terminé → `0.3.1`.
 
-`GET /health` retourne cette version (lue depuis `package.json` à l'exécution) pour que le frontend puisse l'afficher plus tard. Cet endpoint reste un JSON nu (`{ status, version }`), pas enveloppé par `ResponseDto` — c'est un healthcheck consommé par des outils d'infra, pas par le frontend applicatif.
+`GET /health` ne retourne en revanche plus cette version — il reste un JSON nu (`{ status: 'ok' }`), pas enveloppé par `ResponseDto` — c'est un healthcheck consommé par des outils d'infra, pas par le frontend applicatif.
+
+En complément du bump de version, chaque ticket terminé ajoute aussi une entrée dans le contenu de la page **"Notes de version"** seedée par `backend/src/database/dev-seed.ts` (entrée `notes-de-version` de `PAGE_TREE_SEED`) : entrée en tête de ce contenu markdown (plus récent en premier), titrée `## <version> — <date>`, suivie d'une liste à puces résumant le changement.
 
 ## Architecture backend (`backend/src`)
 

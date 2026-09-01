@@ -2,13 +2,19 @@ import { useMemo, useState } from 'react'
 import { useParams } from 'react-router'
 import { usePageTree } from '#hooks/usePageTree'
 import { PageTreeItem } from '#components/layout/PageTreeItem'
-import { findPathToNode } from '#utils/page-tree'
+import { filterTree, findPathToNode } from '#utils/page-tree'
 
-export function PageTree() {
+interface PageTreeProps {
+  filter?: string
+}
+
+export function PageTree({ filter = '' }: PageTreeProps) {
   const params = useParams()
   const slug = params['*']?.split('/').filter(Boolean).pop()
   const { tree, status } = usePageTree()
   const [overrides, setOverrides] = useState<Map<string, boolean>>(new Map())
+  const isFiltering = filter.trim().length > 0
+  const visibleTree = useMemo(() => filterTree(tree, filter), [tree, filter])
 
   const ancestorIds = useMemo(() => {
     if (!slug) {
@@ -19,6 +25,9 @@ export function PageTree() {
   }, [tree, slug])
 
   function isExpanded(id: string): boolean {
+    if (isFiltering) {
+      return true
+    }
     return overrides.get(id) ?? ancestorIds.includes(id)
   }
 
@@ -38,9 +47,13 @@ export function PageTree() {
     return <p className="px-2.5 py-1.5 text-sm text-destructive">Impossible de charger les pages.</p>
   }
 
+  if (isFiltering && visibleTree.length === 0) {
+    return <p className="px-2.5 py-1.5 text-sm text-muted-foreground">Aucune page ne correspond.</p>
+  }
+
   return (
     <div className="flex flex-col gap-0.5">
-      {tree.map((node) => (
+      {visibleTree.map((node) => (
         <PageTreeItem
           key={node.id}
           node={node}
