@@ -1,16 +1,36 @@
-import { Link } from 'react-router'
+import { useState } from 'react'
+import { Plus, Search } from 'lucide-react'
+import { Button } from '#components/ui/button'
+import { InputGroup, InputGroupAddon, InputGroupInput } from '#components/ui/input-group'
 import { Sheet, SheetContent, SheetTitle } from '#components/ui/sheet'
+import { PageTree } from '#components/layout/PageTree'
 import { cn } from '#lib/utils'
 
 function SidebarNav() {
+  const [filter, setFilter] = useState('')
+
   return (
     <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
-      <Link
-        to="/"
-        className="rounded-md px-2.5 py-1.5 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+      <InputGroup>
+        <InputGroupAddon>
+          <Search className="size-4" />
+        </InputGroupAddon>
+        <InputGroupInput
+          placeholder="Filtrer les pages..."
+          value={filter}
+          onChange={(event) => setFilter(event.target.value)}
+        />
+      </InputGroup>
+      <Button
+        variant="outline"
+        size="sm"
+        className="mt-3 mb-3 justify-start gap-2 text-sidebar-foreground"
+        disabled
       >
-        Accueil
-      </Link>
+        <Plus className="size-4" />
+        Nouvelle page
+      </Button>
+      <PageTree filter={filter} />
     </nav>
   )
 }

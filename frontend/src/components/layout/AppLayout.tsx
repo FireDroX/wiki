@@ -7,11 +7,11 @@ export function AppLayout() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
   return (
-    <div className="flex h-svh">
-      <Sidebar mobileOpen={mobileSidebarOpen} onMobileOpenChange={setMobileSidebarOpen} />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <Topbar onOpenSidebar={() => setMobileSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto">
+    <div className="flex h-svh flex-col">
+      <Topbar onOpenSidebar={() => setMobileSidebarOpen(true)} />
+      <div className="flex min-h-0 flex-1">
+        <Sidebar mobileOpen={mobileSidebarOpen} onMobileOpenChange={setMobileSidebarOpen} />
+        <main className="min-w-0 flex-1 overflow-y-auto">
           <Outlet />
         </main>
       </div>

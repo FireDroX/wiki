@@ -23,11 +23,14 @@ export function Topbar({ onOpenSidebar }: TopbarProps) {
   const { status, logout } = useAuth()
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-background px-4">
+    <header className="flex h-14 w-full shrink-0 items-center gap-3 border-b border-border bg-background px-4">
       <Button variant="ghost" size="icon" className="md:hidden" onClick={onOpenSidebar}>
         <Menu />
         <span className="sr-only">Ouvrir la navigation</span>
       </Button>
+      <Link to="/" className="flex shrink-0 items-center">
+        <img src="/openwiki-logo.svg" alt="OpenWiki" className="h-7 w-auto" />
+      </Link>
       <InputGroup className="max-w-md">
         <InputGroupAddon>
           <Search />

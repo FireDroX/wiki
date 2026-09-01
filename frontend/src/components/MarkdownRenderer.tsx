@@ -1,0 +1,91 @@
+import { useEffect, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { cn } from '#lib/utils'
+
+const SHIKI_THEME = 'github-dark'
+
+interface CodeBlockProps {
+  language: string
+  code: string
+}
+
+function CodeBlock({ language, code }: CodeBlockProps) {
+  const [html, setHtml] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    import('shiki').then(({ codeToHtml }) =>
+      codeToHtml(code, { lang: language, theme: SHIKI_THEME }).catch(() =>
+        codeToHtml(code, { lang: 'text', theme: SHIKI_THEME }),
+      ),
+    ).then((result) => {
+      if (!cancelled) setHtml(result)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [code, language])
+
+  if (!html) {
+    return (
+      <pre className="overflow-x-auto rounded-md bg-muted p-4 text-sm">
+        <code>{code}</code>
+      </pre>
+    )
+  }
+
+  return (
+    <div
+      className="[&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:p-4 [&_pre]:text-sm"
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  )
+}
+
+interface MarkdownRendererProps {
+  content: string
+}
+
+const MARKDOWN_BODY_CLASSES = cn(
+  'max-w-none space-y-4 text-sm leading-relaxed',
+  '[&_h1]:text-2xl [&_h1]:font-semibold [&_h1]:mt-6',
+  '[&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mt-6',
+  '[&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mt-4',
+  '[&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2',
+  '[&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6',
+  '[&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-4 [&_blockquote]:text-muted-foreground',
+  '[&_hr]:border-border',
+  '[&_img]:max-w-full [&_img]:rounded-md',
+  '[&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-border [&_th]:p-2 [&_td]:border [&_td]:border-border [&_td]:p-2',
+)
+
+export function MarkdownRenderer({ content }: MarkdownRendererProps) {
+  return (
+    <div className={MARKDOWN_BODY_CLASSES}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          pre({ children }) {
+            return <>{children}</>
+          },
+          code({ className, children, node: _node, ...rest }) {
+            const match = /language-(\w+)/.exec(className ?? '')
+            if (match) {
+              return <CodeBlock language={match[1]} code={String(children).replace(/\n$/, '')} />
+            }
+            return (
+              <code className={cn('rounded bg-muted px-1 py-0.5 text-sm', className)} {...rest}>
+                {children}
+              </code>
+            )
+          },
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  )
+}
