@@ -1,28 +1,19 @@
-import { useEffect, useState } from 'react'
-import { getTree } from '#api/pages'
+import { createContext, useContext } from 'react'
 import type { PageTreeNode } from '#api/pages'
 
 export type PageTreeStatus = 'loading' | 'success' | 'error'
 
-export interface UsePageTreeResult {
+export interface PageTreeContextValue {
   tree: PageTreeNode[]
   status: PageTreeStatus
 }
 
-export function usePageTree(): UsePageTreeResult {
-  const [tree, setTree] = useState<PageTreeNode[]>([])
-  const [status, setStatus] = useState<PageTreeStatus>('loading')
+export const PageTreeContext = createContext<PageTreeContextValue | null>(null)
 
-  useEffect(() => {
-    getTree()
-      .then((nodes) => {
-        setTree(nodes)
-        setStatus('success')
-      })
-      .catch(() => {
-        setStatus('error')
-      })
-  }, [])
-
-  return { tree, status }
+export function usePageTree(): PageTreeContextValue {
+  const context = useContext(PageTreeContext)
+  if (!context) {
+    throw new Error('usePageTree must be used within a PageTreeProvider')
+  }
+  return context
 }

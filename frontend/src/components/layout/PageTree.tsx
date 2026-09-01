@@ -2,27 +2,20 @@ import { useMemo, useState } from 'react'
 import { useParams } from 'react-router'
 import { usePageTree } from '#hooks/usePageTree'
 import { PageTreeItem } from '#components/layout/PageTreeItem'
-import type { PageTreeNode } from '#api/pages'
-
-function findAncestorIds(nodes: PageTreeNode[], slug: string): string[] | null {
-  for (const node of nodes) {
-    if (node.slug === slug) {
-      return [node.id]
-    }
-    const childPath = findAncestorIds(node.children, slug)
-    if (childPath) {
-      return [node.id, ...childPath]
-    }
-  }
-  return null
-}
+import { findPathToNode } from '#utils/page-tree'
 
 export function PageTree() {
   const { slug } = useParams<{ slug?: string }>()
   const { tree, status } = usePageTree()
   const [overrides, setOverrides] = useState<Map<string, boolean>>(new Map())
 
-  const ancestorIds = useMemo(() => (slug ? (findAncestorIds(tree, slug) ?? []) : []), [tree, slug])
+  const ancestorIds = useMemo(() => {
+    if (!slug) {
+      return []
+    }
+    const path = findPathToNode(tree, (node) => node.slug === slug)
+    return path?.map((node) => node.id) ?? []
+  }, [tree, slug])
 
   function isExpanded(id: string): boolean {
     return overrides.get(id) ?? ancestorIds.includes(id)
