@@ -14,11 +14,21 @@ import {
 } from '@nestjs/common';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
+import { PaginatedResponseDto } from '../common/dto/paginated-response.dto.js';
 import { ResponseDto } from '../common/dto/response.dto.js';
+import { PageNotFoundException } from '../common/exceptions/pages/page-not-found.exception.js';
+import { VersionNotFoundException } from '../common/exceptions/pages/version-not-found.exception.js';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
 import { OptionalJwtAuthGuard } from '../common/guards/optional-jwt-auth.guard.js';
 import { RolesGuard } from '../common/guards/roles.guard.js';
 import type { AuthenticatedUser } from '../common/strategies/jwt.strategy.js';
+import { DiffVersionsDto } from '../versions/dto/in/diff-versions.dto.js';
+import { ListVersionsQueryDto } from '../versions/dto/in/list-versions-query.dto.js';
+import { DiffResponseDto } from '../versions/dto/out/diff-response.dto.js';
+import { VersionDetailResponseDto } from '../versions/dto/out/version-detail-response.dto.js';
+import { VersionSummaryResponseDto } from '../versions/dto/out/version-summary-response.dto.js';
+import { VersionMapper } from '../versions/mapper/version.mapper.js';
+import { VersionsService } from '../versions/services/versions.service.js';
 import { CreatePageDto } from './dto/in/create-page.dto.js';
 import { DeletePageQueryDto } from './dto/in/delete-page-query.dto.js';
 import { MovePageDto } from './dto/in/move-page.dto.js';
@@ -35,7 +45,10 @@ import { PagesService } from './services/pages.service.js';
 @Controller('pages')
 @UseFilters(PagesExceptionFilter)
 export class PagesController {
-  constructor(private readonly pagesService: PagesService) {}
+  constructor(
+    private readonly pagesService: PagesService,
+    private readonly versionsService: VersionsService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -105,6 +118,72 @@ export class PagesController {
   ): Promise<ResponseDto<PageTreeNodeDto[]>> {
     const tree = await this.pagesService.getTree(user);
     return new ResponseDto(tree);
+  }
+
+  @Get(':id/versions')
+  @UseGuards(OptionalJwtAuthGuard)
+  async listVersions(
+    @Param('id') id: string,
+    @Query() query: ListVersionsQueryDto,
+    @CurrentUser() user?: AuthenticatedUser,
+  ): Promise<ResponseDto<PaginatedResponseDto<VersionSummaryResponseDto>>> {
+    await this.pagesService.getByIdOrFail(id, user);
+    const { items, total, page, limit } =
+      await this.versionsService.findAllByPage(id, query);
+    return VersionMapper.toPaginatedResponse(items, total, page, limit);
+  }
+
+  @Get(':id/versions/:versionId')
+  @UseGuards(OptionalJwtAuthGuard)
+  async getVersion(
+    @Param('id') id: string,
+    @Param('versionId') versionId: string,
+    @CurrentUser() user?: AuthenticatedUser,
+  ): Promise<ResponseDto<VersionDetailResponseDto>> {
+    await this.pagesService.getByIdOrFail(id, user);
+    const version = await this.versionsService.findOne(id, versionId);
+    return VersionMapper.toDetailResponse(version);
+  }
+
+  @Post(':id/versions/diff')
+  @UseGuards(OptionalJwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async diffVersions(
+    @Param('id') id: string,
+    @Body() dto: DiffVersionsDto,
+    @CurrentUser() user?: AuthenticatedUser,
+  ): Promise<ResponseDto<DiffResponseDto>> {
+    await this.pagesService.getByIdOrFail(id, user);
+    const diff = await this.versionsService.computeDiff(id, dto.from, dto.to);
+    return new ResponseDto(diff);
+  }
+
+  @Post(':id/versions/:versionId/restore')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('editor', 'admin')
+  @HttpCode(HttpStatus.CREATED)
+  async restoreVersion(
+    @Param('id') id: string,
+    @Param('versionId') versionId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<ResponseDto<PageUpdateResponseDto>> {
+    const targetVersion = await this.versionsService.findOne(id, versionId);
+
+    try {
+      const { page, version } =
+        await this.pagesService.createNewVersionFromContent(
+          id,
+          targetVersion.content,
+          user.id,
+          `Restored from version ${versionId}`,
+        );
+      return PageMapper.toUpdateResponse(page, version);
+    } catch (error) {
+      if (error instanceof PageNotFoundException) {
+        throw new VersionNotFoundException();
+      }
+      throw error;
+    }
   }
 
   @Get('*path')

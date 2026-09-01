@@ -34,6 +34,7 @@ export class PagesExceptionFilter implements ExceptionFilter {
     switch (exception.name) {
       case 'ParentPageNotFoundException':
       case 'PageNotFoundException':
+      case 'VersionNotFoundException':
         return { statusCode: HttpStatus.NOT_FOUND, error: exception.message };
       case 'SlugAlreadyExistsException':
       case 'CircularReferenceException':

@@ -2,10 +2,12 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
 @Entity('page_versions')
+@Index(['pageId'])
 export class PageVersion {
   @PrimaryGeneratedColumn('uuid')
   id: string;

@@ -113,11 +113,7 @@ export class PagesService {
       throw new PageNotFoundException();
     }
 
-    const isPubliclyAccessible =
-      page.visibility === 'public' && page.isPublished;
-    if (!isPubliclyAccessible && !PagesService.hasFullAccess(currentUser)) {
-      throw new PageAccessForbiddenException();
-    }
+    PagesService.assertAccessible(page, currentUser);
 
     const version = await this.pagesRepository.findVersionById(
       page.currentVersionId,
@@ -127,6 +123,40 @@ export class PagesService {
     }
 
     return { page, version };
+  }
+
+  async getByIdOrFail(
+    id: string,
+    currentUser?: AuthenticatedUser,
+  ): Promise<Page> {
+    const page = await this.pagesRepository.findById(id);
+    if (!page) {
+      throw new PageNotFoundException();
+    }
+
+    PagesService.assertAccessible(page, currentUser);
+
+    return page;
+  }
+
+  async createNewVersionFromContent(
+    pageId: string,
+    content: string,
+    authorId: string,
+    changeSummary: string | null,
+  ): Promise<{ page: Page; version: PageVersion }> {
+    const page = await this.pagesRepository.findById(pageId);
+    if (!page || !page.currentVersionId) {
+      throw new PageNotFoundException();
+    }
+
+    return this.pagesRepository.updateWithNewVersion({
+      page,
+      title: page.title,
+      content,
+      changeSummary,
+      authorId,
+    });
   }
 
   async updatePage(
@@ -289,6 +319,17 @@ export class PagesService {
 
   private static hasFullAccess(currentUser?: AuthenticatedUser): boolean {
     return currentUser?.role === 'admin' || currentUser?.role === 'editor';
+  }
+
+  private static assertAccessible(
+    page: Page,
+    currentUser?: AuthenticatedUser,
+  ): void {
+    const isPubliclyAccessible =
+      page.visibility === 'public' && page.isPublished;
+    if (!isPubliclyAccessible && !PagesService.hasFullAccess(currentUser)) {
+      throw new PageAccessForbiddenException();
+    }
   }
 
   private validateCreatePage(dto: CreatePageDto): void {
