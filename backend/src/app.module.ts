@@ -6,6 +6,7 @@ import { DataSource } from 'typeorm';
 import { AuthModule } from './auth/auth.module.js';
 import { JwtAuthModule } from './common/jwt-auth.module.js';
 import { HealthModule } from './health/health.module.js';
+import { MediaModule } from './media/media.module.js';
 import { PagesModule } from './pages/pages.module.js';
 import { StorageModule } from './storage/storage.module.js';
 import { UsersModule } from './users/users.module.js';
@@ -27,6 +28,7 @@ import { typeOrmConfig } from './config/typeorm.config.js';
     AuthModule,
     PagesModule,
     VersionsModule,
+    MediaModule,
   ],
 })
 export class AppModule implements OnModuleInit {

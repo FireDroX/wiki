@@ -94,11 +94,9 @@ const response = await fetch('/api/auth/login', {
             title: 'Endpoints',
             content: `# Endpoints
 
-| Méthode | Route | Description |
-| --- | --- | --- |
-| GET | /pages/tree | Arborescence des pages |
-| GET | /pages/:slug | Détail d'une page |
-| POST | /pages | Créer une page |`,
+La documentation ci-dessous est générée automatiquement à partir des routes réellement exposées par le backend (schéma OpenAPI de \`/api/docs-json\`).
+
+<api-reference></api-reference>`,
           },
         ],
       },
@@ -109,7 +107,52 @@ const response = await fetch('/api/auth/login', {
     title: 'Notes de version',
     content: `# Notes de version
 
+## Version 0.7
+
+<details>
+<summary>0.7.4 — 2026-09-02</summary>
+
+- \`DELETE /media/:id\` (éditeur+) : supprime un attachment (fichier Minio puis ligne en base, dans cet ordre).
+
+</details>
+
+<details>
+<summary>0.7.3 — 2026-09-02</summary>
+
+- \`GET /media/:id/url\` (selon visibilité) : génère une URL présignée pour un attachment existant.
+
+</details>
+
+<details>
+<summary>0.7.2 — 2026-09-02</summary>
+
+- \`GET /media?pageId=\` (selon visibilité) : liste les médias rattachés à une page, avec URL présignée pour chacun.
+
+</details>
+
+<details>
+<summary>0.7.1 — 2026-09-02</summary>
+
+- \`POST /media/upload\` (éditeur+, multipart/form-data) : upload d'un fichier vers Minio, clé \`pages/{pageId}/{uuid}-{filename}\`, enregistrement en \`Attachment\` et retour d'une URL présignée. Limite de 20 Mo et whitelist de types MIME (images + documents courants).
+
+</details>
+
+<details>
+<summary>0.7.0 — 2026-09-02</summary>
+
+- Entité \`Attachment\` + migration : modélise les fichiers stockés sur Minio (\`pageId\` nullable, \`minioKey\`, \`filename\`, \`mimeType\`, \`size\`, \`uploadedById\`), index sur \`pageId\` pour \`GET /media?pageId=\`.
+
+</details>
+
 ## Version 0.6
+
+<details>
+<summary>0.6.6 — 2026-09-02</summary>
+
+- Documentation interactive de l'API (\`GET /api/docs\`, \`GET /api/docs-json\`) générée depuis les décorateurs \`@nestjs/swagger\`.
+- Page "Endpoints" reliée à cette documentation via un composant de référence intégré au rendu markdown.
+
+</details>
 
 <details>
 <summary>0.6.5 — 2026-09-01</summary>

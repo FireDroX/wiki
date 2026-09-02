@@ -1,0 +1,192 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+  UploadedFile,
+  UseFilters,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiPayloadTooLargeResponse,
+  ApiQuery,
+  ApiTags,
+  ApiUnauthorizedResponse,
+  ApiUnsupportedMediaTypeResponse,
+} from '@nestjs/swagger';
+import { CurrentUser } from '../common/decorators/current-user.decorator.js';
+import { Roles } from '../common/decorators/roles.decorator.js';
+import { ErrorResponseDto } from '../common/dto/error-response.dto.js';
+import { ResponseDto } from '../common/dto/response.dto.js';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
+import { OptionalJwtAuthGuard } from '../common/guards/optional-jwt-auth.guard.js';
+import { RolesGuard } from '../common/guards/roles.guard.js';
+import type { AuthenticatedUser } from '../common/strategies/jwt.strategy.js';
+import { MAX_ATTACHMENT_SIZE_MB } from '../common/variables.global.js';
+import { ListMediaQueryDto } from './dto/in/list-media-query.dto.js';
+import { UploadMediaDto } from './dto/in/upload-media.dto.js';
+import { AttachmentResponseDto } from './dto/out/attachment-response.dto.js';
+import { PresignedUrlResponseDto } from './dto/out/presigned-url-response.dto.js';
+import { MediaExceptionFilter } from './filter/media-exception.filter.js';
+import { AttachmentMapper } from './mapper/attachment.mapper.js';
+import { MediaService, UploadedMediaFile } from './services/media.service.js';
+
+@ApiTags('Media')
+@Controller('media')
+@UseFilters(MediaExceptionFilter)
+export class MediaController {
+  constructor(private readonly mediaService: MediaService) {}
+
+  @Post('upload')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('editor', 'admin')
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Uploader un fichier vers Minio' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+        pageId: { type: 'string', nullable: true },
+      },
+    },
+  })
+  @ApiCreatedResponse({ description: 'Fichier uploadé avec succès.' })
+  @ApiBadRequestResponse({
+    description: 'Aucun fichier fourni ou pageId invalide.',
+    type: ErrorResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Authentification requise.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Rôle insuffisant (editor ou admin requis).',
+    type: ErrorResponseDto,
+  })
+  @ApiPayloadTooLargeResponse({
+    description: `Fichier de plus de ${MAX_ATTACHMENT_SIZE_MB} Mo.`,
+    type: ErrorResponseDto,
+  })
+  @ApiUnsupportedMediaTypeResponse({
+    description: 'Type de fichier non autorisé.',
+    type: ErrorResponseDto,
+  })
+  async upload(
+    @UploadedFile() file: UploadedMediaFile | undefined,
+    @Body() dto: UploadMediaDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<ResponseDto<AttachmentResponseDto>> {
+    const { attachment, url } = await this.mediaService.uploadFile(
+      file,
+      dto,
+      user.id,
+    );
+    return AttachmentMapper.toResponse(attachment, url);
+  }
+
+  @Get()
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({ summary: "Lister les médias d'une page" })
+  @ApiQuery({
+    name: 'pageId',
+    required: true,
+    description: 'Identifiant de la page',
+  })
+  @ApiOkResponse({ description: 'Liste des médias de la page.' })
+  @ApiBadRequestResponse({
+    description: 'pageId manquant ou invalide.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Page privée, accès non autorisé.',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: "La page n'existe pas.",
+    type: ErrorResponseDto,
+  })
+  async list(
+    @Query() query: ListMediaQueryDto,
+    @CurrentUser() user?: AuthenticatedUser,
+  ): Promise<ResponseDto<AttachmentResponseDto[]>> {
+    const results = await this.mediaService.findAllByPage(query.pageId, user);
+    return AttachmentMapper.toListResponse(results);
+  }
+
+  @Get(':id/url')
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({ summary: 'Obtenir une URL présignée pour un média' })
+  @ApiOkResponse({ description: 'URL présignée générée.' })
+  @ApiBadRequestResponse({
+    description: "L'id n'est pas un UUID valide.",
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Page privée, accès non autorisé.',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: "Le média n'existe pas.",
+    type: ErrorResponseDto,
+  })
+  async getUrl(
+    @Param('id') id: string,
+    @CurrentUser() user?: AuthenticatedUser,
+  ): Promise<ResponseDto<PresignedUrlResponseDto>> {
+    const { url, expiresIn } = await this.mediaService.getPresignedUrl(
+      id,
+      user,
+    );
+    return AttachmentMapper.toPresignedUrlResponse(url, expiresIn);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('editor', 'admin')
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Supprimer un média' })
+  @ApiParam({ name: 'id', description: "Identifiant de l'attachment" })
+  @ApiNoContentResponse({ description: 'Média supprimé.' })
+  @ApiBadRequestResponse({
+    description: "L'id n'est pas un UUID valide.",
+    type: ErrorResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Authentification requise.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Rôle insuffisant (editor ou admin requis).',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: "Le média n'existe pas.",
+    type: ErrorResponseDto,
+  })
+  async remove(@Param('id') id: string): Promise<void> {
+    await this.mediaService.deleteAttachment(id);
+  }
+}

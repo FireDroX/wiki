@@ -1,9 +1,15 @@
-import { useEffect, useState } from 'react'
+import { type ComponentProps, type ReactNode, useEffect, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
-import rehypeSanitize from 'rehype-sanitize'
+import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
 import remarkGfm from 'remark-gfm'
+import { ApiReferenceViewer } from '#components/ApiReferenceViewer'
 import { cn } from '#lib/utils'
+
+const MARKDOWN_SANITIZE_SCHEMA = {
+  ...defaultSchema,
+  tagNames: [...(defaultSchema.tagNames ?? []), 'api-reference'],
+}
 
 const SHIKI_THEME = 'github-dark'
 
@@ -67,28 +73,31 @@ const MARKDOWN_BODY_CLASSES = cn(
   '[&_details[open]_summary]:mb-3',
 )
 
+const markdownComponents = {
+  pre({ children }: { children?: ReactNode }) {
+    return <>{children}</>
+  },
+  'api-reference': () => <ApiReferenceViewer />,
+  code({ className, children, node: _node, ...rest }: ComponentProps<'code'> & { node?: unknown }) {
+    const match = /language-(\w+)/.exec(className ?? '')
+    if (match) {
+      return <CodeBlock language={match[1]} code={String(children).replace(/\n$/, '')} />
+    }
+    return (
+      <code className={cn('rounded bg-muted px-1 py-0.5 text-sm', className)} {...rest}>
+        {children}
+      </code>
+    )
+  },
+}
+
 export function MarkdownRenderer({ content }: MarkdownRendererProps) {
   return (
     <div className={MARKDOWN_BODY_CLASSES}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeRaw, rehypeSanitize]}
-        components={{
-          pre({ children }) {
-            return <>{children}</>
-          },
-          code({ className, children, node: _node, ...rest }) {
-            const match = /language-(\w+)/.exec(className ?? '')
-            if (match) {
-              return <CodeBlock language={match[1]} code={String(children).replace(/\n$/, '')} />
-            }
-            return (
-              <code className={cn('rounded bg-muted px-1 py-0.5 text-sm', className)} {...rest}>
-                {children}
-              </code>
-            )
-          },
-        }}
+        rehypePlugins={[rehypeRaw, [rehypeSanitize, MARKDOWN_SANITIZE_SCHEMA]]}
+        components={markdownComponents}
       >
         {content}
       </ReactMarkdown>
