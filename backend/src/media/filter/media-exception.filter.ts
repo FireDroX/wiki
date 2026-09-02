@@ -42,6 +42,10 @@ export class MediaExceptionFilter implements ExceptionFilter {
           statusCode: HttpStatus.UNSUPPORTED_MEDIA_TYPE,
           error: exception.message,
         };
+      case 'PageNotFoundException':
+        return { statusCode: HttpStatus.NOT_FOUND, error: exception.message };
+      case 'PageAccessForbiddenException':
+        return { statusCode: HttpStatus.FORBIDDEN, error: exception.message };
       case 'ValidationException':
         return { statusCode: HttpStatus.BAD_REQUEST, error: exception.message };
       default:

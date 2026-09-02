@@ -3,12 +3,14 @@ import { Inject, Injectable } from '@nestjs/common';
 import { FileTooLargeException } from '../../common/exceptions/media/file-too-large.exception.js';
 import { UnsupportedFileTypeException } from '../../common/exceptions/media/unsupported-file-type.exception.js';
 import { ValidationException } from '../../common/exceptions/validation.exception.js';
+import type { AuthenticatedUser } from '../../common/strategies/jwt.strategy.js';
 import {
   ALLOWED_ATTACHMENT_MIME_TYPES,
   MAX_ATTACHMENT_SIZE_BYTES,
   MEDIA_PRESIGNED_URL_EXPIRY_SECONDS,
   UUID_REGEX,
 } from '../../common/variables.global.js';
+import { PagesService } from '../../pages/services/pages.service.js';
 import { StorageService } from '../../storage/services/storage.service.js';
 import { UploadMediaDto } from '../dto/in/upload-media.dto.js';
 import { Attachment } from '../entities/attachment.entity.js';
@@ -27,6 +29,7 @@ export class MediaService {
     @Inject('AttachmentsRepository')
     private readonly attachmentsRepository: AttachmentsRepository,
     private readonly storageService: StorageService,
+    private readonly pagesService: PagesService,
   ) {}
 
   async uploadFile(
@@ -60,6 +63,30 @@ export class MediaService {
     );
 
     return { attachment, url };
+  }
+
+  async findAllByPage(
+    pageId: string | undefined,
+    currentUser?: AuthenticatedUser,
+  ): Promise<{ attachment: Attachment; url: string }[]> {
+    if (!pageId || !UUID_REGEX.test(pageId)) {
+      throw new ValidationException('pageId must be a UUID');
+    }
+
+    await this.pagesService.getByIdOrFail(pageId, currentUser);
+
+    const attachments =
+      await this.attachmentsRepository.findAllByPageId(pageId);
+
+    return Promise.all(
+      attachments.map(async (attachment) => ({
+        attachment,
+        url: await this.storageService.getPresignedUrl(
+          attachment.minioKey,
+          MEDIA_PRESIGNED_URL_EXPIRY_SECONDS,
+        ),
+      })),
+    );
   }
 
   private validateUpload(file: UploadedMediaFile, dto: UploadMediaDto): void {

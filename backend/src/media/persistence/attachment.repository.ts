@@ -11,4 +11,5 @@ export interface CreateAttachmentInput {
 
 export interface AttachmentsRepository {
   create(input: CreateAttachmentInput): Promise<Attachment>;
+  findAllByPageId(pageId: string): Promise<Attachment[]>;
 }

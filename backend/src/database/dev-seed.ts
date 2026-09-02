@@ -110,6 +110,13 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
 ## Version 0.7
 
 <details>
+<summary>0.7.2 — 2026-09-02</summary>
+
+- \`GET /media?pageId=\` (selon visibilité) : liste les médias rattachés à une page, avec URL présignée pour chacun.
+
+</details>
+
+<details>
 <summary>0.7.1 — 2026-09-02</summary>
 
 - \`POST /media/upload\` (éditeur+, multipart/form-data) : upload d'un fichier vers Minio, clé \`pages/{pageId}/{uuid}-{filename}\`, enregistrement en \`Attachment\` et retour d'une URL présignée. Limite de 20 Mo et whitelist de types MIME (images + documents courants).

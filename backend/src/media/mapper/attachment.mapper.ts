@@ -24,4 +24,14 @@ export class AttachmentMapper {
       AttachmentMapper.toAttachmentResponseDto(attachment, url),
     );
   }
+
+  static toListResponse(
+    results: { attachment: Attachment; url: string }[],
+  ): ResponseDto<AttachmentResponseDto[]> {
+    return new ResponseDto(
+      results.map(({ attachment, url }) =>
+        AttachmentMapper.toAttachmentResponseDto(attachment, url),
+      ),
+    );
+  }
 }

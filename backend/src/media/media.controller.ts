@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
+  Query,
   UploadedFile,
   UseFilters,
   UseGuards,
@@ -17,8 +19,11 @@ import {
   ApiConsumes,
   ApiCreatedResponse,
   ApiForbiddenResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiPayloadTooLargeResponse,
+  ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
   ApiUnsupportedMediaTypeResponse,
@@ -28,9 +33,11 @@ import { Roles } from '../common/decorators/roles.decorator.js';
 import { ErrorResponseDto } from '../common/dto/error-response.dto.js';
 import { ResponseDto } from '../common/dto/response.dto.js';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
+import { OptionalJwtAuthGuard } from '../common/guards/optional-jwt-auth.guard.js';
 import { RolesGuard } from '../common/guards/roles.guard.js';
 import type { AuthenticatedUser } from '../common/strategies/jwt.strategy.js';
 import { MAX_ATTACHMENT_SIZE_MB } from '../common/variables.global.js';
+import { ListMediaQueryDto } from './dto/in/list-media-query.dto.js';
 import { UploadMediaDto } from './dto/in/upload-media.dto.js';
 import { AttachmentResponseDto } from './dto/out/attachment-response.dto.js';
 import { MediaExceptionFilter } from './filter/media-exception.filter.js';
@@ -92,5 +99,37 @@ export class MediaController {
       user.id,
     );
     return AttachmentMapper.toResponse(attachment, url);
+  }
+
+  @Get()
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({ summary: "Lister les médias d'une page" })
+  @ApiQuery({
+    name: 'pageId',
+    required: true,
+    description: 'Identifiant de la page',
+  })
+  @ApiOkResponse({ description: "Liste des médias de la page." })
+  @ApiBadRequestResponse({
+    description: 'pageId manquant ou invalide.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Page privée, accès non autorisé.',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: "La page n'existe pas.",
+    type: ErrorResponseDto,
+  })
+  async list(
+    @Query() query: ListMediaQueryDto,
+    @CurrentUser() user?: AuthenticatedUser,
+  ): Promise<ResponseDto<AttachmentResponseDto[]>> {
+    const results = await this.mediaService.findAllByPage(
+      query.pageId,
+      user,
+    );
+    return AttachmentMapper.toListResponse(results);
   }
 }

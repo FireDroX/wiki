@@ -17,4 +17,11 @@ export class TypeormAttachmentsRepository implements AttachmentsRepository {
   create(input: CreateAttachmentInput): Promise<Attachment> {
     return this.repository.save(this.repository.create(input));
   }
+
+  findAllByPageId(pageId: string): Promise<Attachment[]> {
+    return this.repository.find({
+      where: { pageId },
+      order: { createdAt: 'DESC' },
+    });
+  }
 }
