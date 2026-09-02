@@ -49,6 +49,11 @@ export class MediaExceptionFilter implements ExceptionFilter {
         return { statusCode: HttpStatus.FORBIDDEN, error: exception.message };
       case 'ValidationException':
         return { statusCode: HttpStatus.BAD_REQUEST, error: exception.message };
+      case 'StorageDeleteFailedException':
+        return {
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: exception.message,
+        };
       default:
         return {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,

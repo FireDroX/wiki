@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -20,9 +21,11 @@ import {
   ApiConsumes,
   ApiCreatedResponse,
   ApiForbiddenResponse,
+  ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiParam,
   ApiPayloadTooLargeResponse,
   ApiQuery,
   ApiTags,
@@ -157,5 +160,33 @@ export class MediaController {
       user,
     );
     return AttachmentMapper.toPresignedUrlResponse(url, expiresIn);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('editor', 'admin')
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Supprimer un média' })
+  @ApiParam({ name: 'id', description: "Identifiant de l'attachment" })
+  @ApiNoContentResponse({ description: 'Média supprimé.' })
+  @ApiBadRequestResponse({
+    description: "L'id n'est pas un UUID valide.",
+    type: ErrorResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Authentification requise.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Rôle insuffisant (editor ou admin requis).',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: "Le média n'existe pas.",
+    type: ErrorResponseDto,
+  })
+  async remove(@Param('id') id: string): Promise<void> {
+    await this.mediaService.deleteAttachment(id);
   }
 }

@@ -13,4 +13,5 @@ export interface AttachmentsRepository {
   create(input: CreateAttachmentInput): Promise<Attachment>;
   findAllByPageId(pageId: string): Promise<Attachment[]>;
   findById(id: string): Promise<Attachment | null>;
+  delete(id: string): Promise<void>;
 }

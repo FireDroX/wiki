@@ -28,4 +28,8 @@ export class TypeormAttachmentsRepository implements AttachmentsRepository {
   findById(id: string): Promise<Attachment | null> {
     return this.repository.findOne({ where: { id } });
   }
+
+  async delete(id: string): Promise<void> {
+    await this.repository.delete(id);
+  }
 }

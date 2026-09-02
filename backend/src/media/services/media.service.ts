@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { AttachmentNotFoundException } from '../../common/exceptions/media/attachment-not-found.exception.js';
 import { FileTooLargeException } from '../../common/exceptions/media/file-too-large.exception.js';
+import { StorageDeleteFailedException } from '../../common/exceptions/media/storage-delete-failed.exception.js';
 import { UnsupportedFileTypeException } from '../../common/exceptions/media/unsupported-file-type.exception.js';
 import { ValidationException } from '../../common/exceptions/validation.exception.js';
 import type { AuthenticatedUser } from '../../common/strategies/jwt.strategy.js';
@@ -113,6 +114,25 @@ export class MediaService {
     );
 
     return { url, expiresIn: MEDIA_PRESIGNED_URL_EXPIRY_SECONDS };
+  }
+
+  async deleteAttachment(id: string): Promise<void> {
+    if (!UUID_REGEX.test(id)) {
+      throw new ValidationException('id must be a UUID');
+    }
+
+    const attachment = await this.attachmentsRepository.findById(id);
+    if (!attachment) {
+      throw new AttachmentNotFoundException();
+    }
+
+    try {
+      await this.storageService.deleteFile(attachment.minioKey);
+    } catch {
+      throw new StorageDeleteFailedException();
+    }
+
+    await this.attachmentsRepository.delete(attachment.id);
   }
 
   private validateUpload(file: UploadedMediaFile, dto: UploadMediaDto): void {

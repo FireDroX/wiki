@@ -110,6 +110,13 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
 ## Version 0.7
 
 <details>
+<summary>0.7.4 — 2026-09-02</summary>
+
+- \`DELETE /media/:id\` (éditeur+) : supprime un attachment (fichier Minio puis ligne en base, dans cet ordre).
+
+</details>
+
+<details>
 <summary>0.7.3 — 2026-09-02</summary>
 
 - \`GET /media/:id/url\` (selon visibilité) : génère une URL présignée pour un attachment existant.
