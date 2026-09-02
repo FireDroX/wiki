@@ -110,6 +110,14 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
 ## Version 0.8
 
 <details>
+<summary>0.8.1 — 2026-09-02</summary>
+
+- Upload d'images depuis l'éditeur : bouton toolbar et glisser-déposer directement sur la zone d'édition, insertion automatique du markdown à la position du curseur.
+- Notifications (toasts) pour les erreurs d'upload (fichier trop volumineux, type non supporté).
+
+</details>
+
+<details>
 <summary>0.8.0 — 2026-09-02</summary>
 
 - Éditeur markdown avec prévisualisation live (split view, bascule mobile édition/aperçu, debounce, raccourci \`Ctrl+S\`/\`Cmd+S\`, confirmation de sortie si modifications non sauvegardées).
