@@ -31,3 +31,23 @@ export async function getPageByPath(pathSegments: string[]): Promise<PageDetail>
   const { data } = await apiClient.get<ResponseDto<PageDetail>>(`/pages/${path}`)
   return data.data
 }
+
+export interface UpdatePagePayload {
+  title?: string
+  content?: string
+  changeSummary?: string
+}
+
+export interface PageUpdateResult {
+  id: string
+  slug: string
+  title: string
+  content: string
+  currentVersionId: string
+  updatedAt: string
+}
+
+export async function updatePage(id: string, payload: UpdatePagePayload): Promise<PageUpdateResult> {
+  const { data } = await apiClient.patch<ResponseDto<PageUpdateResult>>(`/pages/${id}`, payload)
+  return data.data
+}
