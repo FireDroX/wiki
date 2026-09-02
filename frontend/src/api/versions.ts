@@ -32,3 +32,21 @@ export async function getVersion(pageId: string, versionId: string): Promise<Ver
   const { data } = await apiClient.get<ResponseDto<VersionDetail>>(`/pages/${pageId}/versions/${versionId}`)
   return data.data
 }
+
+export type DiffChangeType = 'added' | 'removed' | 'unchanged'
+
+export interface DiffChange {
+  type: DiffChangeType
+  value: string
+}
+
+export interface DiffResult {
+  from: string
+  to: string
+  changes: DiffChange[]
+}
+
+export async function diffVersions(pageId: string, from: string, to: string): Promise<DiffResult> {
+  const { data } = await apiClient.post<ResponseDto<DiffResult>>(`/pages/${pageId}/versions/diff`, { from, to })
+  return data.data
+}

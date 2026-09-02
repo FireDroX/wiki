@@ -110,6 +110,13 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
 ## Version 0.9
 
 <details>
+<summary>0.9.1 — 2026-09-02</summary>
+
+- Vue diff entre les deux versions sélectionnées dans l'historique : diff ligne à ligne (\`POST /pages/:id/versions/diff\`), lignes ajoutées/supprimées mises en couleur, lignes identiques non colorées, en-tête affichant la date de chaque version comparée.
+
+</details>
+
+<details>
 <summary>0.9.0 — 2026-09-02</summary>
 
 - Historique des versions d'une page (\`/history/*\`) : liste paginée (auteur, date relative, résumé), sélection de deux versions au maximum (cocher une 3e ligne décoche automatiquement la plus ancienne sélection), aperçu du contenu d'une version.

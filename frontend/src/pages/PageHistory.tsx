@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { ArrowLeft } from 'lucide-react'
+import { diffVersions, type DiffChange } from '#api/versions'
 import { Button } from '#components/ui/button'
 import { Skeleton } from '#components/ui/skeleton'
+import { VersionDiffView } from '#components/PageHistory/VersionDiffView'
 import { VersionHistoryTable } from '#components/PageHistory/VersionHistoryTable'
 import { useAuth } from '#hooks/useAuth'
 import { usePage } from '#hooks/usePage'
@@ -20,6 +22,8 @@ export function PageHistory() {
   const { user } = useAuth()
   const versions = useVersions(page?.id)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [diffChanges, setDiffChanges] = useState<DiffChange[] | null>(null)
+  const [diffStatus, setDiffStatus] = useState<'idle' | 'loading' | 'error'>('idle')
 
   const selectedVersions = useMemo(
     () =>
@@ -41,6 +45,32 @@ export function PageHistory() {
       return [...previous, versionId]
     })
   }
+
+  useEffect(() => {
+    if (!page || selectedVersions.length !== 2) {
+      setDiffChanges(null)
+      setDiffStatus('idle')
+      return
+    }
+
+    let cancelled = false
+    setDiffStatus('loading')
+
+    diffVersions(page.id, selectedVersions[0].id, selectedVersions[1].id)
+      .then((result) => {
+        if (cancelled) return
+        setDiffChanges(result.changes)
+        setDiffStatus('idle')
+      })
+      .catch(() => {
+        if (cancelled) return
+        setDiffStatus('error')
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [page, selectedVersions])
 
   if (status === 'loading') {
     return (
@@ -133,10 +163,23 @@ export function PageHistory() {
               Sélectionnez deux versions dans la liste pour les comparer.
             </p>
           ) : (
-            <div className="flex flex-wrap items-center gap-2 text-sm">
-              <span className="font-medium">{formatDateTime(selectedVersions[0].createdAt)}</span>
-              <span className="text-muted-foreground">→</span>
-              <span className="font-medium">{formatDateTime(selectedVersions[1].createdAt)}</span>
+            <div className="flex h-full flex-col gap-3">
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="font-medium">{formatDateTime(selectedVersions[0].createdAt)}</span>
+                <span className="text-muted-foreground">→</span>
+                <span className="font-medium">{formatDateTime(selectedVersions[1].createdAt)}</span>
+              </div>
+              {diffStatus === 'loading' && (
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-5/6" />
+                </div>
+              )}
+              {diffStatus === 'error' && (
+                <p className="text-sm text-destructive">Impossible de comparer ces deux versions.</p>
+              )}
+              {diffChanges && <VersionDiffView changes={diffChanges} />}
             </div>
           )}
         </div>
