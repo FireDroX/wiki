@@ -110,6 +110,13 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
 ## Version 0.7
 
 <details>
+<summary>0.7.1 — 2026-09-02</summary>
+
+- \`POST /media/upload\` (éditeur+, multipart/form-data) : upload d'un fichier vers Minio, clé \`pages/{pageId}/{uuid}-{filename}\`, enregistrement en \`Attachment\` et retour d'une URL présignée. Limite de 20 Mo et whitelist de types MIME (images + documents courants).
+
+</details>
+
+<details>
 <summary>0.7.0 — 2026-09-02</summary>
 
 - Entité \`Attachment\` + migration : modélise les fichiers stockés sur Minio (\`pageId\` nullable, \`minioKey\`, \`filename\`, \`mimeType\`, \`size\`, \`uploadedById\`), index sur \`pageId\` pour \`GET /media?pageId=\`.

@@ -16,6 +16,7 @@ function setupSwagger(app: INestApplication): void {
     .addTag('Auth', 'Inscription, connexion et gestion des tokens JWT')
     .addTag('Health', "Vérification de l'état du serveur")
     .addTag('Pages', 'Arborescence, contenu, versions et historique des pages')
+    .addTag('Media', 'Upload et gestion des fichiers stockés sur Minio')
     .addTag('Users', 'Profil du compte connecté')
     .addTag(
       'Admin — Users',
