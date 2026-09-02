@@ -110,6 +110,13 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
 ## Version 0.8
 
 <details>
+<summary>0.8.2 — 2026-09-02</summary>
+
+- Formulaire de métadonnées de page (titre, slug auto-généré et éditable, visibilité, sélection de la page parente via une recherche dans l'arborescence) et page "Nouvelle page" (\`/new\`), reliée au bouton de la barre latérale pour les éditeurs et admins.
+
+</details>
+
+<details>
 <summary>0.8.1 — 2026-09-02</summary>
 
 - Upload d'images depuis l'éditeur : bouton toolbar et glisser-déposer directement sur la zone d'édition, insertion automatique du markdown à la position du curseur.

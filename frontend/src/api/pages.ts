@@ -51,3 +51,25 @@ export async function updatePage(id: string, payload: UpdatePagePayload): Promis
   const { data } = await apiClient.patch<ResponseDto<PageUpdateResult>>(`/pages/${id}`, payload)
   return data.data
 }
+
+export interface CreatePagePayload {
+  slug: string
+  title: string
+  content: string
+  visibility: PageVisibility
+  parentId: string | null
+}
+
+export interface PageCreateResult {
+  id: string
+  slug: string
+  title: string
+  parentId: string | null
+  visibility: PageVisibility
+  isPublished: boolean
+}
+
+export async function createPage(payload: CreatePagePayload): Promise<PageCreateResult> {
+  const { data } = await apiClient.post<ResponseDto<PageCreateResult>>('/pages', payload)
+  return data.data
+}

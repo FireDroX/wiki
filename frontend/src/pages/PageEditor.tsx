@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { isAxiosError } from 'axios'
-import { toast } from 'sonner'
 import { ImageUploadButton } from '#components/PageEditor/ImageUploadButton'
 import { MarkdownEditor, type MarkdownEditorHandle } from '#components/PageEditor/MarkdownEditor'
 import { PageBreadcrumb } from '#components/layout/PageBreadcrumb'
@@ -9,21 +7,11 @@ import { Button } from '#components/ui/button'
 import { FormError } from '#components/FormError'
 import { Input } from '#components/ui/input'
 import { Skeleton } from '#components/ui/skeleton'
-import { uploadFile } from '#api/media'
 import { updatePage } from '#api/pages'
 import { useEditorState } from '#hooks/useEditorState'
+import { useImageUpload } from '#hooks/useImageUpload'
 import { usePage } from '#hooks/usePage'
 import { extractErrorMessage } from '#lib/api-errors'
-
-function uploadErrorMessage(error: unknown): string {
-  if (isAxiosError(error) && error.response?.status === 413) {
-    return 'Fichier trop volumineux (max 20 Mo)'
-  }
-  if (isAxiosError(error) && error.response?.status === 415) {
-    return 'Type de fichier non supporté'
-  }
-  return extractErrorMessage(error, "Échec de l'upload du fichier.")
-}
 
 function pathFromParam(param: string | undefined): string[] {
   return (param ?? '').split('/').filter(Boolean)
@@ -74,23 +62,7 @@ export function PageEditor() {
     }
   }
 
-  async function handleFiles(files: FileList) {
-    const file = files[0]
-    if (!file) {
-      return
-    }
-
-    const placeholder = `![Uploading ${file.name}...]()`
-    editorRef.current?.insertAtCursor(placeholder)
-
-    try {
-      const attachment = await uploadFile(file, page?.id)
-      editorRef.current?.replaceText(placeholder, `![${attachment.filename}](${attachment.url})`)
-    } catch (error) {
-      editorRef.current?.replaceText(placeholder, '')
-      toast.error(uploadErrorMessage(error))
-    }
-  }
+  const handleFiles = useImageUpload(editorRef, page?.id)
 
   function handleCancel() {
     if (editor.isDirty && !window.confirm('Abandonner les modifications non sauvegardées ?')) {

@@ -7,6 +7,7 @@ import { useAuth } from '#hooks/useAuth'
 import { AdminUsers } from '#pages/AdminUsers'
 import { Home } from '#pages/Home'
 import { Login } from '#pages/Login'
+import { PageCreate } from '#pages/PageCreate'
 import { PageEditor } from '#pages/PageEditor'
 import { PageView } from '#pages/PageView'
 
@@ -26,6 +27,7 @@ export function App() {
         <Route index element={<Home />} />
         <Route path="/pages/*" element={<PageView />} />
         <Route element={<ProtectedRoute roles={EDITOR_ROLES} />}>
+          <Route path="/new" element={<PageCreate />} />
           <Route path="/edit/*" element={<PageEditor />} />
         </Route>
         <Route element={<ProtectedRoute roles={[UserRole.Admin]} />}>

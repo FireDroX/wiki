@@ -6,6 +6,7 @@ export type PageTreeStatus = 'loading' | 'success' | 'error'
 export interface PageTreeContextValue {
   tree: PageTreeNode[]
   status: PageTreeStatus
+  refresh: () => Promise<void>
 }
 
 export const PageTreeContext = createContext<PageTreeContextValue | null>(null)

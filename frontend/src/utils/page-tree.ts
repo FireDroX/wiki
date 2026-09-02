@@ -31,3 +31,34 @@ export function findPathToNode(
   }
   return null
 }
+
+export function collectSubtreeIds(nodes: PageTreeNode[], rootId: string): string[] {
+  const path = findPathToNode(nodes, (node) => node.id === rootId)
+  const root = path?.at(-1)
+  if (!root) {
+    return [rootId]
+  }
+
+  const ids: string[] = [root.id]
+  function walk(node: PageTreeNode) {
+    for (const child of node.children) {
+      ids.push(child.id)
+      walk(child)
+    }
+  }
+  walk(root)
+  return ids
+}
+
+export interface FlatPageTreeNode {
+  id: string
+  title: string
+  path: string
+}
+
+export function flattenTree(nodes: PageTreeNode[], parentPath: string[] = []): FlatPageTreeNode[] {
+  return nodes.flatMap((node) => {
+    const path = [...parentPath, node.title]
+    return [{ id: node.id, title: node.title, path: path.join(' / ') }, ...flattenTree(node.children, path)]
+  })
+}
