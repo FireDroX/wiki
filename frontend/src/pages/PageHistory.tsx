@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { ArrowLeft } from 'lucide-react'
+import { UserRole } from '#api/auth'
 import { diffVersions, type DiffChange } from '#api/versions'
 import { Button } from '#components/ui/button'
 import { Skeleton } from '#components/ui/skeleton'
@@ -10,6 +11,8 @@ import { useAuth } from '#hooks/useAuth'
 import { usePage } from '#hooks/usePage'
 import { useVersions } from '#hooks/useVersions'
 import { formatDateTime } from '#utils/relative-time'
+
+const EDITOR_ROLES: UserRole[] = [UserRole.Editor, UserRole.Admin]
 
 function pathFromParam(param: string | undefined): string[] {
   return (param ?? '').split('/').filter(Boolean)
@@ -24,6 +27,8 @@ export function PageHistory() {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [diffChanges, setDiffChanges] = useState<DiffChange[] | null>(null)
   const [diffStatus, setDiffStatus] = useState<'idle' | 'loading' | 'error'>('idle')
+
+  const canRestore = !!user && EDITOR_ROLES.includes(user.role)
 
   const selectedVersions = useMemo(
     () =>
@@ -127,6 +132,8 @@ export function PageHistory() {
                 currentUserId={user?.id}
                 selectedIds={selectedIds}
                 onToggleSelected={toggleSelected}
+                canRestore={canRestore}
+                onRestored={versions.refresh}
               />
               {versions.total > versions.limit && (
                 <div className="flex items-center justify-between text-sm text-muted-foreground">

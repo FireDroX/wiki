@@ -1,5 +1,6 @@
 import { Checkbox } from '#components/ui/checkbox'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '#components/ui/table'
+import { RestoreVersionButton } from '#components/PageHistory/RestoreVersionButton'
 import { VersionContentDialog } from '#components/PageHistory/VersionContentDialog'
 import type { VersionSummary } from '#api/versions'
 import { formatRelativeTime } from '#utils/relative-time'
@@ -10,6 +11,8 @@ interface VersionHistoryTableProps {
   currentUserId: string | undefined
   selectedIds: string[]
   onToggleSelected: (versionId: string) => void
+  canRestore: boolean
+  onRestored: () => void
 }
 
 function authorLabel(authorId: string, currentUserId: string | undefined): string {
@@ -25,6 +28,8 @@ export function VersionHistoryTable({
   currentUserId,
   selectedIds,
   onToggleSelected,
+  canRestore,
+  onRestored,
 }: VersionHistoryTableProps) {
   return (
     <Table>
@@ -54,7 +59,12 @@ export function VersionHistoryTable({
               {version.changeSummary ?? '—'}
             </TableCell>
             <TableCell className="text-right">
-              <VersionContentDialog pageId={pageId} versionId={version.id} />
+              <div className="flex justify-end gap-1">
+                <VersionContentDialog pageId={pageId} versionId={version.id} />
+                {canRestore && (
+                  <RestoreVersionButton pageId={pageId} versionId={version.id} onRestored={onRestored} />
+                )}
+              </div>
             </TableCell>
           </TableRow>
         ))}

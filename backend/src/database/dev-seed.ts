@@ -110,6 +110,13 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
 ## Version 0.9
 
 <details>
+<summary>0.9.2 — 2026-09-02</summary>
+
+- Action "Restaurer" sur chaque version de l'historique (\`POST /pages/:id/versions/:versionId/restore\`, éditeur+), confirmation via boîte de dialogue, puis rafraîchissement de la liste : la version restaurée apparaît en haut avec le résumé auto-généré côté backend.
+
+</details>
+
+<details>
 <summary>0.9.1 — 2026-09-02</summary>
 
 - Vue diff entre les deux versions sélectionnées dans l'historique : diff ligne à ligne (\`POST /pages/:id/versions/diff\`), lignes ajoutées/supprimées mises en couleur, lignes identiques non colorées, en-tête affichant la date de chaque version comparée.

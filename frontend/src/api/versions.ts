@@ -1,5 +1,6 @@
 import { apiClient } from '#lib/api-client'
 import type { ResponseDto } from '#api/response-dto'
+import type { PageUpdateResult } from '#api/pages'
 
 export interface VersionSummary {
   id: string
@@ -48,5 +49,12 @@ export interface DiffResult {
 
 export async function diffVersions(pageId: string, from: string, to: string): Promise<DiffResult> {
   const { data } = await apiClient.post<ResponseDto<DiffResult>>(`/pages/${pageId}/versions/diff`, { from, to })
+  return data.data
+}
+
+export async function restoreVersion(pageId: string, versionId: string): Promise<PageUpdateResult> {
+  const { data } = await apiClient.post<ResponseDto<PageUpdateResult>>(
+    `/pages/${pageId}/versions/${versionId}/restore`,
+  )
   return data.data
 }
