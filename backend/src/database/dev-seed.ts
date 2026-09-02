@@ -107,6 +107,15 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
     title: 'Notes de version',
     content: `# Notes de version
 
+## Version 0.7
+
+<details>
+<summary>0.7.0 — 2026-09-02</summary>
+
+- Entité \`Attachment\` + migration : modélise les fichiers stockés sur Minio (\`pageId\` nullable, \`minioKey\`, \`filename\`, \`mimeType\`, \`size\`, \`uploadedById\`), index sur \`pageId\` pour \`GET /media?pageId=\`.
+
+</details>
+
 ## Version 0.6
 
 <details>
