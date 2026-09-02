@@ -94,11 +94,9 @@ const response = await fetch('/api/auth/login', {
             title: 'Endpoints',
             content: `# Endpoints
 
-| Méthode | Route | Description |
-| --- | --- | --- |
-| GET | /pages/tree | Arborescence des pages |
-| GET | /pages/:slug | Détail d'une page |
-| POST | /pages | Créer une page |`,
+La documentation ci-dessous est générée automatiquement à partir des routes réellement exposées par le backend (schéma OpenAPI de \`/api/docs-json\`).
+
+<api-reference></api-reference>`,
           },
         ],
       },
@@ -110,6 +108,14 @@ const response = await fetch('/api/auth/login', {
     content: `# Notes de version
 
 ## Version 0.6
+
+<details>
+<summary>0.6.6 — 2026-09-02</summary>
+
+- Documentation interactive de l'API (\`GET /api/docs\`, \`GET /api/docs-json\`) générée depuis les décorateurs \`@nestjs/swagger\`.
+- Page "Endpoints" reliée à cette documentation via un composant de référence intégré au rendu markdown.
+
+</details>
 
 <details>
 <summary>0.6.5 — 2026-09-01</summary>

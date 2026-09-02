@@ -12,8 +12,25 @@ import {
   UseFilters,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiConflictResponse,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
+import { ErrorResponseDto } from '../common/dto/error-response.dto.js';
 import { PaginatedResponseDto } from '../common/dto/paginated-response.dto.js';
 import { ResponseDto } from '../common/dto/response.dto.js';
 import { PageNotFoundException } from '../common/exceptions/pages/page-not-found.exception.js';
@@ -42,6 +59,7 @@ import { PagesExceptionFilter } from './filter/pages-exception.filter.js';
 import { PageMapper } from './mapper/page.mapper.js';
 import { PagesService } from './services/pages.service.js';
 
+@ApiTags('Pages')
 @Controller('pages')
 @UseFilters(PagesExceptionFilter)
 export class PagesController {
@@ -53,7 +71,31 @@ export class PagesController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('editor', 'admin')
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Créer une page' })
+  @ApiBody({ type: CreatePageDto })
+  @ApiCreatedResponse({ description: 'Page créée avec succès.' })
+  @ApiBadRequestResponse({
+    description: 'Slug, titre, contenu ou visibilité invalide.',
+    type: ErrorResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Authentification requise.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Rôle insuffisant (editor ou admin requis).',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: "La page parente indiquée n'existe pas.",
+    type: ErrorResponseDto,
+  })
+  @ApiConflictResponse({
+    description: 'Un slug identique existe déjà au même niveau.',
+    type: ErrorResponseDto,
+  })
   async create(
     @Body() dto: CreatePageDto,
     @CurrentUser() user: AuthenticatedUser,
@@ -65,6 +107,29 @@ export class PagesController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('editor', 'admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Modifier une page' })
+  @ApiParam({ name: 'id', description: 'Identifiant de la page' })
+  @ApiBody({ type: UpdatePageDto })
+  @ApiOkResponse({
+    description: 'Page modifiée, une nouvelle version est créée.',
+  })
+  @ApiBadRequestResponse({
+    description: 'Titre, contenu ou résumé de modification invalide.',
+    type: ErrorResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Authentification requise.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Rôle insuffisant (editor ou admin requis).',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: "La page n'existe pas.",
+    type: ErrorResponseDto,
+  })
   async update(
     @Param('id') id: string,
     @Body() dto: UpdatePageDto,
@@ -81,6 +146,27 @@ export class PagesController {
   @Patch(':id/move')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('editor', 'admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Déplacer une page dans l'arborescence" })
+  @ApiParam({ name: 'id', description: 'Identifiant de la page à déplacer' })
+  @ApiBody({ type: MovePageDto })
+  @ApiOkResponse({ description: 'Page déplacée avec succès.' })
+  @ApiUnauthorizedResponse({
+    description: 'Authentification requise.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Rôle insuffisant (editor ou admin requis).',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: "La page ou la nouvelle page parente n'existe pas.",
+    type: ErrorResponseDto,
+  })
+  @ApiConflictResponse({
+    description: "Le déplacement créerait un cycle dans l'arborescence.",
+    type: ErrorResponseDto,
+  })
   async move(
     @Param('id') id: string,
     @Body() dto: MovePageDto,
@@ -92,6 +178,23 @@ export class PagesController {
   @Patch(':id/publish')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('editor', 'admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Publier ou dépublier une page' })
+  @ApiParam({ name: 'id', description: 'Identifiant de la page' })
+  @ApiBody({ type: PublishPageDto })
+  @ApiOkResponse({ description: 'État de publication mis à jour.' })
+  @ApiUnauthorizedResponse({
+    description: 'Authentification requise.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Rôle insuffisant (editor ou admin requis).',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: "La page n'existe pas.",
+    type: ErrorResponseDto,
+  })
   async publish(
     @Param('id') id: string,
     @Body() dto: PublishPageDto,
@@ -103,7 +206,32 @@ export class PagesController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('editor', 'admin')
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Supprimer une page' })
+  @ApiParam({ name: 'id', description: 'Identifiant de la page' })
+  @ApiNoContentResponse({ description: 'Page supprimée.' })
+  @ApiUnauthorizedResponse({
+    description: 'Authentification requise.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Rôle insuffisant (editor ou admin requis).',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: "La page n'existe pas.",
+    type: ErrorResponseDto,
+  })
+  @ApiConflictResponse({
+    description: 'La page a des enfants : relancer avec ?cascade=true.',
+    type: ErrorResponseDto,
+  })
+  @ApiQuery({
+    name: 'cascade',
+    required: false,
+    description: 'Supprimer aussi les pages enfants ("true"/"false").',
+  })
   async remove(
     @Param('id') id: string,
     @Query() query: DeletePageQueryDto,
@@ -113,6 +241,15 @@ export class PagesController {
 
   @Get('tree')
   @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({
+    summary: "Récupérer l'arborescence des pages",
+    description:
+      'Authentification optionnelle : les pages privées ne sont incluses que si le token correspond à un utilisateur autorisé.',
+  })
+  @ApiOkResponse({
+    description:
+      "Arborescence complète, filtrée selon les droits de l'appelant.",
+  })
   async getTree(
     @CurrentUser() user?: AuthenticatedUser,
   ): Promise<ResponseDto<PageTreeNodeDto[]>> {
@@ -122,6 +259,21 @@ export class PagesController {
 
   @Get(':id/versions')
   @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({
+    summary: "Lister l'historique des versions d'une page",
+    description:
+      'Authentification optionnelle : droits alignés sur la visibilité de la page.',
+  })
+  @ApiParam({ name: 'id', description: 'Identifiant de la page' })
+  @ApiOkResponse({ description: 'Historique paginé des versions.' })
+  @ApiForbiddenResponse({
+    description: 'Page privée, accès non autorisé.',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: "La page n'existe pas.",
+    type: ErrorResponseDto,
+  })
   async listVersions(
     @Param('id') id: string,
     @Query() query: ListVersionsQueryDto,
@@ -135,6 +287,22 @@ export class PagesController {
 
   @Get(':id/versions/:versionId')
   @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({
+    summary: "Récupérer une version précise d'une page",
+    description:
+      'Authentification optionnelle : droits alignés sur la visibilité de la page.',
+  })
+  @ApiParam({ name: 'id', description: 'Identifiant de la page' })
+  @ApiParam({ name: 'versionId', description: 'Identifiant de la version' })
+  @ApiOkResponse({ description: 'Détail de la version demandée.' })
+  @ApiForbiddenResponse({
+    description: 'Page privée, accès non autorisé.',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: "La page ou la version n'existe pas.",
+    type: ErrorResponseDto,
+  })
   async getVersion(
     @Param('id') id: string,
     @Param('versionId') versionId: string,
@@ -148,6 +316,26 @@ export class PagesController {
   @Post(':id/versions/diff')
   @UseGuards(OptionalJwtAuthGuard)
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "Comparer deux versions d'une page",
+    description:
+      'Authentification optionnelle : droits alignés sur la visibilité de la page.',
+  })
+  @ApiParam({ name: 'id', description: 'Identifiant de la page' })
+  @ApiBody({ type: DiffVersionsDto })
+  @ApiOkResponse({ description: 'Diff ligne à ligne entre les deux versions.' })
+  @ApiBadRequestResponse({
+    description: 'Identifiants de version manquants ou invalides.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Page privée, accès non autorisé.',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: "La page ou l'une des versions n'existe pas.",
+    type: ErrorResponseDto,
+  })
   async diffVersions(
     @Param('id') id: string,
     @Body() dto: DiffVersionsDto,
@@ -161,7 +349,33 @@ export class PagesController {
   @Post(':id/versions/:versionId/restore')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('editor', 'admin')
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Restaurer une ancienne version',
+    description:
+      "Crée une nouvelle version à partir du contenu de l'ancienne ; l'historique reste intact.",
+  })
+  @ApiParam({ name: 'id', description: 'Identifiant de la page' })
+  @ApiParam({
+    name: 'versionId',
+    description: 'Identifiant de la version à restaurer',
+  })
+  @ApiCreatedResponse({
+    description: 'Nouvelle version créée à partir du contenu restauré.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Authentification requise.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Rôle insuffisant (editor ou admin requis).',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: "La page ou la version n'existe pas.",
+    type: ErrorResponseDto,
+  })
   async restoreVersion(
     @Param('id') id: string,
     @Param('versionId') versionId: string,
@@ -188,6 +402,28 @@ export class PagesController {
 
   @Get('*path')
   @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({
+    summary: 'Récupérer une page par son chemin',
+    description:
+      "Authentification optionnelle : droits alignés sur la visibilité de la page. Le chemin est la suite des slugs ancêtres, comme dans l'URL du wiki.",
+  })
+  @ApiParam({
+    name: 'path',
+    description:
+      'Chemin de la page (slugs séparés par "/"), ex. "documentation/guide-demarrage/installation".',
+    type: String,
+  })
+  @ApiOkResponse({
+    description: 'Détail de la page et de sa version courante.',
+  })
+  @ApiForbiddenResponse({
+    description: 'Page privée, accès non autorisé.',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Aucune page ne correspond à ce chemin.',
+    type: ErrorResponseDto,
+  })
   async getByPath(
     @Param('path') path: string[],
     @CurrentUser() user?: AuthenticatedUser,

@@ -8,7 +8,18 @@ import {
   Res,
   UseFilters,
 } from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiBody,
+  ApiConflictResponse,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import type { Request, Response } from 'express';
+import { ErrorResponseDto } from '../common/dto/error-response.dto.js';
 import { ResponseDto } from '../common/dto/response.dto.js';
 import {
   ACCESS_TOKEN_COOKIE,
@@ -24,6 +35,7 @@ import { AuthService, type TokenPair } from './services/auth.service.js';
 const ACCESS_TOKEN_MAX_AGE_MS = 15 * 60 * 1000;
 const REFRESH_TOKEN_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
+@ApiTags('Auth')
 @Controller('auth')
 @UseFilters(AuthExceptionFilter)
 export class AuthController {
@@ -31,6 +43,17 @@ export class AuthController {
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Créer un compte utilisateur' })
+  @ApiBody({ type: RegisterDto })
+  @ApiCreatedResponse({ description: 'Compte créé avec succès.' })
+  @ApiBadRequestResponse({
+    description: "Email, mot de passe ou nom d'affichage invalide.",
+    type: ErrorResponseDto,
+  })
+  @ApiConflictResponse({
+    description: 'Cet email est déjà utilisé.',
+    type: ErrorResponseDto,
+  })
   async register(
     @Body() dto: RegisterDto,
   ): Promise<ResponseDto<UserResponseDto>> {
@@ -40,6 +63,15 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Se connecter' })
+  @ApiBody({ type: LoginDto })
+  @ApiOkResponse({
+    description: 'Connexion réussie, tokens déposés en cookies httpOnly.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Email ou mot de passe incorrect.',
+    type: ErrorResponseDto,
+  })
   async login(
     @Body() dto: LoginDto,
     @Res({ passthrough: true }) res: Response,
@@ -51,6 +83,14 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Rafraîchir le token d'accès" })
+  @ApiOkResponse({
+    description: "Nouveau token d'accès déposé en cookie.",
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Refresh token manquant ou invalide.',
+    type: ErrorResponseDto,
+  })
   refresh(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
@@ -69,6 +109,10 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Se déconnecter' })
+  @ApiOkResponse({
+    description: "Cookies d'authentification supprimés.",
+  })
   logout(@Res({ passthrough: true }) res: Response): ResponseDto<null> {
     res.clearCookie(ACCESS_TOKEN_COOKIE, { path: '/' });
     res.clearCookie(REFRESH_TOKEN_COOKIE, { path: '/' });
