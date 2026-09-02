@@ -6,9 +6,10 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { Eye, Pencil } from 'lucide-react'
+import { Bold, Code, Eye, Italic, Link2, Pencil } from 'lucide-react'
 import { MarkdownRenderer } from '#components/MarkdownRenderer'
 import { Button } from '#components/ui/button'
+import { Separator } from '#components/ui/separator'
 import { Textarea } from '#components/ui/textarea'
 import { useDebouncedValue } from '#hooks/useDebouncedValue'
 import { cn } from '#lib/utils'
@@ -20,39 +21,77 @@ export interface MarkdownEditorHandle {
   replaceText: (search: string, replacement: string) => void
 }
 
+interface Selection {
+  start: number
+  end: number
+}
+
 interface MarkdownEditorProps {
   value: string
   onChange: (value: string) => void
   onSave: () => void
-  toolbar?: ReactNode
+  toolbarExtra?: ReactNode
   onFilesDropped?: (files: FileList) => void
 }
 
 export const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
-  function MarkdownEditor({ value, onChange, onSave, toolbar, onFilesDropped }, ref) {
+  function MarkdownEditor({ value, onChange, onSave, toolbarExtra, onFilesDropped }, ref) {
     const [mobileView, setMobileView] = useState<'edit' | 'preview'>('edit')
     const [isDraggingOver, setIsDraggingOver] = useState(false)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const debouncedValue = useDebouncedValue(value, PREVIEW_DEBOUNCE_MS)
 
+    function currentSelection(): Selection {
+      const textarea = textareaRef.current
+      return {
+        start: textarea?.selectionStart ?? value.length,
+        end: textarea?.selectionEnd ?? value.length,
+      }
+    }
+
+    function focusSelection(start: number, end: number) {
+      requestAnimationFrame(() => {
+        const textarea = textareaRef.current
+        textarea?.focus()
+        textarea?.setSelectionRange(start, end)
+      })
+    }
+
+    function insertAtCursor(text: string) {
+      const { start, end } = currentSelection()
+      onChange(value.slice(0, start) + text + value.slice(end))
+      focusSelection(start + text.length, start + text.length)
+    }
+
+    function wrapSelection(before: string, after: string = before) {
+      const { start, end } = currentSelection()
+      const selected = value.slice(start, end)
+      onChange(value.slice(0, start) + before + selected + after + value.slice(end))
+      if (selected) {
+        focusSelection(start + before.length, start + before.length + selected.length)
+      } else {
+        focusSelection(start + before.length, start + before.length)
+      }
+    }
+
+    function insertLink() {
+      const { start, end } = currentSelection()
+      const selected = value.slice(start, end) || 'texte du lien'
+      const snippet = `[${selected}](url)`
+      onChange(value.slice(0, start) + snippet + value.slice(end))
+      const urlStart = start + selected.length + 3
+      focusSelection(urlStart, urlStart + 3)
+    }
+
     useImperativeHandle(
       ref,
       () => ({
-        insertAtCursor(text: string) {
-          const textarea = textareaRef.current
-          const start = textarea?.selectionStart ?? value.length
-          const end = textarea?.selectionEnd ?? value.length
-          onChange(value.slice(0, start) + text + value.slice(end))
-          requestAnimationFrame(() => {
-            const cursor = start + text.length
-            textarea?.focus()
-            textarea?.setSelectionRange(cursor, cursor)
-          })
-        },
+        insertAtCursor,
         replaceText(search: string, replacement: string) {
           onChange(value.replace(search, replacement))
         },
       }),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       [value, onChange],
     )
 
@@ -78,7 +117,27 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorPro
 
     return (
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="flex items-center justify-between gap-2 border-b border-border pb-2">
+        <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
+          <div className="flex items-center gap-0.5">
+            <Button type="button" variant="ghost" size="icon-sm" title="Gras" onClick={() => wrapSelection('**')}>
+              <Bold />
+            </Button>
+            <Button type="button" variant="ghost" size="icon-sm" title="Italique" onClick={() => wrapSelection('_')}>
+              <Italic />
+            </Button>
+            <Button type="button" variant="ghost" size="icon-sm" title="Code" onClick={() => wrapSelection('`')}>
+              <Code />
+            </Button>
+            <Button type="button" variant="ghost" size="icon-sm" title="Lien" onClick={insertLink}>
+              <Link2 />
+            </Button>
+            {toolbarExtra && (
+              <>
+                <Separator orientation="vertical" className="mx-1 h-5" />
+                {toolbarExtra}
+              </>
+            )}
+          </div>
           <div className="flex items-center gap-1 lg:hidden">
             <Button
               type="button"
@@ -97,14 +156,13 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorPro
               <Eye /> Aperçu
             </Button>
           </div>
-          {toolbar && <div className="flex items-center gap-2">{toolbar}</div>}
         </div>
-        <div className="grid min-h-0 flex-1 gap-4 pt-4 lg:grid-cols-2">
+        <div className="grid min-h-0 flex-1 lg:grid-cols-2">
           <div
             className={cn(
-              'relative lg:block',
+              'relative border-border lg:block lg:border-r',
               mobileView === 'preview' && 'hidden',
-              isDraggingOver && 'rounded-lg ring-2 ring-primary',
+              isDraggingOver && 'ring-2 ring-inset ring-primary',
             )}
             onDragOver={(event) => {
               event.preventDefault()
@@ -118,12 +176,12 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorPro
               value={value}
               onChange={(event) => onChange(event.target.value)}
               placeholder="Rédigez votre contenu en markdown, ou glissez-déposez une image..."
-              className="field-sizing-fixed min-h-[60vh] resize-none font-mono text-sm"
+              className="field-sizing-fixed h-full min-h-[60vh] resize-none rounded-none border-0 px-5 py-4 font-mono text-sm shadow-none focus-visible:ring-0"
             />
           </div>
           <div
             className={cn(
-              'min-h-[60vh] overflow-y-auto rounded-lg border border-border p-4 lg:block',
+              'min-h-[60vh] overflow-y-auto px-5 py-4 lg:block',
               mobileView === 'edit' && 'hidden',
             )}
           >

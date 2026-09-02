@@ -2,6 +2,7 @@ import { useCallback, type RefObject } from 'react'
 import { isAxiosError } from 'axios'
 import { toast } from 'sonner'
 import type { MarkdownEditorHandle } from '#components/PageEditor/MarkdownEditor'
+import type { FileUploadVariant } from '#components/PageEditor/FileUploadButton'
 import { uploadFile } from '#api/media'
 import { extractErrorMessage } from '#lib/api-errors'
 
@@ -15,7 +16,11 @@ function uploadErrorMessage(error: unknown): string {
   return extractErrorMessage(error, "Échec de l'upload du fichier.")
 }
 
-export function useImageUpload(editorRef: RefObject<MarkdownEditorHandle | null>, pageId?: string) {
+export function useFileUpload(
+  editorRef: RefObject<MarkdownEditorHandle | null>,
+  pageId?: string,
+  variant: FileUploadVariant = 'image',
+) {
   return useCallback(
     async (files: FileList) => {
       const file = files[0]
@@ -23,17 +28,18 @@ export function useImageUpload(editorRef: RefObject<MarkdownEditorHandle | null>
         return
       }
 
-      const placeholder = `![Uploading ${file.name}...]()`
+      const placeholder = `${variant === 'image' ? '!' : ''}[Envoi de ${file.name}...]()`
       editorRef.current?.insertAtCursor(placeholder)
 
       try {
         const attachment = await uploadFile(file, pageId)
-        editorRef.current?.replaceText(placeholder, `![${attachment.filename}](${attachment.url})`)
+        const markdown = `${variant === 'image' ? '!' : ''}[${attachment.filename}](${attachment.url})`
+        editorRef.current?.replaceText(placeholder, markdown)
       } catch (error) {
         editorRef.current?.replaceText(placeholder, '')
         toast.error(uploadErrorMessage(error))
       }
     },
-    [editorRef, pageId],
+    [editorRef, pageId, variant],
   )
 }

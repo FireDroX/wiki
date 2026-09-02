@@ -23,13 +23,13 @@ export function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route element={<ProtectedRoute roles={EDITOR_ROLES} />}>
+        <Route path="/new" element={<PageCreate />} />
+        <Route path="/edit/*" element={<PageEditor />} />
+      </Route>
       <Route element={<AppLayout />}>
         <Route index element={<Home />} />
         <Route path="/pages/*" element={<PageView />} />
-        <Route element={<ProtectedRoute roles={EDITOR_ROLES} />}>
-          <Route path="/new" element={<PageCreate />} />
-          <Route path="/edit/*" element={<PageEditor />} />
-        </Route>
         <Route element={<ProtectedRoute roles={[UserRole.Admin]} />}>
           <Route path="/admin/users" element={<AdminUsers />} />
         </Route>

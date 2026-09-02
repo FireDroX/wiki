@@ -73,3 +73,11 @@ export async function createPage(payload: CreatePagePayload): Promise<PageCreate
   const { data } = await apiClient.post<ResponseDto<PageCreateResult>>('/pages', payload)
   return data.data
 }
+
+export async function movePage(id: string, newParentId: string | null): Promise<void> {
+  await apiClient.patch(`/pages/${id}/move`, { newParentId })
+}
+
+export async function publishPage(id: string, isPublished: boolean): Promise<void> {
+  await apiClient.patch(`/pages/${id}/publish`, { isPublished })
+}
