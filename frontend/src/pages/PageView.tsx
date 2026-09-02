@@ -1,6 +1,6 @@
 import { Link, useParams } from 'react-router'
 import { useMemo } from 'react'
-import { Pencil } from 'lucide-react'
+import { History, Pencil } from 'lucide-react'
 import { UserRole } from '#api/auth'
 import { Button } from '#components/ui/button'
 import { MarkdownRenderer } from '#components/MarkdownRenderer'
@@ -84,13 +84,20 @@ export function PageView() {
     <article className="max-w-3xl space-y-6 p-8">
       <div className="flex items-start justify-between gap-4">
         <PageBreadcrumb title={page.title} parentId={page.parentId} />
-        {canEdit && (
+        <div className="flex shrink-0 gap-2">
           <Button variant="outline" size="sm" asChild>
-            <Link to={`/edit/${pathSegments.join('/')}`}>
-              <Pencil /> Modifier
+            <Link to={`/history/${pathSegments.join('/')}`}>
+              <History /> Historique
             </Link>
           </Button>
-        )}
+          {canEdit && (
+            <Button variant="outline" size="sm" asChild>
+              <Link to={`/edit/${pathSegments.join('/')}`}>
+                <Pencil /> Modifier
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
       <MarkdownRenderer content={page.content} />
     </article>

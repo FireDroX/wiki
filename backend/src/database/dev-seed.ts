@@ -107,6 +107,16 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
     title: 'Notes de version',
     content: `# Notes de version
 
+## Version 0.9
+
+<details>
+<summary>0.9.0 — 2026-09-02</summary>
+
+- Historique des versions d'une page (\`/history/*\`) : liste paginée (auteur, date relative, résumé), sélection de deux versions au maximum (cocher une 3e ligne décoche automatiquement la plus ancienne sélection), aperçu du contenu d'une version.
+- Bouton "Historique" sur la vue d'une page, visible selon les mêmes droits de visibilité que la page elle-même.
+
+</details>
+
 ## Version 0.8
 
 <details>

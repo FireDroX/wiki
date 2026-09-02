@@ -1,0 +1,34 @@
+import { apiClient } from '#lib/api-client'
+import type { ResponseDto } from '#api/response-dto'
+
+export interface VersionSummary {
+  id: string
+  authorId: string
+  changeSummary: string | null
+  createdAt: string
+}
+
+export interface VersionDetail extends VersionSummary {
+  pageId: string
+  title: string
+  content: string
+}
+
+export interface PaginatedVersions {
+  items: VersionSummary[]
+  total: number
+  page: number
+  limit: number
+}
+
+export async function listVersions(pageId: string, page = 1, limit = 20): Promise<PaginatedVersions> {
+  const { data } = await apiClient.get<ResponseDto<PaginatedVersions>>(`/pages/${pageId}/versions`, {
+    params: { page, limit },
+  })
+  return data.data
+}
+
+export async function getVersion(pageId: string, versionId: string): Promise<VersionDetail> {
+  const { data } = await apiClient.get<ResponseDto<VersionDetail>>(`/pages/${pageId}/versions/${versionId}`)
+  return data.data
+}
