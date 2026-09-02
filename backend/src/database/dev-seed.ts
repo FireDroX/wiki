@@ -107,6 +107,30 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
     title: 'Notes de version',
     content: `# Notes de version
 
+## Version 0.9
+
+<details>
+<summary>0.9.2 — 2026-09-02</summary>
+
+- Action "Restaurer" sur chaque version de l'historique (\`POST /pages/:id/versions/:versionId/restore\`, éditeur+), confirmation via boîte de dialogue, puis rafraîchissement de la liste : la version restaurée apparaît en haut avec le résumé auto-généré côté backend.
+
+</details>
+
+<details>
+<summary>0.9.1 — 2026-09-02</summary>
+
+- Vue diff entre les deux versions sélectionnées dans l'historique : diff ligne à ligne (\`POST /pages/:id/versions/diff\`), lignes ajoutées/supprimées mises en couleur, lignes identiques non colorées, en-tête affichant la date de chaque version comparée.
+
+</details>
+
+<details>
+<summary>0.9.0 — 2026-09-02</summary>
+
+- Historique des versions d'une page (\`/history/*\`) : liste paginée (auteur, date relative, résumé), sélection de deux versions au maximum (cocher une 3e ligne décoche automatiquement la plus ancienne sélection), aperçu du contenu d'une version.
+- Bouton "Historique" sur la vue d'une page, visible selon les mêmes droits de visibilité que la page elle-même.
+
+</details>
+
 ## Version 0.8
 
 <details>
