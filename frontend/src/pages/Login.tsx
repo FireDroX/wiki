@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
-import { isAxiosError } from 'axios'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
 import { FormError } from '#components/FormError'
@@ -9,19 +8,13 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '#components/ui/field'
 import { Input } from '#components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#components/ui/tabs'
 import { useAuth } from '#hooks/useAuth'
+import { extractErrorMessage } from '#lib/api-errors'
 import {
   loginSchema,
   registerSchema,
   type LoginFormValues,
   type RegisterFormValues,
 } from '#schemas/auth.schema'
-
-function extractErrorMessage(error: unknown): string {
-  if (isAxiosError(error) && typeof error.response?.data?.error === 'string') {
-    return error.response.data.error
-  }
-  return 'Une erreur est survenue, veuillez réessayer.'
-}
 
 function LoginForm() {
   const { login } = useAuth()

@@ -1,10 +1,15 @@
 import { Link, useParams } from 'react-router'
 import { useMemo } from 'react'
+import { Pencil } from 'lucide-react'
+import { UserRole } from '#api/auth'
 import { Button } from '#components/ui/button'
 import { MarkdownRenderer } from '#components/MarkdownRenderer'
 import { Skeleton } from '#components/ui/skeleton'
 import { PageBreadcrumb } from '#components/layout/PageBreadcrumb'
+import { useAuth } from '#hooks/useAuth'
 import { usePage } from '#hooks/usePage'
+
+const EDITOR_ROLES: UserRole[] = [UserRole.Editor, UserRole.Admin]
 
 function PageViewSkeleton() {
   return (
@@ -41,6 +46,8 @@ export function PageView() {
   const params = useParams()
   const pathSegments = useMemo(() => (params['*'] ?? '').split('/').filter(Boolean), [params])
   const { status, page } = usePage(pathSegments)
+  const { user } = useAuth()
+  const canEdit = !!user && EDITOR_ROLES.includes(user.role)
 
   if (status === 'loading') {
     return <PageViewSkeleton />
@@ -75,7 +82,16 @@ export function PageView() {
 
   return (
     <article className="max-w-3xl space-y-6 p-8">
-      <PageBreadcrumb title={page.title} parentId={page.parentId} />
+      <div className="flex items-start justify-between gap-4">
+        <PageBreadcrumb title={page.title} parentId={page.parentId} />
+        {canEdit && (
+          <Button variant="outline" size="sm" asChild>
+            <Link to={`/edit/${pathSegments.join('/')}`}>
+              <Pencil /> Modifier
+            </Link>
+          </Button>
+        )}
+      </div>
       <MarkdownRenderer content={page.content} />
     </article>
   )

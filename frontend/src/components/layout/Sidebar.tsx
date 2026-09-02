@@ -1,13 +1,20 @@
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { Plus, Search } from 'lucide-react'
+import { UserRole } from '#api/auth'
 import { Button } from '#components/ui/button'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '#components/ui/input-group'
 import { Sheet, SheetContent, SheetTitle } from '#components/ui/sheet'
 import { PageTree } from '#components/layout/PageTree'
+import { useAuth } from '#hooks/useAuth'
 import { cn } from '#lib/utils'
+
+const EDITOR_ROLES: UserRole[] = [UserRole.Editor, UserRole.Admin]
 
 function SidebarNav() {
   const [filter, setFilter] = useState('')
+  const { user } = useAuth()
+  const canCreate = !!user && EDITOR_ROLES.includes(user.role)
 
   return (
     <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
@@ -21,15 +28,19 @@ function SidebarNav() {
           onChange={(event) => setFilter(event.target.value)}
         />
       </InputGroup>
-      <Button
-        variant="outline"
-        size="sm"
-        className="mt-3 mb-3 justify-start gap-2 text-sidebar-foreground"
-        disabled
-      >
-        <Plus className="size-4" />
-        Nouvelle page
-      </Button>
+      {canCreate && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-3 mb-3 justify-start gap-2 text-sidebar-foreground"
+          asChild
+        >
+          <Link to="/new">
+            <Plus className="size-4" />
+            Nouvelle page
+          </Link>
+        </Button>
+      )}
       <PageTree filter={filter} />
     </nav>
   )

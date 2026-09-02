@@ -107,6 +107,46 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
     title: 'Notes de version',
     content: `# Notes de version
 
+## Version 0.8
+
+<details>
+<summary>0.8.4 — 2026-09-02</summary>
+
+- Nouvelle direction artistique de l'éditeur de page (création et modification), alignée sur la maquette : vue plein écran sans navigation latérale, panneau de métadonnées permanent (titre, chemin, page parente, visibilité), barre d'outils markdown (gras, italique, code, lien, image, pièce jointe) et actions "Enregistrer le brouillon" / "Publier".
+- En modification, le résumé de modification est désormais un champ permanent du panneau plutôt qu'une boîte de dialogue, et le déplacement de la page (page parente) s'applique immédiatement.
+
+</details>
+
+<details>
+<summary>0.8.3 — 2026-09-02</summary>
+
+- Boîte de dialogue de sauvegarde avec champ "résumé de modification" (optionnel), ouverte par le bouton Sauvegarder ou \`Ctrl+S\`/\`Cmd+S\` sur l'éditeur de page ; confirmation par toast une fois la sauvegarde effectuée.
+
+</details>
+
+<details>
+<summary>0.8.2 — 2026-09-02</summary>
+
+- Formulaire de métadonnées de page (titre, slug auto-généré et éditable, visibilité, sélection de la page parente via une recherche dans l'arborescence) et page "Nouvelle page" (\`/new\`), reliée au bouton de la barre latérale pour les éditeurs et admins.
+
+</details>
+
+<details>
+<summary>0.8.1 — 2026-09-02</summary>
+
+- Upload d'images depuis l'éditeur : bouton toolbar et glisser-déposer directement sur la zone d'édition, insertion automatique du markdown à la position du curseur.
+- Notifications (toasts) pour les erreurs d'upload (fichier trop volumineux, type non supporté).
+
+</details>
+
+<details>
+<summary>0.8.0 — 2026-09-02</summary>
+
+- Éditeur markdown avec prévisualisation live (split view, bascule mobile édition/aperçu, debounce, raccourci \`Ctrl+S\`/\`Cmd+S\`, confirmation de sortie si modifications non sauvegardées).
+- Page \`/edit/*\` (éditeur+) pour modifier une page existante, accessible via un bouton "Modifier" sur la vue d'une page.
+
+</details>
+
 ## Version 0.7
 
 <details>
