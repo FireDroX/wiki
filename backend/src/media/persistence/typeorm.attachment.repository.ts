@@ -24,4 +24,8 @@ export class TypeormAttachmentsRepository implements AttachmentsRepository {
       order: { createdAt: 'DESC' },
     });
   }
+
+  findById(id: string): Promise<Attachment | null> {
+    return this.repository.findOne({ where: { id } });
+  }
 }

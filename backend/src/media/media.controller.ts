@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   Query,
   UploadedFile,
@@ -40,6 +41,7 @@ import { MAX_ATTACHMENT_SIZE_MB } from '../common/variables.global.js';
 import { ListMediaQueryDto } from './dto/in/list-media-query.dto.js';
 import { UploadMediaDto } from './dto/in/upload-media.dto.js';
 import { AttachmentResponseDto } from './dto/out/attachment-response.dto.js';
+import { PresignedUrlResponseDto } from './dto/out/presigned-url-response.dto.js';
 import { MediaExceptionFilter } from './filter/media-exception.filter.js';
 import { AttachmentMapper } from './mapper/attachment.mapper.js';
 import { MediaService, UploadedMediaFile } from './services/media.service.js';
@@ -109,7 +111,7 @@ export class MediaController {
     required: true,
     description: 'Identifiant de la page',
   })
-  @ApiOkResponse({ description: "Liste des médias de la page." })
+  @ApiOkResponse({ description: 'Liste des médias de la page.' })
   @ApiBadRequestResponse({
     description: 'pageId manquant ou invalide.',
     type: ErrorResponseDto,
@@ -126,10 +128,34 @@ export class MediaController {
     @Query() query: ListMediaQueryDto,
     @CurrentUser() user?: AuthenticatedUser,
   ): Promise<ResponseDto<AttachmentResponseDto[]>> {
-    const results = await this.mediaService.findAllByPage(
-      query.pageId,
+    const results = await this.mediaService.findAllByPage(query.pageId, user);
+    return AttachmentMapper.toListResponse(results);
+  }
+
+  @Get(':id/url')
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({ summary: 'Obtenir une URL présignée pour un média' })
+  @ApiOkResponse({ description: 'URL présignée générée.' })
+  @ApiBadRequestResponse({
+    description: "L'id n'est pas un UUID valide.",
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Page privée, accès non autorisé.',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: "Le média n'existe pas.",
+    type: ErrorResponseDto,
+  })
+  async getUrl(
+    @Param('id') id: string,
+    @CurrentUser() user?: AuthenticatedUser,
+  ): Promise<ResponseDto<PresignedUrlResponseDto>> {
+    const { url, expiresIn } = await this.mediaService.getPresignedUrl(
+      id,
       user,
     );
-    return AttachmentMapper.toListResponse(results);
+    return AttachmentMapper.toPresignedUrlResponse(url, expiresIn);
   }
 }

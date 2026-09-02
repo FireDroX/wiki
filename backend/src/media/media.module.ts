@@ -8,11 +8,7 @@ import { TypeormAttachmentsRepository } from './persistence/typeorm.attachment.r
 import { MediaService } from './services/media.service.js';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Attachment]),
-    StorageModule,
-    PagesModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Attachment]), StorageModule, PagesModule],
   controllers: [MediaController],
   providers: [
     {

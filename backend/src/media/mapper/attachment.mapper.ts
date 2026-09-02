@@ -1,5 +1,6 @@
 import { ResponseDto } from '../../common/dto/response.dto.js';
 import { AttachmentResponseDto } from '../dto/out/attachment-response.dto.js';
+import { PresignedUrlResponseDto } from '../dto/out/presigned-url-response.dto.js';
 import { Attachment } from '../entities/attachment.entity.js';
 
 export class AttachmentMapper {
@@ -33,5 +34,12 @@ export class AttachmentMapper {
         AttachmentMapper.toAttachmentResponseDto(attachment, url),
       ),
     );
+  }
+
+  static toPresignedUrlResponse(
+    url: string,
+    expiresIn: number,
+  ): ResponseDto<PresignedUrlResponseDto> {
+    return new ResponseDto({ url, expiresIn });
   }
 }

@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
+import { AttachmentNotFoundException } from '../../common/exceptions/media/attachment-not-found.exception.js';
 import { FileTooLargeException } from '../../common/exceptions/media/file-too-large.exception.js';
 import { UnsupportedFileTypeException } from '../../common/exceptions/media/unsupported-file-type.exception.js';
 import { ValidationException } from '../../common/exceptions/validation.exception.js';
@@ -87,6 +88,31 @@ export class MediaService {
         ),
       })),
     );
+  }
+
+  async getPresignedUrl(
+    id: string,
+    currentUser?: AuthenticatedUser,
+  ): Promise<{ url: string; expiresIn: number }> {
+    if (!UUID_REGEX.test(id)) {
+      throw new ValidationException('id must be a UUID');
+    }
+
+    const attachment = await this.attachmentsRepository.findById(id);
+    if (!attachment) {
+      throw new AttachmentNotFoundException();
+    }
+
+    if (attachment.pageId) {
+      await this.pagesService.getByIdOrFail(attachment.pageId, currentUser);
+    }
+
+    const url = await this.storageService.getPresignedUrl(
+      attachment.minioKey,
+      MEDIA_PRESIGNED_URL_EXPIRY_SECONDS,
+    );
+
+    return { url, expiresIn: MEDIA_PRESIGNED_URL_EXPIRY_SECONDS };
   }
 
   private validateUpload(file: UploadedMediaFile, dto: UploadMediaDto): void {
