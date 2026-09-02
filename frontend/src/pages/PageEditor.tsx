@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
+import { toast } from 'sonner'
 import { ImageUploadButton } from '#components/PageEditor/ImageUploadButton'
 import { MarkdownEditor, type MarkdownEditorHandle } from '#components/PageEditor/MarkdownEditor'
+import { SaveDialog } from '#components/PageEditor/SaveDialog'
 import { PageBreadcrumb } from '#components/layout/PageBreadcrumb'
 import { Button } from '#components/ui/button'
 import { FormError } from '#components/FormError'
@@ -37,6 +39,7 @@ export function PageEditor() {
   const editorRef = useRef<MarkdownEditorHandle>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false)
 
   useEffect(() => {
     if (page) {
@@ -45,15 +48,26 @@ export function PageEditor() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page])
 
-  async function handleSave() {
+  function openSaveDialog() {
+    setSaveError(null)
+    setSaveDialogOpen(true)
+  }
+
+  async function handleConfirmSave(changeSummary: string) {
     if (!page || isSaving) {
       return
     }
     setIsSaving(true)
     setSaveError(null)
     try {
-      await updatePage(page.id, { title: editor.title, content: editor.content })
+      await updatePage(page.id, {
+        title: editor.title,
+        content: editor.content,
+        changeSummary: changeSummary || undefined,
+      })
       editor.markSaved()
+      setSaveDialogOpen(false)
+      toast.success('Page sauvegardée.')
       navigate(returnPath)
     } catch (error) {
       setSaveError(extractErrorMessage(error))
@@ -101,8 +115,8 @@ export function PageEditor() {
           <Button type="button" variant="outline" onClick={handleCancel}>
             Annuler
           </Button>
-          <Button type="button" onClick={handleSave} disabled={isSaving}>
-            {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
+          <Button type="button" onClick={openSaveDialog} disabled={isSaving}>
+            Sauvegarder
           </Button>
         </div>
       </div>
@@ -111,9 +125,15 @@ export function PageEditor() {
         ref={editorRef}
         value={editor.content}
         onChange={editor.setContent}
-        onSave={handleSave}
+        onSave={openSaveDialog}
         onFilesDropped={handleFiles}
         toolbar={<ImageUploadButton onFilesSelected={handleFiles} />}
+      />
+      <SaveDialog
+        open={saveDialogOpen}
+        onOpenChange={setSaveDialogOpen}
+        onConfirm={handleConfirmSave}
+        isSaving={isSaving}
       />
     </div>
   )
