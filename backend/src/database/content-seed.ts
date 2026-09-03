@@ -105,6 +105,13 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
 ## Version 0.12
 
 <details>
+<summary>0.12.1 — 2026-09-03</summary>
+
+- Résolution du droit d'édition effectif d'une page : un \`reader\` global avec un grant explicite sur une page hérite du droit d'édition sur toute sa sous-arborescence (le grant le plus proche dans l'arbre l'emporte), \`editor\`/\`admin\` globaux ne sont jamais bloqués. Appliqué avant modification, déplacement, suppression et publication d'une page.
+
+</details>
+
+<details>
 <summary>0.12.0 — 2026-09-03</summary>
 
 - Entité \`PagePermission\` + migration : modélise les grants d'édition par page (\`pageId\`, \`userId\`, \`grantedById\`), unique sur \`(pageId, userId)\`.

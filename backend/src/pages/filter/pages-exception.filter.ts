@@ -41,6 +41,7 @@ export class PagesExceptionFilter implements ExceptionFilter {
       case 'PageHasChildrenException':
         return { statusCode: HttpStatus.CONFLICT, error: exception.message };
       case 'PageAccessForbiddenException':
+      case 'InsufficientPagePermissionException':
         return { statusCode: HttpStatus.FORBIDDEN, error: exception.message };
       case 'ValidationException':
         return { statusCode: HttpStatus.BAD_REQUEST, error: exception.message };

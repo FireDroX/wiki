@@ -144,8 +144,7 @@ export class PagesController {
   }
 
   @Patch(':id/move')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('editor', 'admin')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Déplacer une page dans l'arborescence" })
   @ApiParam({ name: 'id', description: 'Identifiant de la page à déplacer' })
@@ -156,7 +155,7 @@ export class PagesController {
     type: ErrorResponseDto,
   })
   @ApiForbiddenResponse({
-    description: 'Rôle insuffisant (editor ou admin requis).',
+    description: "Droit d'édition insuffisant sur cette page.",
     type: ErrorResponseDto,
   })
   @ApiNotFoundResponse({
@@ -170,14 +169,18 @@ export class PagesController {
   async move(
     @Param('id') id: string,
     @Body() dto: MovePageDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<ResponseDto<PageResponseDto>> {
-    const { page, version } = await this.pagesService.movePage(id, dto);
+    const { page, version } = await this.pagesService.movePage(
+      id,
+      dto,
+      user.id,
+    );
     return PageMapper.toResponse(page, version);
   }
 
   @Patch(':id/publish')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('editor', 'admin')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Publier ou dépublier une page' })
   @ApiParam({ name: 'id', description: 'Identifiant de la page' })
@@ -188,7 +191,7 @@ export class PagesController {
     type: ErrorResponseDto,
   })
   @ApiForbiddenResponse({
-    description: 'Rôle insuffisant (editor ou admin requis).',
+    description: "Droit d'édition insuffisant sur cette page.",
     type: ErrorResponseDto,
   })
   @ApiNotFoundResponse({
@@ -198,14 +201,18 @@ export class PagesController {
   async publish(
     @Param('id') id: string,
     @Body() dto: PublishPageDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<ResponseDto<PageResponseDto>> {
-    const { page, version } = await this.pagesService.setPublishStatus(id, dto);
+    const { page, version } = await this.pagesService.setPublishStatus(
+      id,
+      dto,
+      user.id,
+    );
     return PageMapper.toResponse(page, version);
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('editor', 'admin')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Supprimer une page' })
@@ -216,7 +223,7 @@ export class PagesController {
     type: ErrorResponseDto,
   })
   @ApiForbiddenResponse({
-    description: 'Rôle insuffisant (editor ou admin requis).',
+    description: "Droit d'édition insuffisant sur cette page.",
     type: ErrorResponseDto,
   })
   @ApiNotFoundResponse({
@@ -235,8 +242,9 @@ export class PagesController {
   async remove(
     @Param('id') id: string,
     @Query() query: DeletePageQueryDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
-    await this.pagesService.deletePage(id, query);
+    await this.pagesService.deletePage(id, query, user.id);
   }
 
   @Get('tree')
