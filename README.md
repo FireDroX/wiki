@@ -15,7 +15,6 @@ Clone de WikiJS — NestJS / TypeORM / MySQL / React / TypeScript / Tailwind / s
 - Uploader et insérer des médias (images, fichiers) dans les pages
 - Rechercher du contenu (full-text)
 - Gérer des utilisateurs et des permissions (admin / éditeur / lecteur)
-- Commenter les pages
 
 ---
 
@@ -56,7 +55,6 @@ openwiki/
 │   │   ├── versions/       (idem)
 │   │   ├── media/          (idem)
 │   │   ├── search/         (idem)
-│   │   ├── comments/       (idem)
 │   │   ├── admin/          (idem)
 │   │   ├── health/
 │   │   ├── common/ (guards, decorators, interceptors, filters globaux)
@@ -183,16 +181,6 @@ Table clé/valeur générique pour les réglages globaux (pas par utilisateur). 
 | PageTag.pageId | uuid    | FK composite |
 | PageTag.tagId  | uuid    | FK composite |
 
-### Comment
-
-| Champ     | Type     | Notes     |
-| --------- | -------- | --------- |
-| id        | uuid     | PK        |
-| pageId    | uuid     | FK → Page |
-| authorId  | uuid     | FK → User |
-| content   | text     |           |
-| createdAt | datetime |           |
-
 ### McpApiKey
 
 | Champ       | Type              | Notes                                   |
@@ -229,19 +217,18 @@ Table clé/valeur générique pour les réglages globaux (pas par utilisateur). 
 4. **EPIC-04** — Versioning
 5. **EPIC-05** — Médias / Minio
 6. **EPIC-06** — Recherche
-7. **EPIC-07** — Commentaires
-8. **EPIC-10** — Frontend : Setup & Layout
-9. **EPIC-11** — Frontend : Authentification
-10. **EPIC-12** — Frontend : Navigation & Arborescence
-11. **EPIC-13** — Frontend : Éditeur de pages
-12. **EPIC-14** — Frontend : Historique / Diff
-13. **EPIC-15** — Frontend : Recherche
-14. **EPIC-16** — Frontend : Administration
-15. **EPIC-17** — Tests & CI/CD
-16. **EPIC-18** — Intégration MCP (pilotage par IA)
-17. **EPIC-19** — Permissions avancées (grants par page)
-18. **EPIC-20** — Sécurité & anti-abus
-19. **EPIC-21** — Internationalisation (i18n)
+7. **EPIC-10** — Frontend : Setup & Layout
+8. **EPIC-11** — Frontend : Authentification
+9. **EPIC-12** — Frontend : Navigation & Arborescence
+10. **EPIC-13** — Frontend : Éditeur de pages
+11. **EPIC-14** — Frontend : Historique / Diff
+12. **EPIC-15** — Frontend : Recherche
+13. **EPIC-16** — Frontend : Administration
+14. **EPIC-17** — Tests & CI/CD
+15. **EPIC-18** — Intégration MCP (pilotage par IA)
+16. **EPIC-19** — Permissions avancées (grants par page)
+17. **EPIC-20** — Sécurité & anti-abus
+18. **EPIC-21** — Internationalisation (i18n)
 
 ---
 
@@ -433,26 +420,6 @@ Table clé/valeur générique pour les réglages globaux (pas par utilisateur). 
 - `GET /search?q=:query&page=1&limit=20`
 - Réponse : `{ results: [{ pageId, slug, title, excerpt, score }], total }`
 - AC : ne renvoie que les pages publiées et visibles par l'utilisateur.
-
----
-
-### EPIC-07 — Commentaires
-
-**BE-060 — Entité Comment + migration**
-
-**BE-061 — Lister commentaires d'une page**
-
-- `GET /pages/:id/comments`
-
-**BE-062 — Ajouter un commentaire**
-
-- `POST /pages/:id/comments`
-- Body : `{ content }`
-
-**BE-063 — Supprimer un commentaire**
-
-- `DELETE /comments/:id`
-- AC : autorisé pour l'auteur ou un admin.
 
 ---
 
@@ -724,6 +691,11 @@ Table clé/valeur générique pour les réglages globaux (pas par utilisateur). 
 
 - Description : `Table` paginée (admin, date, action, cible), filtrable par admin/action, appelle `GET /admin/audit-log`.
 
+**OPS-010 — Traiter les alertes de sécurité Dependabot**
+
+- Description : GitHub remonte des warnings Dependabot sur les dépendances du repo (backend + frontend). Mettre à jour/patcher les packages concernés (`pnpm audit` / bump de version), et ajouter `.github/dependabot.yml` (écosystème `npm`, un entry par workspace `backend`/`frontend`) pour que les futures failles remontent automatiquement en PR.
+- AC : plus d'alerte Dependabot ouverte de sévérité high/critical sur le repo ; `.github/dependabot.yml` committé et actif.
+
 ---
 
 ### EPIC-21 — Internationalisation (i18n)
@@ -823,14 +795,6 @@ Table clé/valeur générique pour les réglages globaux (pas par utilisateur). 
 | ------- | ---------- | ---------------- | ------------------- |
 | GET     | /search?q= | selon visibilité | Recherche full-text |
 
-### Commentaires
-
-| Méthode | Route               | Auth             | Description |
-| ------- | ------------------- | ---------------- | ----------- |
-| GET     | /pages/:id/comments | selon visibilité | Liste       |
-| POST    | /pages/:id/comments | oui              | Ajouter     |
-| DELETE  | /comments/:id       | auteur/admin     | Supprimer   |
-
 ### MCP (pilotage par IA)
 
 | Méthode   | Route                   | Auth                 | Description                                         |
@@ -864,10 +828,9 @@ Table clé/valeur générique pour les réglages globaux (pas par utilisateur). 
 4. EPIC-05 (Médias) + EPIC-13 (Éditeur)
 5. EPIC-04 (Versioning) + EPIC-14 (Historique/Diff)
 6. EPIC-06 (Recherche) + EPIC-15 (Frontend recherche)
-7. EPIC-07 (Commentaires)
-8. EPIC-16 (Admin)
-9. EPIC-18 (MCP) — une fois les modules Pages/Tags/Users/Média/Recherche stabilisés, car les tools MCP les enveloppent sans dupliquer leur logique
-10. EPIC-19 (Permissions avancées) — une fois EPIC-03 (Pages) et EPIC-02 (Auth) stabilisés, car le resolver s'appuie sur l'arborescence et les rôles existants
-11. EPIC-20 (Sécurité & anti-abus) — dès que EPIC-02/EPIC-11 (Auth backend + frontend) sont en place, avant une mise en prod
-12. EPIC-21 (i18n) — en parallèle du reste du frontend, une fois EPIC-16 (Administration) posé pour le sélecteur de langue
-13. EPIC-17 (Tests & CI/CD) — en continu dès le début, formalisé à la fin
+7. EPIC-16 (Admin)
+8. EPIC-18 (MCP) — une fois les modules Pages/Tags/Users/Média/Recherche stabilisés, car les tools MCP les enveloppent sans dupliquer leur logique
+9. EPIC-19 (Permissions avancées) — une fois EPIC-03 (Pages) et EPIC-02 (Auth) stabilisés, car le resolver s'appuie sur l'arborescence et les rôles existants
+10. EPIC-20 (Sécurité & anti-abus) — dès que EPIC-02/EPIC-11 (Auth backend + frontend) sont en place, avant une mise en prod
+11. EPIC-21 (i18n) — en parallèle du reste du frontend, une fois EPIC-16 (Administration) posé pour le sélecteur de langue
+12. EPIC-17 (Tests & CI/CD) — en continu dès le début, formalisé à la fin

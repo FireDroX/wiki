@@ -3,6 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { QueryFailedError } from 'typeorm';
 import type { AuthenticatedUser } from '../../common/strategies/jwt.strategy.js';
 import { CircularReferenceException } from '../../common/exceptions/pages/circular-reference.exception.js';
+import { InsufficientPagePermissionException } from '../../common/exceptions/pages/insufficient-page-permission.exception.js';
 import { PageAccessForbiddenException } from '../../common/exceptions/pages/page-access-forbidden.exception.js';
 import { PageHasChildrenException } from '../../common/exceptions/pages/page-has-children.exception.js';
 import { PageNotFoundException } from '../../common/exceptions/pages/page-not-found.exception.js';
@@ -30,6 +31,7 @@ import {
 } from '../events/page-published.event.js';
 import { PageTreeMapper } from '../mapper/page-tree.mapper.js';
 import type { PagesRepository } from '../persistence/page.repository.js';
+import { PagePermissionsService } from './page-permissions.service.js';
 
 const MYSQL_DUPLICATE_ENTRY_CODE = 'ER_DUP_ENTRY';
 
@@ -38,6 +40,7 @@ export class PagesService {
   constructor(
     @Inject('PagesRepository')
     private readonly pagesRepository: PagesRepository,
+    private readonly pagePermissionsService: PagePermissionsService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -169,6 +172,8 @@ export class PagesService {
       throw new PageNotFoundException();
     }
 
+    await this.assertCanEdit(id, authorId);
+
     const currentVersion = await this.pagesRepository.findVersionById(
       page.currentVersionId,
     );
@@ -193,6 +198,7 @@ export class PagesService {
   async movePage(
     id: string,
     dto: MovePageDto,
+    userId: string,
   ): Promise<{ page: Page; version: PageVersion }> {
     this.validateMovePage(dto);
 
@@ -200,6 +206,8 @@ export class PagesService {
     if (!page || !page.currentVersionId) {
       throw new PageNotFoundException();
     }
+
+    await this.assertCanEdit(id, userId);
 
     const currentVersion = await this.pagesRepository.findVersionById(
       page.currentVersionId,
@@ -243,11 +251,17 @@ export class PagesService {
     }
   }
 
-  async deletePage(id: string, query: DeletePageQueryDto): Promise<void> {
+  async deletePage(
+    id: string,
+    query: DeletePageQueryDto,
+    userId: string,
+  ): Promise<void> {
     const page = await this.pagesRepository.findById(id);
     if (!page) {
       throw new PageNotFoundException();
     }
+
+    await this.assertCanEdit(id, userId);
 
     const cascade = PagesService.parseCascade(query.cascade);
     const children = await this.pagesRepository.findChildren(id);
@@ -266,6 +280,7 @@ export class PagesService {
   async setPublishStatus(
     id: string,
     dto: PublishPageDto,
+    userId: string,
   ): Promise<{ page: Page; version: PageVersion }> {
     this.validatePublishPage(dto);
 
@@ -273,6 +288,8 @@ export class PagesService {
     if (!page || !page.currentVersionId) {
       throw new PageNotFoundException();
     }
+
+    await this.assertCanEdit(id, userId);
 
     const version = await this.pagesRepository.findVersionById(
       page.currentVersionId,
@@ -295,6 +312,13 @@ export class PagesService {
     }
 
     return { page: updated, version };
+  }
+
+  private async assertCanEdit(pageId: string, userId: string): Promise<void> {
+    const canEdit = await this.pagePermissionsService.canEdit(userId, pageId);
+    if (!canEdit) {
+      throw new InsufficientPagePermissionException();
+    }
   }
 
   private async deleteRecursive(id: string): Promise<void> {

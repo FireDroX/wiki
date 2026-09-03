@@ -35,12 +35,16 @@ export class PagesExceptionFilter implements ExceptionFilter {
       case 'ParentPageNotFoundException':
       case 'PageNotFoundException':
       case 'VersionNotFoundException':
+      case 'UserNotFoundException':
+      case 'PermissionNotFoundException':
         return { statusCode: HttpStatus.NOT_FOUND, error: exception.message };
       case 'SlugAlreadyExistsException':
       case 'CircularReferenceException':
       case 'PageHasChildrenException':
+      case 'PermissionAlreadyExistsException':
         return { statusCode: HttpStatus.CONFLICT, error: exception.message };
       case 'PageAccessForbiddenException':
+      case 'InsufficientPagePermissionException':
         return { statusCode: HttpStatus.FORBIDDEN, error: exception.message };
       case 'ValidationException':
         return { statusCode: HttpStatus.BAD_REQUEST, error: exception.message };
