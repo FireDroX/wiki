@@ -143,6 +143,13 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
 ## Version 0.12
 
 <details>
+<summary>0.12.4 — 2026-09-03</summary>
+
+- Panneau "Droits d'édition" dans l'éditeur de page (réservé admin) : liste des éditeurs grantés explicitement sur la page, ajout via une recherche d'utilisateur, révocation confirmée par boîte de dialogue.
+
+</details>
+
+<details>
 <summary>0.12.3 — 2026-09-03</summary>
 
 - Révocation d'un droit d'édition (\`DELETE /pages/:id/permissions/:userId\`, admin) : \`204\` si un grant explicite existait sur cette page précise, \`404\` sinon — révoquer un droit hérité d'une page ancêtre (au lieu d'un grant explicite sur la page ciblée) échoue volontairement en \`404\`, sans effet sur l'héritage.

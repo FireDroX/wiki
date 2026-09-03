@@ -7,12 +7,14 @@ import { EditorLayout } from '#components/PageEditor/EditorLayout'
 import { FileUploadButton } from '#components/PageEditor/FileUploadButton'
 import { MarkdownEditor, type MarkdownEditorHandle } from '#components/PageEditor/MarkdownEditor'
 import { PageMetadataForm } from '#components/PageEditor/PageMetadataForm'
+import { PagePermissionsPanel } from '#components/page-settings/PagePermissionsPanel'
 import { Button } from '#components/ui/button'
 import { Field, FieldLabel } from '#components/ui/field'
 import { FormError } from '#components/FormError'
 import { Skeleton } from '#components/ui/skeleton'
 import { Textarea } from '#components/ui/textarea'
 import { movePage, publishPage, updatePage } from '#api/pages'
+import { useAuth } from '#hooks/useAuth'
 import { useEditorState } from '#hooks/useEditorState'
 import { useFileUpload } from '#hooks/useFileUpload'
 import { usePage } from '#hooks/usePage'
@@ -38,6 +40,7 @@ function PageEditorSkeleton() {
 export function PageEditor() {
   const params = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const pathSegments = pathFromParam(params['*'])
   const initialReturnPath = `/pages/${pathSegments.join('/')}`
   const { status, page } = usePage(pathSegments)
@@ -177,6 +180,11 @@ export function PageEditor() {
               rows={3}
             />
           </Field>
+          {user?.role === 'admin' && (
+            <div className="mt-5">
+              <PagePermissionsPanel pageId={page.id} />
+            </div>
+          )}
           <FormError message={saveError} />
         </>
       }
