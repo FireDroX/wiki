@@ -42,7 +42,8 @@ pnpm run start:prod          # node dist/main (build requis avant)
 pnpm run migration:run       # applique les migrations TypeORM en attente
 pnpm run migration:revert    # annule la dernière migration
 pnpm run migration:generate  # diff entities vs DB (via tsx, hors contexte Nest)
-pnpm run seed:dev            # peuple la DB locale de données factices (dev uniquement)
+pnpm run seed:dev            # crée l'utilisateur admin de dev (dev uniquement, jamais en prod)
+pnpm run seed:content        # (re)seed la page arborescence documentation/notes-de-version/faq (safe en prod, à rejouer à chaque déploiement)
 ```
 
 Config : trois fichiers `.env` séparés (chacun avec un `.env.example` à copier) :
@@ -59,7 +60,7 @@ Config : trois fichiers `.env` séparés (chacun avec un `.env.example` à copie
 
 `GET /health` ne retourne en revanche plus cette version — il reste un JSON nu (`{ status: 'ok' }`), pas enveloppé par `ResponseDto` — c'est un healthcheck consommé par des outils d'infra, pas par le frontend applicatif.
 
-En complément du bump de version, chaque ticket terminé ajoute aussi une entrée dans le contenu de la page **"Notes de version"** seedée par `backend/src/database/dev-seed.ts` (entrée `notes-de-version` de `PAGE_TREE_SEED`) : entrée en tête de ce contenu markdown (plus récent en premier), titrée `## <version> — <date>`, suivie d'une liste à puces résumant le changement.
+En complément du bump de version, chaque ticket terminé ajoute aussi une entrée dans le contenu de la page **"Notes de version"** seedée par `backend/src/database/content-seed.ts` (entrée `notes-de-version` de `PAGE_TREE_SEED`) : entrée en tête de ce contenu markdown (plus récent en premier), titrée `## <version> — <date>`, suivie d'une liste à puces résumant le changement.
 
 ## Architecture backend (`backend/src`)
 
@@ -83,7 +84,10 @@ Auth : JWT (access + refresh token), retournés dans le **corps** de la réponse
 
 Base de données : MySQL 8 via `@nestjs/typeorm`, tous les changements de schéma passent par des migrations dans `src/database/migrations/` (SQL brut via `queryRunner.query`, pas le query builder — voir les migrations existantes). `src/config/data-source.ts` est un `DataSource` standalone séparé utilisé seulement par le CLI TypeORM (les migrations tournent hors du contexte Nest, contre `src/**/*.entity.ts` directement, pas `dist/`).
 
-`src/database/dev-seed.ts` peuple la DB locale avec un jeu de données factices (un user admin + une arborescence de pages sur 3 niveaux) via `pnpm run seed:dev` — script `tsx` standalone comme `data-source.ts`, hors contexte Nest, idempotent (skip ce qui existe déjà par email/slug). Usage dev uniquement, jamais exécuté en prod/CI.
+Deux scripts `tsx` standalone comme `data-source.ts`, hors contexte Nest, idempotents :
+
+- `src/database/dev-seed.ts` (`pnpm run seed:dev`) crée l'utilisateur admin de dev (skip s'il existe déjà par email). **Usage dev uniquement, jamais exécuté en prod/CI.**
+- `src/database/content-seed.ts` (`pnpm run seed:content`) crée/met à jour l'arborescence de pages de contenu (documentation sur 3 niveaux, notes de version, FAQ) — une page existante dont le contenu a changé reçoit une nouvelle `PageVersion` (jamais de skip silencieux d'un contenu modifié), attribuée au plus ancien utilisateur de la base. **Safe à rejouer en prod, prévu pour tourner à chaque déploiement** afin de garder la doc et les notes de version à jour.
 
 Stockage médias : Minio (S3-compatible) via `storage/services/storage.service.ts`, bucket auto-créé au démarrage (`onModuleInit`) si absent.
 
