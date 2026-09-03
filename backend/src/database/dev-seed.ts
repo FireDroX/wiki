@@ -107,6 +107,15 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
     title: 'Notes de version',
     content: `# Notes de version
 
+## Version 0.12
+
+<details>
+<summary>0.12.0 — 2026-09-03</summary>
+
+- Entité \`PagePermission\` + migration : modélise les grants d'édition par page (\`pageId\`, \`userId\`, \`grantedById\`), unique sur \`(pageId, userId)\`.
+
+</details>
+
 ## Version 0.11
 
 <details>
