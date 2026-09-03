@@ -24,7 +24,42 @@ Bienvenue dans la documentation d'OpenWiki. Utilisez l'arborescence à gauche po
         title: 'Guide de démarrage',
         content: `# Guide de démarrage
 
-Ce guide couvre l'installation et la configuration initiale d'OpenWiki.`,
+Ce guide couvre l'installation, la configuration et le premier lancement d'OpenWiki en local, de bout en bout.
+
+## Vue d'ensemble
+
+OpenWiki est un monorepo pnpm avec deux packages : \`backend/\` (NestJS + TypeORM + MySQL) et \`frontend/\` (React + Vite). Les pages [Installation](/pages/documentation/guide-demarrage/installation) et [Configuration](/pages/documentation/guide-demarrage/configuration) détaillent chaque étape ; ce qui suit résume le parcours complet.
+
+## Étapes
+
+1. **Installation** — cloner le dépôt, installer les dépendances, démarrer MySQL et Minio via Docker. Voir [Installation](/pages/documentation/guide-demarrage/installation).
+2. **Configuration** — copier et renseigner les trois fichiers \`.env\` (racine, \`backend/\`, \`frontend/\`). Voir [Configuration](/pages/documentation/guide-demarrage/configuration).
+3. **Migrations** — appliquer le schéma de base de données :
+
+\`\`\`bash
+cd backend
+pnpm run migration:run
+\`\`\`
+
+4. **Compte de test** (optionnel, développement uniquement) :
+
+\`\`\`bash
+pnpm run seed:dev
+\`\`\`
+
+5. **Démarrage** (deux terminaux, depuis la racine du dépôt) :
+
+\`\`\`bash
+pnpm run back:dev   # backend sur http://localhost:3000
+pnpm run front:dev  # frontend sur http://localhost:5173
+\`\`\`
+
+6. Ouvrir [http://localhost:5173](http://localhost:5173) et se connecter avec le compte créé à l'étape 4, ou s'inscrire via la page d'inscription.
+
+## Étapes suivantes
+
+- Créez votre première page depuis le bouton "Nouvelle page" de la barre latérale.
+- Consultez la page [Endpoints](/pages/documentation/endpoints) pour la référence complète de l'API.`,
         children: [
           {
             slug: 'installation',
@@ -34,22 +69,38 @@ Ce guide couvre l'installation et la configuration initiale d'OpenWiki.`,
 ## Prérequis
 
 - Node.js 20+
+- pnpm (voir le champ \`packageManager\` de \`package.json\`)
 - Docker (pour MySQL et Minio)
 
 ## Étapes
 
-1. Cloner le dépôt
+1. Cloner le dépôt :
+
+\`\`\`bash
+git clone <url-du-dépôt>
+cd openwiki
+\`\`\`
+
 2. Installer les dépendances :
 
 \`\`\`bash
 pnpm install
 \`\`\`
 
-3. Démarrer les services :
+3. Démarrer les services (MySQL + Minio) :
 
 \`\`\`bash
 docker compose up -d
 \`\`\`
+
+4. Appliquer les migrations de base de données :
+
+\`\`\`bash
+cd backend
+pnpm run migration:run
+\`\`\`
+
+Passez ensuite à la page [Configuration](/pages/documentation/guide-demarrage/configuration) pour renseigner les fichiers \`.env\`.
 
 ![Aperçu du tableau de bord](https://placehold.co/480x240?text=Dashboard)`,
           },
@@ -58,49 +109,36 @@ docker compose up -d
             title: 'Configuration',
             content: `# Configuration
 
-La configuration se fait via trois fichiers \`.env\` distincts (racine, \`backend/\`, \`frontend/\`), chacun avec un \`.env.example\` à copier.`,
+La configuration se fait via trois fichiers \`.env\` distincts, chacun avec un \`.env.example\` à copier :
+
+| Fichier | Rôle |
+| --- | --- |
+| \`.env\` (racine) | Identifiants MySQL/Minio pour \`docker-compose.yml\` |
+| \`backend/.env\` | Port, URL du frontend (CORS), connexion DB, connexion Minio |
+| \`frontend/.env\` | \`VITE_API_URL\`, URL de base de l'API backend (préfixe \`/api\` inclus) |
+
+Une fois les trois fichiers renseignés, démarrez les serveurs de développement :
+
+\`\`\`bash
+pnpm run back:dev   # backend sur http://localhost:3000
+pnpm run front:dev  # frontend sur http://localhost:5173
+\`\`\``,
           },
         ],
       },
       {
-        slug: 'reference-api',
-        title: 'Référence API',
-        content: `# Référence API
-
-Cette section documente l'API REST exposée par le backend.`,
-        children: [
-          {
-            slug: 'authentification',
-            title: 'Authentification',
-            content: `# Authentification
-
-L'API utilise des tokens JWT (access + refresh).
-
-\`\`\`js
-const response = await fetch('/api/auth/login', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ email, password }),
-})
-\`\`\``,
-          },
-          {
-            slug: 'endpoints',
-            title: 'Endpoints',
-            content: `# Endpoints
+        slug: 'endpoints',
+        title: 'Endpoints',
+        content: `# Endpoints
 
 La documentation ci-dessous est générée automatiquement à partir des routes réellement exposées par le backend (schéma OpenAPI de \`/api/docs-json\`).
 
 <api-reference></api-reference>`,
-          },
-        ],
       },
-    ],
-  },
-  {
-    slug: 'notes-de-version',
-    title: 'Notes de version',
-    content: `# Notes de version
+      {
+        slug: 'notes-de-version',
+        title: 'Notes de version',
+        content: `# Notes de version
 
 ## Version 0.12
 
@@ -366,15 +404,8 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
 - Mise en place du monorepo pnpm (backend/frontend), Docker Compose (MySQL + Minio) et intégration du stockage d'objets.
 
 </details>`,
-  },
-  {
-    slug: 'faq',
-    title: 'FAQ',
-    content: `# FAQ
-
-**Comment créer une page ?**
-
-Utilisez le bouton "Nouvelle page" depuis la barre latérale.`,
+      },
+    ],
   },
 ];
 
@@ -443,10 +474,11 @@ async function seedPage(
     const currentVersion = page.currentVersionId
       ? await versionRepository.findOneBy({ id: page.currentVersionId })
       : null;
+    const contentChanged =
+      currentVersion?.content !== content || page.title !== seed.title;
+    const moved = page.parentId !== parentId;
 
-    if (currentVersion?.content === content && page.title === seed.title) {
-      console.log(`Page "${seed.slug}" already up to date, skipping.`);
-    } else {
+    if (contentChanged) {
       const version = await versionRepository.save(
         versionRepository.create({
           pageId: page.id,
@@ -459,8 +491,23 @@ async function seedPage(
 
       page.title = seed.title;
       page.currentVersionId = version.id;
-      await pageRepository.save(page);
-      console.log(`Updated page "${seed.slug}".`);
+    }
+
+    if (moved) {
+      page.parentId = parentId;
+    }
+
+    if (contentChanged || moved) {
+      page = await pageRepository.save(page);
+      if (contentChanged && moved) {
+        console.log(`Updated and moved page "${seed.slug}".`);
+      } else if (contentChanged) {
+        console.log(`Updated page "${seed.slug}".`);
+      } else {
+        console.log(`Moved page "${seed.slug}".`);
+      }
+    } else {
+      console.log(`Page "${seed.slug}" already up to date, skipping.`);
     }
   }
 
