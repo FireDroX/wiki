@@ -1,12 +1,12 @@
 # OpenWiki — Cahier des charges & Backlog complet
 
-Clone de WikiJS — NestJS / TypeORM / MySQL / React / TypeScript / Tailwind / shadcn / Minio / Discord / n8n
+Clone de WikiJS — NestJS / TypeORM / MySQL / React / TypeScript / Tailwind / shadcn / Minio
 
 ---
 
 ## 1. Présentation du projet
 
-**OpenWiki** est une plateforme de wiki collaboratif auto-hébergée. Les utilisateurs créent des pages organisées en arborescence, chaque édition est versionnée, les médias sont stockés sur Minio, et le tout peut être notifié/automatisé via Discord et n8n.
+**OpenWiki** est une plateforme de wiki collaboratif auto-hébergée. Les utilisateurs créent des pages organisées en arborescence, chaque édition est versionnée, les médias sont stockés sur Minio.
 
 ### Objectifs fonctionnels
 
@@ -16,8 +16,6 @@ Clone de WikiJS — NestJS / TypeORM / MySQL / React / TypeScript / Tailwind / s
 - Rechercher du contenu (full-text)
 - Gérer des utilisateurs et des permissions (admin / éditeur / lecteur)
 - Commenter les pages
-- Notifier Discord lors d'évènements clés
-- Déclencher des automatisations n8n (backup, exports, webhooks sortants)
 
 ---
 
@@ -32,7 +30,6 @@ Clone de WikiJS — NestJS / TypeORM / MySQL / React / TypeScript / Tailwind / s
 | Frontend        | React + TypeScript + Vite                                            |
 | UI              | TailwindCSS + shadcn/ui                                              |
 | Auth            | JWT (access + refresh token)                                         |
-| Intégrations    | Discord (webhooks + bot optionnel), n8n (webhooks entrants/sortants) |
 | Recherche       | MySQL FULLTEXT (v1) → migration Meilisearch possible (v2)            |
 
 ---
@@ -60,8 +57,6 @@ openwiki/
 │   │   ├── media/          (idem)
 │   │   ├── search/         (idem)
 │   │   ├── comments/       (idem)
-│   │   ├── integrations/   (idem)
-│   │   ├── webhooks/       (idem)
 │   │   ├── admin/          (idem)
 │   │   ├── health/
 │   │   ├── common/ (guards, decorators, interceptors, filters globaux)
@@ -101,6 +96,8 @@ Chaque module vit directement sous `src/` (pas de dossier `modules/` intermédia
 | displayName  | varchar                     |                   |
 | avatarUrl    | varchar nullable            | pointe vers Minio |
 | role         | enum(admin, editor, reader) |                   |
+| failedLoginAttempts | int                  | reset à 0 sur connexion réussie |
+| lockedUntil  | datetime nullable           | verrouillage temporaire après échecs répétés |
 | createdAt    | datetime                    |                   |
 | updatedAt    | datetime                    |                   |
 
@@ -144,6 +141,39 @@ Chaque module vit directement sous `src/` (pas de dossier `modules/` intermédia
 | uploadedById | uuid          | FK → User          |
 | createdAt    | datetime      |                    |
 
+### PagePermission
+
+| Champ        | Type     | Notes                                                             |
+| ------------ | -------- | ------------------------------------------------------------------ |
+| id           | uuid     | PK                                                                  |
+| pageId       | uuid     | FK → Page                                                           |
+| userId       | uuid     | FK → User                                                           |
+| grantedById  | uuid     | FK → User (admin ayant accordé le droit)                           |
+| createdAt    | datetime |                                                                      |
+
+Unique sur `(pageId, userId)`. Accorde des droits d'éditeur sur la page **et toute sa sous-arborescence**, sauf override explicite plus bas dans l'arbre — voir EPIC-19. Ne remplace jamais `User.role` : élève seulement un `reader` global en éditeur localement.
+
+### AdminAuditLog
+
+| Champ        | Type              | Notes                                                    |
+| ------------ | ----------------- | --------------------------------------------------------- |
+| id           | uuid              | PK                                                          |
+| adminId      | uuid              | FK → User                                                   |
+| action       | varchar           | ex. `user.role_changed`, `user.deleted`                     |
+| targetType   | varchar           | ex. `User`                                                   |
+| targetId     | uuid nullable     |                                                              |
+| metadata     | json nullable     | détails de l'action (ex. ancien/nouveau rôle)               |
+| createdAt    | datetime          |                                                              |
+
+### SystemSetting
+
+| Champ  | Type    | Notes                                          |
+| ------ | ------- | ----------------------------------------------- |
+| key    | varchar | PK, ex. `locale`                                |
+| value  | varchar | ex. `fr` / `en`                                 |
+
+Table clé/valeur générique pour les réglages globaux (pas par utilisateur). Le premier usage est la langue de l'UI (EPIC-21), extensible à d'autres réglages système futurs.
+
 ### Tag / PageTag
 
 | Champ          | Type    | Notes        |
@@ -162,15 +192,6 @@ Chaque module vit directement sous `src/` (pas de dossier `modules/` intermédia
 | authorId  | uuid     | FK → User |
 | content   | text     |           |
 | createdAt | datetime |           |
-
-### IntegrationConfig
-
-| Champ    | Type               | Notes                        |
-| -------- | ------------------ | ---------------------------- |
-| id       | uuid               | PK                           |
-| type     | enum(discord, n8n) |                              |
-| config   | json               | webhook URL, secret, options |
-| isActive | boolean            |                              |
 
 ### McpApiKey
 
@@ -209,17 +230,18 @@ Chaque module vit directement sous `src/` (pas de dossier `modules/` intermédia
 5. **EPIC-05** — Médias / Minio
 6. **EPIC-06** — Recherche
 7. **EPIC-07** — Commentaires
-8. **EPIC-08** — Intégration Discord
-9. **EPIC-09** — Intégration n8n
-10. **EPIC-10** — Frontend : Setup & Layout
-11. **EPIC-11** — Frontend : Authentification
-12. **EPIC-12** — Frontend : Navigation & Arborescence
-13. **EPIC-13** — Frontend : Éditeur de pages
-14. **EPIC-14** — Frontend : Historique / Diff
-15. **EPIC-15** — Frontend : Recherche
-16. **EPIC-16** — Frontend : Administration
-17. **EPIC-17** — Tests & CI/CD
-18. **EPIC-18** — Intégration MCP (pilotage par IA)
+8. **EPIC-10** — Frontend : Setup & Layout
+9. **EPIC-11** — Frontend : Authentification
+10. **EPIC-12** — Frontend : Navigation & Arborescence
+11. **EPIC-13** — Frontend : Éditeur de pages
+12. **EPIC-14** — Frontend : Historique / Diff
+13. **EPIC-15** — Frontend : Recherche
+14. **EPIC-16** — Frontend : Administration
+15. **EPIC-17** — Tests & CI/CD
+16. **EPIC-18** — Intégration MCP (pilotage par IA)
+17. **EPIC-19** — Permissions avancées (grants par page)
+18. **EPIC-20** — Sécurité & anti-abus
+19. **EPIC-21** — Internationalisation (i18n)
 
 ---
 
@@ -434,46 +456,6 @@ Chaque module vit directement sous `src/` (pas de dossier `modules/` intermédia
 
 ---
 
-### EPIC-08 — Intégration Discord
-
-**BE-070 — Entité IntegrationConfig + migration**
-
-**BE-071 — CRUD config Discord (admin)**
-
-- `GET /admin/integrations/discord`
-- `PUT /admin/integrations/discord` — Body : `{ webhookUrl, events: ['page.published', 'page.commented'] }`
-
-**BE-072 — Service de notification Discord**
-
-- Description : écoute les events internes (EventEmitter NestJS) et poste sur le webhook configuré.
-- Events couverts : `page.created`, `page.published`, `page.commented`, `user.registered`.
-- AC : échec d'envoi Discord ne bloque jamais l'action principale (fire-and-forget avec log d'erreur).
-
-**BE-073 (optionnel) — Bot Discord avec commande `/wiki-search`**
-
-- Description : bot séparé (discord.js) qui appelle `GET /search` et renvoie un embed avec les 3 meilleurs résultats.
-
----
-
-### EPIC-09 — Intégration n8n
-
-**BE-080 — Webhook entrant depuis n8n**
-
-- `POST /webhooks/n8n/:integrationId`
-- Description : endpoint générique sécurisé par secret, permet à n8n de déclencher des actions (ex : créer une page depuis un flux automatisé).
-
-**BE-081 — Webhook sortant vers n8n**
-
-- Description : au même titre que Discord, certains events internes peuvent POST vers une URL n8n configurée (déclenchement de workflow).
-- AC : configurable indépendamment par event dans `IntegrationConfig`.
-
-**BE-082 — Endpoint export complet (pour backup n8n)**
-
-- `GET /admin/export` (réservé admin)
-- Réponse : archive ZIP (pages en markdown + métadonnées) générée à la volée, pensée pour être appelée périodiquement par un workflow n8n qui la pousse ensuite vers Minio ou ailleurs.
-
----
-
 ### EPIC-10 — Frontend : Setup & Layout
 
 **FE-001 — Init projet Vite + React + TS**
@@ -581,17 +563,9 @@ Chaque module vit directement sous `src/` (pas de dossier `modules/` intermédia
 
 - `Table` + `Select` pour changer le rôle, `AlertDialog` pour suppression.
 
-**FE-061 — Page configuration Discord**
+**FE-064 — Sélecteur de langue (FR/EN)**
 
-- Formulaire webhook URL + checkboxes des events à notifier.
-
-**FE-062 — Page configuration n8n**
-
-- Formulaire webhook URL + secret + bouton "tester la connexion".
-
-**FE-063 — Page export/backup**
-
-- Bouton déclenchant `GET /admin/export`, téléchargement direct du ZIP.
+- Description : `Select` shadcn dans le panel admin, appelle `PATCH /admin/settings/locale`. Réglage global (pas par utilisateur) — voir EPIC-21.
 
 ---
 
@@ -675,14 +649,114 @@ Chaque module vit directement sous `src/` (pas de dossier `modules/` intermédia
 
 ---
 
+### EPIC-19 — Permissions avancées (grants par page)
+
+**BE-100 — Entité PagePermission + migration**
+
+- Description : `PagePermission(id, pageId, userId, grantedById, createdAt)`, unique sur `(pageId, userId)`.
+
+**BE-101 — Resolver de permission effective**
+
+- Description : dans le guard des pages, résout le droit d'édition en remontant la chaîne `parentId` depuis la page ciblée jusqu'à trouver un grant explicite, sinon retombe sur `User.role` global.
+- AC : un `reader` global avec un grant sur une page hérite du droit d'édition sur toute la sous-arborescence, sauf si un descendant a lui-même un grant (override) ; `editor`/`admin` globaux ne sont jamais restreints par l'absence de grant.
+
+**BE-102 — Créer / lister un grant**
+
+- `POST /pages/:id/permissions` (admin) — Body : `{ userId }`
+- `GET /pages/:id/permissions` (admin) — grants explicites définis directement sur cette page (pas les hérités)
+- AC : grant dupliqué (même `pageId`/`userId`) → `409`.
+
+**BE-103 — Révoquer un grant**
+
+- `DELETE /pages/:id/permissions/:userId` (admin)
+- AC : `404` si aucun grant explicite n'existe sur cette page pour cet utilisateur.
+
+**FE-080 — Panneau "Droits d'édition" (settings de page)**
+
+- Description : liste des éditeurs grantés sur la page, recherche/ajout d'un utilisateur, révocation via `AlertDialog`. Accessible depuis les settings de page (FE-032), réservé admin.
+
+---
+
+### EPIC-20 — Sécurité & anti-abus
+
+**BE-110 — Rate limiting global**
+
+- Description : `@nestjs/throttler`, limite globale par IP (ex. 100 req/min) appliquée à toute l'API.
+
+**BE-111 — Rate limiting strict sur l'authentification**
+
+- Description : limites dédiées, plus strictes, sur `POST /auth/login`, `POST /auth/register`, `POST /auth/refresh` (ex. 5/min).
+- AC : dépassement → `429`.
+
+**BE-112 — Cloudflare Turnstile sur login/register**
+
+- Description : `turnstileToken` obligatoire dans le body de `POST /auth/login` et `POST /auth/register`, vérifié côté backend contre l'API `siteverify` de Cloudflare. Secret via `TURNSTILE_SECRET_KEY` (env).
+- AC : token manquant ou invalide → `400` avant toute vérification de credentials.
+
+**BE-113 — Verrouillage de compte après échecs répétés**
+
+- Description : incrémente `User.failedLoginAttempts` à chaque échec de `POST /auth/login`, pose `lockedUntil` après 5 échecs consécutifs (verrouillage 15 min), reset à la connexion réussie.
+- AC : compte verrouillé → `423 Locked` explicite même avec le bon mot de passe, jusqu'à expiration de `lockedUntil`.
+
+**BE-114 — Headers de sécurité (helmet) + durcissement CORS**
+
+- Description : middleware `helmet` (CSP, HSTS, X-Frame-Options...), CORS restreint strictement à `FRONTEND_URL`.
+
+**BE-115 — Audit log des actions admin sensibles**
+
+- Description : entité `AdminAuditLog`, écrit sur changement de rôle (BE-017), suppression d'utilisateur (BE-017).
+- `GET /admin/audit-log` (admin, paginé)
+
+**BE-116 — Politique de mot de passe renforcée**
+
+- Description : au-delà de `MIN_PASSWORD_LENGTH`, exige majuscule + chiffre + caractère spécial ; check optionnel contre l'API haveibeenpwned (k-anonymity) à l'inscription.
+- AC : mot de passe compromis détecté → `400` ; API haveibeenpwned injoignable → ne bloque pas l'inscription (fail-open, log d'erreur).
+
+**FE-081 — Widget Cloudflare Turnstile (login/register)**
+
+- Description : intégration du widget managé sur les formulaires FE-010/FE-011, token envoyé avec la requête.
+
+**FE-082 — Affichage du verrouillage de compte**
+
+- Description : message d'erreur dédié + countdown sur le formulaire de login quand `423 Locked` est renvoyé.
+
+**FE-083 — Page journal d'audit admin**
+
+- Description : `Table` paginée (admin, date, action, cible), filtrable par admin/action, appelle `GET /admin/audit-log`.
+
+---
+
+### EPIC-21 — Internationalisation (i18n)
+
+**BE-120 — Entité SystemSetting + migration**
+
+- Description : `SystemSetting(key, value)`, seed `locale=fr`.
+
+**BE-121 — Endpoints réglages système**
+
+- `GET /settings` (public, pas d'auth — nécessaire même pour les visiteurs non connectés)
+- `PATCH /admin/settings/:key` (admin)
+- AC : `PATCH /admin/settings/locale` avec une valeur hors `fr`/`en` → `400`.
+
+**FE-090 — Intégration react-i18next**
+
+- Description : fichiers de traduction FR/EN pour toute l'UI (labels, boutons, messages d'erreur). Le contenu des pages wiki n'est jamais traduit automatiquement.
+
+**FE-091 — Chargement de la langue globale au démarrage**
+
+- Description : fetch `GET /settings` au démarrage de l'app, configure `react-i18next` en conséquence.
+- AC : réglage global appliqué à tous les visiteurs, aucune préférence par utilisateur, pas de `localStorage` pour ce setting.
+
+---
+
 ## 7. Récapitulatif complet des endpoints API
 
 ### Auth
 
 | Méthode | Route          | Auth | Description         |
 | ------- | -------------- | ---- | ------------------- |
-| POST    | /auth/register | non  | Inscription         |
-| POST    | /auth/login    | non  | Connexion           |
+| POST    | /auth/register | non  | Inscription — rate limit strict + Turnstile requis (EPIC-20) |
+| POST    | /auth/login    | non  | Connexion — rate limit strict + Turnstile requis, verrouillage après échecs répétés (EPIC-20) |
 | POST    | /auth/refresh  | non  | Rafraîchir le token |
 
 ### Users
@@ -706,6 +780,14 @@ Chaque module vit directement sous `src/` (pas de dossier `modules/` intermédia
 | PATCH   | /pages/:id/move    | éditeur+         | Déplacer dans l'arbre     |
 | DELETE  | /pages/:id         | éditeur+         | Supprimer                 |
 | PATCH   | /pages/:id/publish | éditeur+         | Publier/dépublier         |
+
+### Permissions
+
+| Méthode | Route                        | Auth  | Description                          |
+| ------- | ----------------------------- | ----- | ------------------------------------- |
+| GET     | /pages/:id/permissions        | admin | Grants explicites sur cette page      |
+| POST    | /pages/:id/permissions        | admin | Accorder un droit d'éditeur           |
+| DELETE  | /pages/:id/permissions/:userId | admin | Révoquer un droit d'éditeur          |
 
 ### Versions
 
@@ -749,15 +831,6 @@ Chaque module vit directement sous `src/` (pas de dossier `modules/` intermédia
 | POST    | /pages/:id/comments | oui              | Ajouter     |
 | DELETE  | /comments/:id       | auteur/admin     | Supprimer   |
 
-### Intégrations
-
-| Méthode | Route                        | Auth   | Description             |
-| ------- | ---------------------------- | ------ | ----------------------- |
-| GET     | /admin/integrations/discord  | admin  | Config Discord          |
-| PUT     | /admin/integrations/discord  | admin  | Modifier config Discord |
-| POST    | /webhooks/n8n/:integrationId | secret | Entrée depuis n8n       |
-| GET     | /admin/export                | admin  | Export/backup ZIP       |
-
 ### MCP (pilotage par IA)
 
 | Méthode   | Route                   | Auth                 | Description                                         |
@@ -767,6 +840,19 @@ Chaque module vit directement sous `src/` (pas de dossier `modules/` intermédia
 | GET       | /admin/mcp/api-keys     | admin                | Lister les clés API MCP                             |
 | DELETE    | /admin/mcp/api-keys/:id | admin                | Révoquer une clé                                    |
 | GET       | /admin/mcp/audit-log    | admin                | Journal des actions effectuées par les IA           |
+
+### Sécurité
+
+| Méthode | Route              | Auth  | Description                        |
+| ------- | ------------------- | ----- | ------------------------------------ |
+| GET     | /admin/audit-log    | admin | Journal des actions admin sensibles |
+
+### Réglages système
+
+| Méthode | Route                  | Auth  | Description                          |
+| ------- | ------------------------ | ----- | -------------------------------------- |
+| GET     | /settings                | non   | Réglages publics (ex. langue de l'UI) |
+| PATCH   | /admin/settings/:key     | admin | Modifier un réglage système           |
 
 ---
 
@@ -779,6 +865,9 @@ Chaque module vit directement sous `src/` (pas de dossier `modules/` intermédia
 5. EPIC-04 (Versioning) + EPIC-14 (Historique/Diff)
 6. EPIC-06 (Recherche) + EPIC-15 (Frontend recherche)
 7. EPIC-07 (Commentaires)
-8. EPIC-08 / EPIC-09 (Discord / n8n) + EPIC-16 (Admin)
+8. EPIC-16 (Admin)
 9. EPIC-18 (MCP) — une fois les modules Pages/Tags/Users/Média/Recherche stabilisés, car les tools MCP les enveloppent sans dupliquer leur logique
-10. EPIC-17 (Tests & CI/CD) — en continu dès le début, formalisé à la fin
+10. EPIC-19 (Permissions avancées) — une fois EPIC-03 (Pages) et EPIC-02 (Auth) stabilisés, car le resolver s'appuie sur l'arborescence et les rôles existants
+11. EPIC-20 (Sécurité & anti-abus) — dès que EPIC-02/EPIC-11 (Auth backend + frontend) sont en place, avant une mise en prod
+12. EPIC-21 (i18n) — en parallèle du reste du frontend, une fois EPIC-16 (Administration) posé pour le sélecteur de langue
+13. EPIC-17 (Tests & CI/CD) — en continu dès le début, formalisé à la fin

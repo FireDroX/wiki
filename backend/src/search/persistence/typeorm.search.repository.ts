@@ -14,6 +14,16 @@ interface CountRow {
   total: string;
 }
 
+const BOOLEAN_MODE_OPERATORS = /[+\-<>()~*"@]/g;
+
+function toBooleanModePrefixQuery(query: string): string {
+  return query
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((term) => `${term.replace(BOOLEAN_MODE_OPERATORS, '')}*`)
+    .join(' ');
+}
+
 @Injectable()
 export class TypeormSearchRepository implements SearchRepository {
   constructor(private readonly dataSource: DataSource) {}
@@ -28,6 +38,7 @@ export class TypeormSearchRepository implements SearchRepository {
       ? "AND p.is_published = true AND p.visibility = 'public'"
       : '';
     const offset = (page - 1) * limit;
+    const booleanQuery = toBooleanModePrefixQuery(query);
 
     const rows = await this.dataSource.query<SearchRow[]>(
       `SELECT
@@ -35,15 +46,15 @@ export class TypeormSearchRepository implements SearchRepository {
          p.slug AS slug,
          pv.title AS title,
          pv.content AS content,
-         MATCH (pv.title, pv.content) AGAINST (? IN NATURAL LANGUAGE MODE) AS score
+         MATCH (pv.title, pv.content) AGAINST (? IN BOOLEAN MODE) AS score
        FROM pages p
        INNER JOIN page_versions pv ON pv.id = p.current_version_id
        WHERE p.deleted_at IS NULL
-         AND MATCH (pv.title, pv.content) AGAINST (? IN NATURAL LANGUAGE MODE)
+         AND MATCH (pv.title, pv.content) AGAINST (? IN BOOLEAN MODE)
          ${visibilityClause}
        ORDER BY score DESC
        LIMIT ? OFFSET ?`,
-      [query, query, limit, offset],
+      [booleanQuery, booleanQuery, limit, offset],
     );
 
     const countRows = await this.dataSource.query<CountRow[]>(
@@ -51,9 +62,9 @@ export class TypeormSearchRepository implements SearchRepository {
        FROM pages p
        INNER JOIN page_versions pv ON pv.id = p.current_version_id
        WHERE p.deleted_at IS NULL
-         AND MATCH (pv.title, pv.content) AGAINST (? IN NATURAL LANGUAGE MODE)
+         AND MATCH (pv.title, pv.content) AGAINST (? IN BOOLEAN MODE)
          ${visibilityClause}`,
-      [query],
+      [booleanQuery],
     );
 
     return { items: rows, total: Number(countRows[0]?.total ?? 0) };

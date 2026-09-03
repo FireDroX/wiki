@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router'
 import { AppLayout } from '#components/layout/AppLayout'
 import { AppLayoutSkeleton } from '#components/layout/AppLayoutSkeleton'
+import { GlobalSearchCommand } from '#components/GlobalSearchCommand'
 import { ProtectedRoute } from '#components/ProtectedRoute'
 import { UserRole } from '#api/auth'
 import { useAuth } from '#hooks/useAuth'
@@ -11,6 +12,7 @@ import { PageCreate } from '#pages/PageCreate'
 import { PageEditor } from '#pages/PageEditor'
 import { PageHistory } from '#pages/PageHistory'
 import { PageView } from '#pages/PageView'
+import { SearchResults } from '#pages/SearchResults'
 
 const EDITOR_ROLES = [UserRole.Editor, UserRole.Admin]
 
@@ -22,20 +24,24 @@ export function App() {
   }
 
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route element={<ProtectedRoute roles={EDITOR_ROLES} />}>
-        <Route path="/new" element={<PageCreate />} />
-        <Route path="/edit/*" element={<PageEditor />} />
-      </Route>
-      <Route element={<AppLayout />}>
-        <Route index element={<Home />} />
-        <Route path="/pages/*" element={<PageView />} />
-        <Route path="/history/*" element={<PageHistory />} />
-        <Route element={<ProtectedRoute roles={[UserRole.Admin]} />}>
-          <Route path="/admin/users" element={<AdminUsers />} />
+    <>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route element={<ProtectedRoute roles={EDITOR_ROLES} />}>
+          <Route path="/new" element={<PageCreate />} />
+          <Route path="/edit/*" element={<PageEditor />} />
         </Route>
-      </Route>
-    </Routes>
+        <Route element={<AppLayout />}>
+          <Route index element={<Home />} />
+          <Route path="/pages/*" element={<PageView />} />
+          <Route path="/history/*" element={<PageHistory />} />
+          <Route path="/search" element={<SearchResults />} />
+          <Route element={<ProtectedRoute roles={[UserRole.Admin]} />}>
+            <Route path="/admin/users" element={<AdminUsers />} />
+          </Route>
+        </Route>
+      </Routes>
+      <GlobalSearchCommand />
+    </>
   )
 }
