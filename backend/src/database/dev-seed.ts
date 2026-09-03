@@ -107,6 +107,15 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
     title: 'Notes de version',
     content: `# Notes de version
 
+## Version 0.11
+
+<details>
+<summary>0.11.0 — 2026-09-03</summary>
+
+- Barre de recherche globale (\`Ctrl+K\`/\`Cmd+K\` depuis n'importe quelle route, ou clic sur la barre dans la Topbar) : dialog de commande avec débounce de 300 ms, titre + extrait par résultat, navigation directe vers la page au clic.
+
+</details>
+
 ## Version 0.10
 
 <details>

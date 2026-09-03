@@ -50,6 +50,11 @@ export function collectSubtreeIds(nodes: PageTreeNode[], rootId: string): string
   return ids
 }
 
+export function buildPagePath(nodes: PageTreeNode[], pageId: string): string[] | null {
+  const path = findPathToNode(nodes, (node) => node.id === pageId)
+  return path?.map((node) => node.slug) ?? null
+}
+
 export interface FlatPageTreeNode {
   id: string
   title: string

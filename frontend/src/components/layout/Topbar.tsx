@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '#components/ui/dropdown-menu'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '#components/ui/input-group'
+import { GLOBAL_SEARCH_OPEN_EVENT } from '#components/GlobalSearchCommand'
 import { UserRole } from '#api/auth'
 import { useAuth } from '#hooks/useAuth'
 import { useCurrentUser } from '#hooks/useCurrentUser'
@@ -31,12 +32,23 @@ export function Topbar({ onOpenSidebar }: TopbarProps) {
       <Link to="/" className="flex shrink-0 items-center">
         <img src="/openwiki-logo.svg" alt="OpenWiki" className="h-7 w-auto" />
       </Link>
-      <InputGroup className="max-w-md">
-        <InputGroupAddon>
-          <Search />
-        </InputGroupAddon>
-        <InputGroupInput placeholder="Rechercher dans le wiki..." disabled />
-      </InputGroup>
+      <button
+        type="button"
+        className="flex max-w-md flex-1 items-center"
+        onClick={() => window.dispatchEvent(new Event(GLOBAL_SEARCH_OPEN_EVENT))}
+      >
+        <InputGroup className="pointer-events-none w-full">
+          <InputGroupAddon>
+            <Search />
+          </InputGroupAddon>
+          <InputGroupInput placeholder="Rechercher dans le wiki..." readOnly tabIndex={-1} />
+          <InputGroupAddon align="inline-end">
+            <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+              Ctrl K
+            </kbd>
+          </InputGroupAddon>
+        </InputGroup>
+      </button>
       {status === 'authenticated' ? (
         <DropdownMenu>
           <DropdownMenuTrigger className="ml-auto rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
