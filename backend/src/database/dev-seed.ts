@@ -110,6 +110,13 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
 ## Version 0.10
 
 <details>
+<summary>0.10.1 — 2026-09-03</summary>
+
+- Endpoint de recherche full-text (\`GET /search?q=&page=&limit=\`) : recherche \`MATCH...AGAINST\` sur le titre et le contenu de la version courante de chaque page, résultats triés par pertinence avec un extrait généré autour du terme trouvé. Authentification optionnelle : les lecteurs anonymes ou non-éditeurs ne voient que les pages publiques et publiées, les éditeurs/admins voient tout.
+
+</details>
+
+<details>
 <summary>0.10.0 — 2026-09-03</summary>
 
 - Index FULLTEXT MySQL sur \`page_versions\` (\`title\`, \`content\`) pour préparer la recherche full-text.

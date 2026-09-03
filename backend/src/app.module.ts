@@ -8,6 +8,7 @@ import { JwtAuthModule } from './common/jwt-auth.module.js';
 import { HealthModule } from './health/health.module.js';
 import { MediaModule } from './media/media.module.js';
 import { PagesModule } from './pages/pages.module.js';
+import { SearchModule } from './search/search.module.js';
 import { StorageModule } from './storage/storage.module.js';
 import { UsersModule } from './users/users.module.js';
 import { VersionsModule } from './versions/versions.module.js';
@@ -29,6 +30,7 @@ import { typeOrmConfig } from './config/typeorm.config.js';
     PagesModule,
     VersionsModule,
     MediaModule,
+    SearchModule,
   ],
 })
 export class AppModule implements OnModuleInit {
