@@ -110,6 +110,14 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
 ## Version 0.11
 
 <details>
+<summary>0.11.1 — 2026-09-03</summary>
+
+- Page de résultats de recherche complète (\`/search?q=&page=\`) : pagination synchronisée avec l'URL (bookmarkable), terme recherché surligné dans le titre et l'extrait de chaque résultat.
+- La recherche utilise désormais le mode booléen MySQL avec préfixe (\`terme*\`) plutôt que le mode langage naturel, pour que taper un début de mot (ex. "note") remonte aussi les mots qui le contiennent (ex. "Notes").
+
+</details>
+
+<details>
 <summary>0.11.0 — 2026-09-03</summary>
 
 - Barre de recherche globale (\`Ctrl+K\`/\`Cmd+K\` depuis n'importe quelle route, ou clic sur la barre dans la Topbar) : dialog de commande avec débounce de 300 ms, titre + extrait par résultat, navigation directe vers la page au clic.
