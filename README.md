@@ -691,6 +691,11 @@ Table clé/valeur générique pour les réglages globaux (pas par utilisateur). 
 
 - Description : `Table` paginée (admin, date, action, cible), filtrable par admin/action, appelle `GET /admin/audit-log`.
 
+**OPS-010 — Traiter les alertes de sécurité Dependabot**
+
+- Description : GitHub remonte des warnings Dependabot sur les dépendances du repo (backend + frontend). Mettre à jour/patcher les packages concernés (`pnpm audit` / bump de version), et ajouter `.github/dependabot.yml` (écosystème `npm`, un entry par workspace `backend`/`frontend`) pour que les futures failles remontent automatiquement en PR.
+- AC : plus d'alerte Dependabot ouverte de sévérité high/critical sur le repo ; `.github/dependabot.yml` committé et actif.
+
 ---
 
 ### EPIC-21 — Internationalisation (i18n)
