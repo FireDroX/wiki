@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { FileText } from 'lucide-react'
 import {
+  Command,
   CommandDialog,
   CommandEmpty,
   CommandGroup,
@@ -75,42 +76,44 @@ export function GlobalSearchCommand() {
       title="Rechercher"
       description="Rechercher une page dans le wiki"
     >
-      <CommandInput
-        placeholder="Rechercher dans le wiki..."
-        value={query}
-        onValueChange={setQuery}
-      />
-      <CommandList>
-        {showTooShortHint && <CommandEmpty>Tapez au moins 2 caractères.</CommandEmpty>}
-        {showNoResults && <CommandEmpty>Aucun résultat pour « {trimmed} ».</CommandEmpty>}
-        {results.length > 0 && (
-          <CommandGroup heading="Pages">
-            {results.map((result) => (
-              <CommandItem
-                key={result.pageId}
-                value={result.pageId}
-                onSelect={() => goToResult(result)}
-              >
-                <FileText className="text-muted-foreground" />
-                <div className="flex min-w-0 flex-col">
-                  <span className="truncate font-medium">{result.title}</span>
-                  <span className="truncate text-xs text-muted-foreground">{result.excerpt}</span>
-                </div>
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        )}
-        {results.length > 0 && (
-          <>
-            <CommandSeparator />
-            <CommandGroup>
-              <CommandItem value="__view-all-results__" onSelect={goToAllResults}>
-                Voir tous les résultats pour « {trimmed} »
-              </CommandItem>
+      <Command shouldFilter={false}>
+        <CommandInput
+          placeholder="Rechercher dans le wiki..."
+          value={query}
+          onValueChange={setQuery}
+        />
+        <CommandList>
+          {showTooShortHint && <CommandEmpty>Tapez au moins 2 caractères.</CommandEmpty>}
+          {showNoResults && <CommandEmpty>Aucun résultat pour « {trimmed} ».</CommandEmpty>}
+          {results.length > 0 && (
+            <CommandGroup heading="Pages">
+              {results.map((result) => (
+                <CommandItem
+                  key={result.pageId}
+                  value={result.pageId}
+                  onSelect={() => goToResult(result)}
+                >
+                  <FileText className="text-muted-foreground" />
+                  <div className="flex min-w-0 flex-col">
+                    <span className="truncate font-medium">{result.title}</span>
+                    <span className="truncate text-xs text-muted-foreground">{result.excerpt}</span>
+                  </div>
+                </CommandItem>
+              ))}
             </CommandGroup>
-          </>
-        )}
-      </CommandList>
+          )}
+          {results.length > 0 && (
+            <>
+              <CommandSeparator />
+              <CommandGroup>
+                <CommandItem value="__view-all-results__" onSelect={goToAllResults}>
+                  Voir tous les résultats pour « {trimmed} »
+                </CommandItem>
+              </CommandGroup>
+            </>
+          )}
+        </CommandList>
+      </Command>
     </CommandDialog>
   )
 }
