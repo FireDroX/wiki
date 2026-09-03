@@ -1,0 +1,16 @@
+export interface SearchMatch {
+  pageId: string;
+  slug: string;
+  title: string;
+  content: string;
+  score: number;
+}
+
+export interface SearchRepository {
+  search(
+    query: string,
+    page: number,
+    limit: number,
+    restrictToPublic: boolean,
+  ): Promise<{ items: SearchMatch[]; total: number }>;
+}
