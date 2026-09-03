@@ -107,6 +107,15 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
     title: 'Notes de version',
     content: `# Notes de version
 
+## Version 0.10
+
+<details>
+<summary>0.10.0 — 2026-09-03</summary>
+
+- Index FULLTEXT MySQL sur \`page_versions\` (\`title\`, \`content\`) pour préparer la recherche full-text.
+
+</details>
+
 ## Version 0.9
 
 <details>
