@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PageNotFoundException } from '../../common/exceptions/pages/page-not-found.exception.js';
 import { PermissionAlreadyExistsException } from '../../common/exceptions/pages/permission-already-exists.exception.js';
+import { PermissionNotFoundException } from '../../common/exceptions/pages/permission-not-found.exception.js';
 import { UsersService } from '../../users/services/users.service.js';
 import { PagePermission } from '../entities/page-permission.entity.js';
 import type { PagePermissionsRepository } from '../persistence/page-permission.repository.js';
@@ -41,6 +42,18 @@ export class PagePermissionsService {
       userId,
       grantedById,
     });
+  }
+
+  async revoke(pageId: string, userId: string): Promise<void> {
+    const existing = await this.pagePermissionsRepository.findByPageAndUser(
+      pageId,
+      userId,
+    );
+    if (!existing) {
+      throw new PermissionNotFoundException();
+    }
+
+    await this.pagePermissionsRepository.delete(pageId, userId);
   }
 
   async listExplicit(pageId: string): Promise<PagePermission[]> {

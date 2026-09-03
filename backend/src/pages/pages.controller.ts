@@ -479,6 +479,35 @@ export class PagesController {
     return PagePermissionMapper.toListResponse(permissions);
   }
 
+  @Delete(':id/permissions/:userId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: "Révoquer un droit d'édition sur une page" })
+  @ApiParam({ name: 'id', description: 'Identifiant de la page' })
+  @ApiParam({ name: 'userId', description: "Identifiant de l'utilisateur" })
+  @ApiNoContentResponse({ description: 'Droit révoqué.' })
+  @ApiUnauthorizedResponse({
+    description: 'Authentification requise.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Rôle admin requis.',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description:
+      "Aucun droit explicite n'existe pour cet utilisateur sur cette page.",
+    type: ErrorResponseDto,
+  })
+  async revokePermission(
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+  ): Promise<void> {
+    await this.pagePermissionsService.revoke(id, userId);
+  }
+
   @Get('*path')
   @UseGuards(OptionalJwtAuthGuard)
   @ApiOperation({
