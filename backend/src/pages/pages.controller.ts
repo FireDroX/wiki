@@ -48,15 +48,19 @@ import { VersionMapper } from '../versions/mapper/version.mapper.js';
 import { VersionsService } from '../versions/services/versions.service.js';
 import { CreatePageDto } from './dto/in/create-page.dto.js';
 import { DeletePageQueryDto } from './dto/in/delete-page-query.dto.js';
+import { GrantPermissionDto } from './dto/in/grant-permission.dto.js';
 import { MovePageDto } from './dto/in/move-page.dto.js';
 import { PublishPageDto } from './dto/in/publish-page.dto.js';
 import { UpdatePageDto } from './dto/in/update-page.dto.js';
 import { PageDetailResponseDto } from './dto/out/page-detail-response.dto.js';
+import { PagePermissionResponseDto } from './dto/out/page-permission-response.dto.js';
 import { PageResponseDto } from './dto/out/page-response.dto.js';
 import { PageTreeNodeDto } from './dto/out/page-tree-node.dto.js';
 import { PageUpdateResponseDto } from './dto/out/page-update-response.dto.js';
 import { PagesExceptionFilter } from './filter/pages-exception.filter.js';
+import { PagePermissionMapper } from './mapper/page-permission.mapper.js';
 import { PageMapper } from './mapper/page.mapper.js';
+import { PagePermissionsService } from './services/page-permissions.service.js';
 import { PagesService } from './services/pages.service.js';
 
 @ApiTags('Pages')
@@ -66,6 +70,7 @@ export class PagesController {
   constructor(
     private readonly pagesService: PagesService,
     private readonly versionsService: VersionsService,
+    private readonly pagePermissionsService: PagePermissionsService,
   ) {}
 
   @Post()
@@ -105,8 +110,7 @@ export class PagesController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('editor', 'admin')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Modifier une page' })
   @ApiParam({ name: 'id', description: 'Identifiant de la page' })
@@ -123,7 +127,7 @@ export class PagesController {
     type: ErrorResponseDto,
   })
   @ApiForbiddenResponse({
-    description: 'Rôle insuffisant (editor ou admin requis).',
+    description: "Droit d'édition insuffisant sur cette page.",
     type: ErrorResponseDto,
   })
   @ApiNotFoundResponse({
@@ -406,6 +410,73 @@ export class PagesController {
       }
       throw error;
     }
+  }
+
+  @Post(':id/permissions')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: "Accorder un droit d'édition sur une page" })
+  @ApiParam({ name: 'id', description: 'Identifiant de la page' })
+  @ApiBody({ type: GrantPermissionDto })
+  @ApiCreatedResponse({ description: 'Droit accordé avec succès.' })
+  @ApiUnauthorizedResponse({
+    description: 'Authentification requise.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Rôle admin requis.',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: "La page ou l'utilisateur n'existe pas.",
+    type: ErrorResponseDto,
+  })
+  @ApiConflictResponse({
+    description: 'Un droit existe déjà pour cet utilisateur sur cette page.',
+    type: ErrorResponseDto,
+  })
+  async grantPermission(
+    @Param('id') id: string,
+    @Body() dto: GrantPermissionDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<ResponseDto<PagePermissionResponseDto>> {
+    const permission = await this.pagePermissionsService.grant(
+      id,
+      dto.userId,
+      user.id,
+    );
+    return PagePermissionMapper.toResponse(permission);
+  }
+
+  @Get(':id/permissions')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: "Lister les droits d'édition accordés explicitement sur une page",
+    description: "N'inclut pas les droits hérités d'une page ancêtre.",
+  })
+  @ApiParam({ name: 'id', description: 'Identifiant de la page' })
+  @ApiOkResponse({ description: 'Liste des droits explicites de la page.' })
+  @ApiUnauthorizedResponse({
+    description: 'Authentification requise.',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Rôle admin requis.',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: "La page n'existe pas.",
+    type: ErrorResponseDto,
+  })
+  async listPermissions(
+    @Param('id') id: string,
+  ): Promise<ResponseDto<PagePermissionResponseDto[]>> {
+    const permissions = await this.pagePermissionsService.listExplicit(id);
+    return PagePermissionMapper.toListResponse(permissions);
   }
 
   @Get('*path')

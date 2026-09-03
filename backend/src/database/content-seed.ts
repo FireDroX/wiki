@@ -143,6 +143,13 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
 ## Version 0.12
 
 <details>
+<summary>0.12.2 — 2026-09-03</summary>
+
+- Création et consultation des droits d'édition explicites d'une page (\`POST\`/\`GET /pages/:id/permissions\`, admin) : un doublon \`(pageId, userId)\` renvoie \`409\`, la liste ne renvoie que les grants définis directement sur cette page (jamais les grants hérités). \`PATCH /pages/:id\` accepte désormais aussi un \`reader\` disposant d'un grant sur la page (la restriction éditeur/admin ne s'appliquait jusque-là qu'aux autres routes de mutation).
+
+</details>
+
+<details>
 <summary>0.12.1 — 2026-09-03</summary>
 
 - Résolution du droit d'édition effectif d'une page : un \`reader\` global avec un grant explicite sur une page hérite du droit d'édition sur toute sa sous-arborescence (le grant le plus proche dans l'arbre l'emporte), \`editor\`/\`admin\` globaux ne sont jamais bloqués. Appliqué avant modification, déplacement, suppression et publication d'une page.
