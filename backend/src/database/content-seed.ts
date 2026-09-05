@@ -140,6 +140,15 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
         title: 'Notes de version',
         content: `# Notes de version
 
+## Version 0.14
+
+<details>
+<summary>0.14.0 — 2026-09-05</summary>
+
+- Entité \`SystemSetting\` (clé/valeur) + migration : socle des réglages système globaux, seedée avec \`locale=fr\`.
+
+</details>
+
 ## Version 0.13
 
 <details>

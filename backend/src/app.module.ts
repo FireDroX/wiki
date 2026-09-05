@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import { AdminModule } from './admin/admin.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { JwtAuthModule } from './common/jwt-auth.module.js';
 import { HealthModule } from './health/health.module.js';
@@ -31,6 +32,7 @@ import { typeOrmConfig } from './config/typeorm.config.js';
     VersionsModule,
     MediaModule,
     SearchModule,
+    AdminModule,
   ],
 })
 export class AppModule implements OnModuleInit {
