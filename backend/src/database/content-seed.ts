@@ -143,6 +143,13 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
 ## Version 0.15
 
 <details>
+<summary>0.15.5 — 2026-09-05</summary>
+
+- Tools MCP de gestion des utilisateurs : \`wiki_create_user\`, \`wiki_list_users\`, \`wiki_update_user_role\` (scopes \`users:read\`/\`users:write\`). Le mot de passe temporaire généré à la création n'est jamais renvoyé. Ces tools sont invisibles dans \`tools/list\` pour une clé sans le scope requis, pas juste refusés à l'appel.
+
+</details>
+
+<details>
 <summary>0.15.4 — 2026-09-05</summary>
 
 - Tools MCP de gestion des tags : \`wiki_create_tag\`, \`wiki_list_tags\`, \`wiki_tag_page\`, \`wiki_untag_page\` (scopes \`tags:read\`/\`tags:write\`). \`wiki_tag_page\` avec un \`tagId\` inexistant renvoie une erreur explicite invitant à créer le tag d'abord.
