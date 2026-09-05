@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { AdminNav } from '#components/AdminNav'
 import { UsersTable } from '#components/AdminUsers/UsersTable'
 import { deleteUser, listUsers, updateRole, type AdminUser } from '#api/users'
 import type { UserRole } from '#api/auth'
@@ -65,6 +66,7 @@ export function AdminUsers() {
 
   return (
     <div className="space-y-4 p-6">
+      <AdminNav />
       <h1 className="text-xl font-semibold">Utilisateurs</h1>
       {status === 'loading' && <p className="text-sm text-muted-foreground">Chargement...</p>}
       {status === 'error' && <p className="text-sm text-destructive">Échec du chargement des utilisateurs.</p>}
