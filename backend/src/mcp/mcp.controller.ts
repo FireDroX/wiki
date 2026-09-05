@@ -64,7 +64,7 @@ export class McpController {
         }
       };
 
-      const server = this.mcpServerService.createServer(req.mcpScopes);
+      const server = this.mcpServerService.createServer(req.mcpAuth);
       await server.connect(transport);
     }
 

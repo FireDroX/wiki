@@ -8,6 +8,7 @@ import type { CallToolResult, Tool } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 import { InsufficientScopeException } from '../../common/exceptions/mcp/insufficient-scope.exception.js';
 import { ValidationException } from '../../common/exceptions/validation.exception.js';
+import type { McpAuthContext } from './api-keys.service.js';
 import {
   McpToolDefinition,
   McpToolsRegistry,
@@ -20,7 +21,7 @@ const SERVER_VERSION = '1.0.0';
 export class McpServerService {
   constructor(private readonly toolsRegistry: McpToolsRegistry) {}
 
-  createServer(scopes: string[] | null = null): McpServer {
+  createServer(auth: McpAuthContext): McpServer {
     const server = new McpServer({
       name: SERVER_NAME,
       version: SERVER_VERSION,
@@ -30,7 +31,7 @@ export class McpServerService {
 
     server.server.setRequestHandler(ListToolsRequestSchema, () => ({
       tools: this.toolsRegistry
-        .getVisibleForScopes(scopes)
+        .getVisibleForScopes(auth.scopes)
         .map((tool) => McpServerService.toMcpTool(tool)),
     }));
 
@@ -38,7 +39,7 @@ export class McpServerService {
       this.callTool(
         request.params.name,
         (request.params.arguments as Record<string, unknown>) ?? {},
-        scopes,
+        auth,
       ),
     );
 
@@ -48,7 +49,7 @@ export class McpServerService {
   private async callTool(
     name: string,
     args: Record<string, unknown>,
-    scopes: string[] | null,
+    auth: McpAuthContext,
   ): Promise<CallToolResult> {
     try {
       const tool = this.toolsRegistry.findByName(name);
@@ -56,7 +57,7 @@ export class McpServerService {
         throw new ValidationException(`Unknown tool: ${name}`);
       }
 
-      if (!McpServerService.hasRequiredScope(tool, scopes)) {
+      if (!McpServerService.hasRequiredScope(tool, auth.scopes)) {
         throw new InsufficientScopeException(tool.requiredScopes);
       }
 
@@ -67,7 +68,10 @@ export class McpServerService {
         );
       }
 
-      const output = await tool.handler(parsed.data, { scopes: scopes ?? [] });
+      const output = await tool.handler(parsed.data, {
+        scopes: auth.scopes,
+        userId: auth.createdById,
+      });
       return { content: [{ type: 'text', text: JSON.stringify(output) }] };
     } catch (error) {
       return McpServerService.errorResult(
@@ -78,12 +82,12 @@ export class McpServerService {
 
   private static hasRequiredScope(
     tool: McpToolDefinition,
-    scopes: string[] | null,
+    scopes: string[],
   ): boolean {
-    if (tool.requiredScopes.length === 0 || scopes === null) {
-      return true;
-    }
-    return tool.requiredScopes.some((scope) => scopes.includes(scope));
+    return (
+      tool.requiredScopes.length === 0 ||
+      tool.requiredScopes.some((scope) => scopes.includes(scope))
+    );
   }
 
   private static toMcpTool(tool: McpToolDefinition): Tool {

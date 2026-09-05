@@ -10,6 +10,12 @@ import type { McpApiKeyRepository } from '../persistence/mcp-api-key.repository.
 
 const API_KEY_PREFIX = 'sk_';
 
+export interface McpAuthContext {
+  apiKeyId: string;
+  scopes: string[];
+  createdById: string;
+}
+
 @Injectable()
 export class ApiKeysService {
   constructor(
@@ -46,14 +52,22 @@ export class ApiKeysService {
     await this.apiKeyRepository.revoke(id);
   }
 
-  async validate(plainKey: string): Promise<string[]> {
+  async validate(plainKey: string): Promise<McpAuthContext> {
     const entity = await this.apiKeyRepository.findByHash(
       ApiKeysService.hash(plainKey),
     );
     if (!entity || entity.revokedAt !== null) {
       throw new InvalidApiKeyException();
     }
-    return entity.scopes;
+    return {
+      apiKeyId: entity.id,
+      scopes: entity.scopes,
+      createdById: entity.createdById,
+    };
+  }
+
+  touchLastUsed(id: string): Promise<void> {
+    return this.apiKeyRepository.touchLastUsed(id);
   }
 
   private validateScopes(scopes: string[]): void {

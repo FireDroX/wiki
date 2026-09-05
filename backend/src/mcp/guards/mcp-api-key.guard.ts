@@ -2,11 +2,12 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import type { Request } from 'express';
 import { InvalidApiKeyException } from '../../common/exceptions/mcp/invalid-api-key.exception.js';
 import { ApiKeysService } from '../services/api-keys.service.js';
+import type { McpAuthContext } from '../services/api-keys.service.js';
 
 const BEARER_PREFIX = 'Bearer ';
 
 export interface McpAuthenticatedRequest extends Request {
-  mcpScopes: string[];
+  mcpAuth: McpAuthContext;
 }
 
 @Injectable()
@@ -24,7 +25,7 @@ export class McpApiKeyGuard implements CanActivate {
     }
 
     const token = header.slice(BEARER_PREFIX.length);
-    request.mcpScopes = await this.apiKeysService.validate(token);
+    request.mcpAuth = await this.apiKeysService.validate(token);
 
     return true;
   }

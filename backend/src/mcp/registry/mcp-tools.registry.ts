@@ -1,17 +1,38 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import type { ZodRawShape } from 'zod';
+import type { z, ZodRawShape } from 'zod';
+import { PagesService } from '../../pages/services/pages.service.js';
+import { buildPagesTools } from '../tools/pages.tools.js';
 
 export interface McpToolContext {
   scopes: string[];
+  userId: string;
 }
 
-export interface McpToolDefinition<TInput = any> {
+export type InferShape<S extends ZodRawShape> = {
+  [K in keyof S]: z.infer<S[K]>;
+};
+
+export interface McpToolDefinition {
   name: string;
   description: string;
   inputSchema: ZodRawShape;
   requiredScopes: string[];
   hideWithoutScope?: boolean;
-  handler: (input: TInput, ctx: McpToolContext) => Promise<unknown>;
+  handler: (
+    input: Record<string, unknown>,
+    ctx: McpToolContext,
+  ) => Promise<unknown>;
+}
+
+export function defineMcpTool<S extends ZodRawShape>(definition: {
+  name: string;
+  description: string;
+  inputSchema: S;
+  requiredScopes: string[];
+  hideWithoutScope?: boolean;
+  handler: (input: InferShape<S>, ctx: McpToolContext) => Promise<unknown>;
+}): McpToolDefinition {
+  return definition as unknown as McpToolDefinition;
 }
 
 @Injectable()
@@ -30,10 +51,7 @@ export class McpToolsRegistry {
     return this.tools.find((tool) => tool.name === name);
   }
 
-  getVisibleForScopes(scopes: string[] | null): McpToolDefinition[] {
-    if (scopes === null) {
-      return this.tools;
-    }
+  getVisibleForScopes(scopes: string[]): McpToolDefinition[] {
     return this.tools.filter(
       (tool) =>
         !tool.hideWithoutScope ||
@@ -44,10 +62,12 @@ export class McpToolsRegistry {
 
 @Injectable()
 export class McpToolsBootstrapService implements OnModuleInit {
-  constructor(private readonly registry: McpToolsRegistry) {}
+  constructor(
+    private readonly registry: McpToolsRegistry,
+    private readonly pagesService: PagesService,
+  ) {}
 
   onModuleInit(): void {
-    // Chaque ticket suivant (BE-093 à BE-097) enregistre ses tools ici,
-    // ex. `this.registry.register(...buildPagesTools(this.pagesService))`.
+    this.registry.register(...buildPagesTools(this.pagesService));
   }
 }
