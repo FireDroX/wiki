@@ -143,6 +143,13 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
 ## Version 0.15
 
 <details>
+<summary>0.15.1 — 2026-09-05</summary>
+
+- Socle du serveur MCP (\`@modelcontextprotocol/sdk\`) : \`POST/GET/DELETE /mcp\`, transport HTTP streamable avec gestion de session. Aucun tool enregistré à ce stade — un client MCP peut se connecter et lister les tools via \`tools/list\` (liste vide).
+
+</details>
+
+<details>
 <summary>0.15.0 — 2026-09-05</summary>
 
 - Entités \`Tag\`/\`PageTag\` + endpoints CRUD : \`POST/GET /tags\`, \`DELETE /tags/:id\` (cascade sur les associations), \`POST/DELETE /pages/:id/tags\`. Chaque tag a une couleur (hex) choisie à la création.

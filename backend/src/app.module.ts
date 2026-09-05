@@ -7,6 +7,7 @@ import { AdminModule } from './admin/admin.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { JwtAuthModule } from './common/jwt-auth.module.js';
 import { HealthModule } from './health/health.module.js';
+import { McpModule } from './mcp/mcp.module.js';
 import { MediaModule } from './media/media.module.js';
 import { PagesModule } from './pages/pages.module.js';
 import { SearchModule } from './search/search.module.js';
@@ -35,6 +36,7 @@ import { typeOrmConfig } from './config/typeorm.config.js';
     SearchModule,
     TagsModule,
     AdminModule,
+    McpModule,
   ],
 })
 export class AppModule implements OnModuleInit {
