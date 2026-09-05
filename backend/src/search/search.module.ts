@@ -9,5 +9,6 @@ import { SearchService } from './services/search.service.js';
     { provide: 'SearchRepository', useClass: TypeormSearchRepository },
     SearchService,
   ],
+  exports: [SearchService],
 })
 export class SearchModule {}

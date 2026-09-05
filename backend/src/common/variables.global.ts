@@ -31,3 +31,20 @@ export const ALLOWED_ATTACHMENT_MIME_TYPES = [
 ];
 export const MEDIA_PRESIGNED_URL_EXPIRY_SECONDS = 3600;
 export const SUPPORTED_LOCALES = ['fr', 'en'];
+export const TAG_NAME_MAX_LENGTH = 50;
+export const TAG_COLOR_REGEX = /^#[0-9a-f]{6}$/i;
+export const DEFAULT_TAG_COLOR = '#6b7280';
+export const MCP_AUDIT_LOG_DEFAULT_LIMIT = 50;
+export const MCP_AUDIT_LOG_MAX_LIMIT = 200;
+export const MCP_AUDIT_LOG_STRING_MAX_LENGTH = 500;
+export const MCP_SCOPES = [
+  'pages:read',
+  'pages:write',
+  'tags:read',
+  'tags:write',
+  'users:read',
+  'users:write',
+  'media:read',
+  'media:write',
+  'search:read',
+];

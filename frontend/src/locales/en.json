@@ -8,7 +8,8 @@
     "previous": "Previous",
     "next": "Next",
     "pageOf": "Page {{page}} / {{total}}",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "close": "Close"
   },
   "auth": {
     "appTagline": "Your team's knowledge base",
@@ -154,6 +155,8 @@
   "admin": {
     "usersTab": "Users",
     "settingsTab": "Settings",
+    "mcpKeysTab": "MCP API keys",
+    "mcpAuditTab": "MCP log",
     "users": {
       "filterPlaceholder": "Filter users...",
       "loadError": "Failed to load users.",
@@ -180,6 +183,55 @@
       "localeHelp": "Global setting applied to all visitors. You'll see the change immediately, others on their next page load.",
       "localeUpdated": "Language updated.",
       "localeUpdateFailed": "Failed to update the language."
+    },
+    "mcpKeys": {
+      "description": "API keys used by AIs connected via MCP to drive the wiki.",
+      "createButton": "New key",
+      "createTitle": "Create an MCP API key",
+      "createDescription": "Choose a name and the scopes granted to this key.",
+      "nameLabel": "Name",
+      "namePlaceholder": "e.g. Claude Desktop",
+      "scopesLabel": "Scopes",
+      "createSubmit": "Create",
+      "created": "Key created.",
+      "createFailed": "Failed to create the key.",
+      "loadError": "Failed to load keys.",
+      "columnName": "Name",
+      "columnScopes": "Scopes",
+      "columnLastUsed": "Last used",
+      "columnStatus": "Status",
+      "neverUsed": "Never used",
+      "statusActive": "Active",
+      "statusRevoked": "Revoked",
+      "revokeSr": "Revoke {{name}}",
+      "revokeConfirmTitle": "Revoke this key?",
+      "revokeConfirmDescription": "{{name}} will be revoked immediately. This action is irreversible; you'll need to create a new key.",
+      "revokeConfirmAction": "Revoke",
+      "revoked": "Key revoked.",
+      "revokeFailed": "Failed to revoke the key.",
+      "reveal": {
+        "title": "API key created",
+        "description": "Copy this key now: it will never be shown again.",
+        "warning": "This key will never be shown again.",
+        "confirmCloseWarning": "You haven't copied the key yet. Closing now will make it permanently inaccessible.",
+        "copyButton": "Copy",
+        "copiedButton": "Copied",
+        "copiedToast": "Key copied to clipboard.",
+        "closeAnyway": "Close anyway"
+      }
+    },
+    "mcpAudit": {
+      "allKeys": "All keys",
+      "loadError": "Failed to load the log.",
+      "empty": "No actions recorded.",
+      "columnKey": "API key",
+      "columnTool": "Tool called",
+      "columnStatus": "Status",
+      "columnDate": "Date",
+      "statusSuccess": "Success",
+      "statusFailure": "Failure",
+      "detailInput": "Input",
+      "detailOutput": "Output"
     }
   },
   "permissions": {

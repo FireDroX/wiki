@@ -136,9 +136,203 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
 <api-reference></api-reference>`,
       },
       {
+        slug: 'mcp',
+        title: 'Intégration MCP',
+        content: `# Intégration MCP
+
+OpenWiki expose un serveur [MCP](https://modelcontextprotocol.io/) (Model Context Protocol) permettant à un assistant IA compatible (Claude Desktop, Claude Code, etc.) de piloter le wiki directement : créer et modifier des pages, gérer des tags, des utilisateurs, uploader des médias et lancer des recherches.
+
+## 1. Créer une clé API
+
+Seul un compte **admin** peut créer une clé, depuis [Administration → Clés API MCP](/admin/mcp/api-keys) ou via l'API :
+
+\`\`\`bash
+curl -X POST http://localhost:3000/api/admin/mcp/api-keys \\
+  -H "Authorization: Bearer <votre-token-jwt-admin>" \\
+  -H "Content-Type: application/json" \\
+  -d '{ "name": "Claude Desktop", "scopes": ["pages:read", "pages:write"] }'
+\`\`\`
+
+La clé en clair n'est affichée **qu'une seule fois**, à la création — copiez-la immédiatement, elle n'est plus jamais récupérable ensuite (seuls son nom, ses scopes et sa dernière utilisation restent visibles). Une clé peut être révoquée à tout moment depuis la même page.
+
+## 2. Scopes disponibles
+
+Chaque clé porte un ou plusieurs scopes, qui déterminent les tools visibles et utilisables :
+
+| Scope | Donne accès à |
+| --- | --- |
+| \`pages:read\` | Lire des pages, lister l'arborescence, rechercher |
+| \`pages:write\` | Créer, modifier, publier, supprimer des pages |
+| \`tags:read\` | Lister les tags |
+| \`tags:write\` | Créer des tags, (dé)taguer une page |
+| \`users:read\` | Lister les utilisateurs |
+| \`users:write\` | Créer un utilisateur, modifier son rôle |
+| \`media:read\` | Obtenir l'URL présignée d'un média |
+| \`media:write\` | Uploader une image |
+| \`search:read\` | Rechercher (\`pages:read\` suffit aussi) |
+
+Un tool nécessitant un scope absent de la clé n'apparaît même pas dans \`tools/list\`.
+
+## 3. Se connecter avec un client MCP
+
+Le serveur écoute sur \`POST/GET/DELETE /api/mcp\` (transport HTTP streamable, avec gestion de session via l'en-tête \`Mcp-Session-Id\`) et attend la clé API en en-tête \`Authorization: Bearer <clé>\`.
+
+Exemple de configuration pour un client supportant un serveur MCP distant en HTTP (adapter la syntaxe exacte au client utilisé) :
+
+\`\`\`json
+{
+  "mcpServers": {
+    "openwiki": {
+      "url": "http://localhost:3000/api/mcp",
+      "headers": {
+        "Authorization": "Bearer <votre-clé-api-mcp>"
+      }
+    }
+  }
+}
+\`\`\`
+
+Une fois connecté, le client peut lister les tools disponibles (\`tools/list\`) puis les appeler (\`tools/call\`) — seuls les tools couverts par les scopes de la clé apparaissent.
+
+## 4. Tools disponibles
+
+**Pages** (\`pages:read\`/\`pages:write\`)
+
+| Tool | Rôle |
+| --- | --- |
+| \`wiki_create_page\` | Créer une page (slug, titre, contenu, page parente, visibilité) |
+| \`wiki_update_page\` | Modifier titre/contenu (crée une nouvelle version) |
+| \`wiki_get_page\` | Récupérer une page par son chemin complet (ex. \`docs/guide\`) |
+| \`wiki_list_pages\` | Lister l'arbre entier, ou les enfants directs d'une page |
+| \`wiki_delete_page\` | Supprimer une page (\`cascade\` obligatoire si elle a des enfants) |
+| \`wiki_publish_page\` | Publier ou dépublier une page |
+
+**Tags** (\`tags:read\`/\`tags:write\`)
+
+| Tool | Rôle |
+| --- | --- |
+| \`wiki_create_tag\` | Créer un tag |
+| \`wiki_list_tags\` | Lister tous les tags |
+| \`wiki_tag_page\` | Associer un tag existant à une page |
+| \`wiki_untag_page\` | Retirer un tag d'une page |
+
+**Utilisateurs** (\`users:read\`/\`users:write\`)
+
+| Tool | Rôle |
+| --- | --- |
+| \`wiki_create_user\` | Créer un compte (mot de passe temporaire généré, jamais renvoyé) |
+| \`wiki_list_users\` | Lister les utilisateurs (paginé) |
+| \`wiki_update_user_role\` | Modifier le rôle d'un utilisateur |
+
+**Médias** (\`media:read\`/\`media:write\`)
+
+| Tool | Rôle |
+| --- | --- |
+| \`wiki_upload_image\` | Uploader une image (transmise en base64) sur une page |
+| \`wiki_get_media_url\` | Obtenir une URL présignée pour un média existant |
+
+**Recherche** (\`search:read\` ou \`pages:read\`)
+
+| Tool | Rôle |
+| --- | --- |
+| \`wiki_search\` | Rechercher des pages existantes par mot-clé |
+
+## 5. Journal d'audit
+
+Chaque appel de tool (succès ou échec) est tracé — clé utilisée, tool, entrée/sortie (tronquées), statut, message d'erreur. Consultable, filtrable par clé API, depuis [Administration → Journal d'activité MCP](/admin/mcp/audit-log).`,
+      },
+      {
         slug: 'notes-de-version',
         title: 'Notes de version',
         content: `# Notes de version
+
+## Version 0.15
+
+<details>
+<summary>0.15.11 — 2026-09-05</summary>
+
+- Page de documentation "Intégration MCP" (\`/pages/documentation/mcp\`) : création de clé API, scopes disponibles, connexion d'un client MCP, référence des tools par domaine, lien vers le journal d'audit.
+
+</details>
+
+<details>
+<summary>0.15.10 — 2026-09-05</summary>
+
+- Page journal d'activité MCP (\`/admin/mcp/audit-log\`, réservée admin) : historique paginé des appels d'outils, filtrable par clé API (\`?apiKeyId=\`, conservé dans l'URL), détail complet (input/output JSON, message d'erreur) au clic sur une ligne.
+
+</details>
+
+<details>
+<summary>0.15.9 — 2026-09-05</summary>
+
+- Page de gestion des clés API MCP (\`/admin/mcp/api-keys\`, réservée admin) : création avec sélection des scopes, révélation unique de la clé en clair (confirmation demandée si fermeture sans avoir copié), révocation confirmée par boîte de dialogue (clé grisée plutôt que supprimée de la liste).
+
+</details>
+
+<details>
+<summary>0.15.8 — 2026-09-05</summary>
+
+- Journal d'audit des actions MCP : chaque appel de tool (succès ou échec) est tracé (\`McpAuditLog\` : clé API, tool, input/output tronqués à 500 car., succès, message d'erreur), via un wrapper générique autour du dispatch des tools — rien à ajouter dans chaque tool. \`lastUsedAt\` de la clé API est mis à jour à chaque appel réussi. \`GET /admin/mcp/audit-log\` (admin, filtrable par clé, paginé) alimente FE-071.
+
+</details>
+
+<details>
+<summary>0.15.7 — 2026-09-05</summary>
+
+- Tool MCP de recherche : \`wiki_search\` (scope \`search:read\` ou \`pages:read\`, l'un des deux suffit). Une clé avec uniquement \`pages:write\` (aucun scope de lecture) ne peut pas l'appeler.
+
+</details>
+
+<details>
+<summary>0.15.6 — 2026-09-05</summary>
+
+- Tool MCP d'upload de médias : \`wiki_upload_image\` (fichier transmis en base64, décodé puis validé avec la même logique que l'upload REST — taille, type MIME), \`wiki_get_media_url\` (scopes \`media:read\`/\`media:write\`). Un base64 malformé ou un fichier trop volumineux sont rejetés avant tout appel à Minio.
+- La limite de taille du corps JSON de l'API est relevée à 30 Mo (\`GET/POST /api/*\`) pour permettre le transport d'images en base64 par MCP ; l'upload REST multipart (\`/media/upload\`) n'est pas concerné et reste inchangé.
+
+</details>
+
+<details>
+<summary>0.15.5 — 2026-09-05</summary>
+
+- Tools MCP de gestion des utilisateurs : \`wiki_create_user\`, \`wiki_list_users\`, \`wiki_update_user_role\` (scopes \`users:read\`/\`users:write\`). Le mot de passe temporaire généré à la création n'est jamais renvoyé. Ces tools sont invisibles dans \`tools/list\` pour une clé sans le scope requis, pas juste refusés à l'appel.
+
+</details>
+
+<details>
+<summary>0.15.4 — 2026-09-05</summary>
+
+- Tools MCP de gestion des tags : \`wiki_create_tag\`, \`wiki_list_tags\`, \`wiki_tag_page\`, \`wiki_untag_page\` (scopes \`tags:read\`/\`tags:write\`). \`wiki_tag_page\` avec un \`tagId\` inexistant renvoie une erreur explicite invitant à créer le tag d'abord.
+- Correctif : \`POST /pages/:id/tags\` (REST et MCP) vérifiait l'accès à la page comme un visiteur anonyme et rejetait donc le tagging de ses propres pages privées/non publiées ; l'identité de l'appelant est maintenant transmise à la vérification.
+
+</details>
+
+<details>
+<summary>0.15.3 — 2026-09-05</summary>
+
+- Tools MCP de gestion des pages : \`wiki_create_page\`, \`wiki_update_page\`, \`wiki_get_page\`, \`wiki_list_pages\`, \`wiki_delete_page\`, \`wiki_publish_page\` (scopes \`pages:read\`/\`pages:write\`). Une clé avec un scope pages voit les pages privées/non publiées comme un éditeur, pas comme un visiteur anonyme.
+
+</details>
+
+<details>
+<summary>0.15.2 — 2026-09-05</summary>
+
+- Authentification MCP par clé API à scopes : entité \`McpApiKey\`, \`POST/GET/DELETE /admin/mcp/api-keys\` (admin uniquement). La clé en clair n'est affichée qu'à la création ; une clé révoquée (ou absente) est rejetée par le guard MCP avec une erreur JSON-RPC (\`code: -32001\`) plutôt qu'un \`401\` REST classique.
+
+</details>
+
+<details>
+<summary>0.15.1 — 2026-09-05</summary>
+
+- Socle du serveur MCP (\`@modelcontextprotocol/sdk\`) : \`POST/GET/DELETE /mcp\`, transport HTTP streamable avec gestion de session. Aucun tool enregistré à ce stade — un client MCP peut se connecter et lister les tools via \`tools/list\` (liste vide).
+
+</details>
+
+<details>
+<summary>0.15.0 — 2026-09-05</summary>
+
+- Entités \`Tag\`/\`PageTag\` + endpoints CRUD : \`POST/GET /tags\`, \`DELETE /tags/:id\` (cascade sur les associations), \`POST/DELETE /pages/:id/tags\`. Chaque tag a une couleur (hex) choisie à la création.
+
+</details>
 
 ## Version 0.14
 

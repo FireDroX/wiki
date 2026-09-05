@@ -128,6 +128,33 @@ export class PagesService {
     return { page, version };
   }
 
+  async getAncestorPath(page: Page): Promise<string> {
+    const segments = [page.slug];
+    let parentId = page.parentId;
+    while (parentId !== null) {
+      const parent: Page | null = await this.pagesRepository.findById(parentId);
+      if (!parent) {
+        break;
+      }
+      segments.unshift(parent.slug);
+      parentId = parent.parentId;
+    }
+    return `/${segments.join('/')}`;
+  }
+
+  async listChildren(
+    parentId: string,
+    currentUser?: AuthenticatedUser,
+  ): Promise<Page[]> {
+    await this.getByIdOrFail(parentId, currentUser);
+    const children = await this.pagesRepository.findChildren(parentId);
+    return PagesService.hasFullAccess(currentUser)
+      ? children
+      : children.filter(
+          (page) => page.visibility === 'public' && page.isPublished,
+        );
+  }
+
   async getByIdOrFail(
     id: string,
     currentUser?: AuthenticatedUser,

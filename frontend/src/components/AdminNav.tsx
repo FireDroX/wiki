@@ -7,6 +7,8 @@ export function AdminNav() {
   const links = [
     { to: '/admin/users', label: t('admin.usersTab') },
     { to: '/admin/settings', label: t('admin.settingsTab') },
+    { to: '/admin/mcp/api-keys', label: t('admin.mcpKeysTab') },
+    { to: '/admin/mcp/audit-log', label: t('admin.mcpAuditTab') },
   ]
 
   return (
