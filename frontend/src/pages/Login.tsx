@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router'
+import { Navigate, useNavigate, useSearchParams } from 'react-router'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -145,8 +145,13 @@ function RegisterForm() {
 
 export function Login() {
   const { t } = useTranslation()
+  const { status } = useAuth()
   const [searchParams] = useSearchParams()
   const defaultTab = searchParams.get('tab') === 'register' ? 'register' : 'login'
+
+  if (status === 'authenticated') {
+    return <Navigate to="/" replace />
+  }
 
   return (
     <div className="flex min-h-svh items-center justify-center bg-muted/30 p-4">
