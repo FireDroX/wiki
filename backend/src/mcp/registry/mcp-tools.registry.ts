@@ -2,10 +2,12 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import type { z, ZodRawShape } from 'zod';
 import { MediaService } from '../../media/services/media.service.js';
 import { PagesService } from '../../pages/services/pages.service.js';
+import { SearchService } from '../../search/services/search.service.js';
 import { TagsService } from '../../tags/services/tags.service.js';
 import { UsersService } from '../../users/services/users.service.js';
 import { buildMediaTools } from '../tools/media.tools.js';
 import { buildPagesTools } from '../tools/pages.tools.js';
+import { buildSearchTools } from '../tools/search.tools.js';
 import { buildTagsTools } from '../tools/tags.tools.js';
 import { buildUsersTools } from '../tools/users.tools.js';
 
@@ -74,6 +76,7 @@ export class McpToolsBootstrapService implements OnModuleInit {
     private readonly tagsService: TagsService,
     private readonly usersService: UsersService,
     private readonly mediaService: MediaService,
+    private readonly searchService: SearchService,
   ) {}
 
   onModuleInit(): void {
@@ -82,6 +85,7 @@ export class McpToolsBootstrapService implements OnModuleInit {
       ...buildTagsTools(this.tagsService),
       ...buildUsersTools(this.usersService),
       ...buildMediaTools(this.mediaService),
+      ...buildSearchTools(this.searchService),
     );
   }
 }

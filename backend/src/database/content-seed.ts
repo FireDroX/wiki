@@ -143,6 +143,13 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
 ## Version 0.15
 
 <details>
+<summary>0.15.7 — 2026-09-05</summary>
+
+- Tool MCP de recherche : \`wiki_search\` (scope \`search:read\` ou \`pages:read\`, l'un des deux suffit). Une clé avec uniquement \`pages:write\` (aucun scope de lecture) ne peut pas l'appeler.
+
+</details>
+
+<details>
 <summary>0.15.6 — 2026-09-05</summary>
 
 - Tool MCP d'upload de médias : \`wiki_upload_image\` (fichier transmis en base64, décodé puis validé avec la même logique que l'upload REST — taille, type MIME), \`wiki_get_media_url\` (scopes \`media:read\`/\`media:write\`). Un base64 malformé ou un fichier trop volumineux sont rejetés avant tout appel à Minio.
