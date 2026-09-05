@@ -143,6 +143,14 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
 ## Version 0.15
 
 <details>
+<summary>0.15.6 — 2026-09-05</summary>
+
+- Tool MCP d'upload de médias : \`wiki_upload_image\` (fichier transmis en base64, décodé puis validé avec la même logique que l'upload REST — taille, type MIME), \`wiki_get_media_url\` (scopes \`media:read\`/\`media:write\`). Un base64 malformé ou un fichier trop volumineux sont rejetés avant tout appel à Minio.
+- La limite de taille du corps JSON de l'API est relevée à 30 Mo (\`GET/POST /api/*\`) pour permettre le transport d'images en base64 par MCP ; l'upload REST multipart (\`/media/upload\`) n'est pas concerné et reste inchangé.
+
+</details>
+
+<details>
 <summary>0.15.5 — 2026-09-05</summary>
 
 - Tools MCP de gestion des utilisateurs : \`wiki_create_user\`, \`wiki_list_users\`, \`wiki_update_user_role\` (scopes \`users:read\`/\`users:write\`). Le mot de passe temporaire généré à la création n'est jamais renvoyé. Ces tools sont invisibles dans \`tools/list\` pour une clé sans le scope requis, pas juste refusés à l'appel.

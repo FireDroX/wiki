@@ -1,9 +1,12 @@
 import type { INestApplication } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module.js';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter.js';
+
+const JSON_BODY_LIMIT = '30mb';
 
 function setupSwagger(app: INestApplication): void {
   const config = new DocumentBuilder()
@@ -33,8 +36,15 @@ function setupSwagger(app: INestApplication): void {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bodyParser: false,
+  });
 
+  app.useBodyParser('json', { limit: JSON_BODY_LIMIT });
+  app.useBodyParser('urlencoded', {
+    extended: true,
+    limit: JSON_BODY_LIMIT,
+  });
   app.setGlobalPrefix('api');
   app.enableCors({ origin: process.env.FRONTEND_URL, credentials: true });
   app.use(cookieParser());
