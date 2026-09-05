@@ -6,6 +6,8 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import type { CallToolResult, Tool } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
+import { InsufficientScopeException } from '../../common/exceptions/mcp/insufficient-scope.exception.js';
+import { ValidationException } from '../../common/exceptions/validation.exception.js';
 import {
   McpToolDefinition,
   McpToolsRegistry,
@@ -48,25 +50,23 @@ export class McpServerService {
     args: Record<string, unknown>,
     scopes: string[] | null,
   ): Promise<CallToolResult> {
-    const tool = this.toolsRegistry.findByName(name);
-    if (!tool) {
-      return McpServerService.errorResult(`Unknown tool: ${name}`);
-    }
-
-    if (!McpServerService.hasRequiredScope(tool, scopes)) {
-      return McpServerService.errorResult(
-        `Insufficient scope: this tool requires one of [${tool.requiredScopes.join(', ')}]`,
-      );
-    }
-
-    const parsed = z.object(tool.inputSchema).safeParse(args);
-    if (!parsed.success) {
-      return McpServerService.errorResult(
-        `Invalid input: ${parsed.error.issues.map((issue) => issue.message).join(', ')}`,
-      );
-    }
-
     try {
+      const tool = this.toolsRegistry.findByName(name);
+      if (!tool) {
+        throw new ValidationException(`Unknown tool: ${name}`);
+      }
+
+      if (!McpServerService.hasRequiredScope(tool, scopes)) {
+        throw new InsufficientScopeException(tool.requiredScopes);
+      }
+
+      const parsed = z.object(tool.inputSchema).safeParse(args);
+      if (!parsed.success) {
+        throw new ValidationException(
+          `Invalid input: ${parsed.error.issues.map((issue) => issue.message).join(', ')}`,
+        );
+      }
+
       const output = await tool.handler(parsed.data, { scopes: scopes ?? [] });
       return { content: [{ type: 'text', text: JSON.stringify(output) }] };
     } catch (error) {

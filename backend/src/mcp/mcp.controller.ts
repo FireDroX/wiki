@@ -1,15 +1,29 @@
 import { randomUUID } from 'node:crypto';
-import { Controller, Delete, Get, Post, Req, Res } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Post,
+  Req,
+  Res,
+  UseFilters,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
+import { McpExceptionFilter } from './filter/mcp.exception.filter.js';
+import { McpApiKeyGuard } from './guards/mcp-api-key.guard.js';
+import type { McpAuthenticatedRequest } from './guards/mcp-api-key.guard.js';
 import { McpServerService } from './services/mcp-server.service.js';
 
 const SESSION_ID_HEADER = 'mcp-session-id';
 
 @ApiExcludeController()
 @Controller('mcp')
+@UseGuards(McpApiKeyGuard)
+@UseFilters(McpExceptionFilter)
 export class McpController {
   private readonly transports = new Map<
     string,
@@ -19,7 +33,10 @@ export class McpController {
   constructor(private readonly mcpServerService: McpServerService) {}
 
   @Post()
-  async handlePost(@Req() req: Request, @Res() res: Response): Promise<void> {
+  async handlePost(
+    @Req() req: McpAuthenticatedRequest,
+    @Res() res: Response,
+  ): Promise<void> {
     const sessionId = McpController.getSessionId(req);
     let transport = sessionId ? this.transports.get(sessionId) : undefined;
 
@@ -47,7 +64,7 @@ export class McpController {
         }
       };
 
-      const server = this.mcpServerService.createServer();
+      const server = this.mcpServerService.createServer(req.mcpScopes);
       await server.connect(transport);
     }
 
@@ -55,7 +72,10 @@ export class McpController {
   }
 
   @Get()
-  async handleGet(@Req() req: Request, @Res() res: Response): Promise<void> {
+  async handleGet(
+    @Req() req: McpAuthenticatedRequest,
+    @Res() res: Response,
+  ): Promise<void> {
     const transport = this.getExistingTransport(req, res);
     if (!transport) {
       return;
@@ -64,7 +84,10 @@ export class McpController {
   }
 
   @Delete()
-  async handleDelete(@Req() req: Request, @Res() res: Response): Promise<void> {
+  async handleDelete(
+    @Req() req: McpAuthenticatedRequest,
+    @Res() res: Response,
+  ): Promise<void> {
     const transport = this.getExistingTransport(req, res);
     if (!transport) {
       return;
@@ -73,7 +96,7 @@ export class McpController {
   }
 
   private getExistingTransport(
-    req: Request,
+    req: McpAuthenticatedRequest,
     res: Response,
   ): StreamableHTTPServerTransport | undefined {
     const sessionId = McpController.getSessionId(req);
@@ -85,7 +108,9 @@ export class McpController {
     return transport;
   }
 
-  private static getSessionId(req: Request): string | undefined {
+  private static getSessionId(
+    req: McpAuthenticatedRequest,
+  ): string | undefined {
     const header = req.headers[SESSION_ID_HEADER];
     return typeof header === 'string' ? header : undefined;
   }

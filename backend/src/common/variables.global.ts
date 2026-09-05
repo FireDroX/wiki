@@ -34,3 +34,14 @@ export const SUPPORTED_LOCALES = ['fr', 'en'];
 export const TAG_NAME_MAX_LENGTH = 50;
 export const TAG_COLOR_REGEX = /^#[0-9a-f]{6}$/i;
 export const DEFAULT_TAG_COLOR = '#6b7280';
+export const MCP_SCOPES = [
+  'pages:read',
+  'pages:write',
+  'tags:read',
+  'tags:write',
+  'users:read',
+  'users:write',
+  'media:read',
+  'media:write',
+  'search:read',
+];
