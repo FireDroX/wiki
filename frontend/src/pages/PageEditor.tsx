@@ -9,6 +9,7 @@ import { FileUploadButton } from '#components/PageEditor/FileUploadButton'
 import { MarkdownEditor, type MarkdownEditorHandle } from '#components/PageEditor/MarkdownEditor'
 import { PageMetadataForm } from '#components/PageEditor/PageMetadataForm'
 import { PagePermissionsPanel } from '#components/page-settings/PagePermissionsPanel'
+import { PageTagsPanel } from '#components/page-settings/PageTagsPanel'
 import { Button } from '#components/ui/button'
 import { Field, FieldLabel } from '#components/ui/field'
 import { FormError } from '#components/FormError'
@@ -183,6 +184,9 @@ export function PageEditor() {
               rows={3}
             />
           </Field>
+          <div className="mt-5">
+            <PageTagsPanel pageId={page.id} canDeleteTags={user?.role === 'admin'} />
+          </div>
           {user?.role === 'admin' && (
             <div className="mt-5">
               <PagePermissionsPanel pageId={page.id} />

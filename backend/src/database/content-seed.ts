@@ -2,14 +2,32 @@ import 'dotenv/config';
 import { DataSource } from 'typeorm';
 import { Page } from '../pages/entities/page.entity.js';
 import { PageVersion } from '../pages/entities/page-version.entity.js';
+import { PageTag } from '../tags/entities/page-tag.entity.js';
+import { Tag } from '../tags/entities/tag.entity.js';
 import { User } from '../users/entities/user.entity.js';
 
 interface PageSeed {
   slug: string;
   title: string;
   content?: string;
+  tags?: string[];
   children?: PageSeed[];
 }
+
+interface TagSeed {
+  name: string;
+  color: string;
+}
+
+const TAG_SEED: TagSeed[] = [
+  { name: 'documentation', color: '#3b82f6' },
+  { name: 'guide', color: '#6366f1' },
+  { name: 'installation', color: '#22c55e' },
+  { name: 'configuration', color: '#f59e0b' },
+  { name: 'api', color: '#a855f7' },
+  { name: 'changelog', color: '#14b8a6' },
+  { name: 'mcp', color: '#ec4899' },
+];
 
 const PAGE_TREE_SEED: PageSeed[] = [
   {
@@ -18,10 +36,12 @@ const PAGE_TREE_SEED: PageSeed[] = [
     content: `# Documentation
 
 Bienvenue dans la documentation d'OpenWiki. Utilisez l'arborescence à gauche pour naviguer entre les sections.`,
+    tags: ['documentation'],
     children: [
       {
         slug: 'guide-demarrage',
         title: 'Guide de démarrage',
+        tags: ['guide', 'documentation'],
         content: `# Guide de démarrage
 
 Ce guide couvre l'installation, la configuration et le premier lancement d'OpenWiki en local, de bout en bout.
@@ -64,6 +84,7 @@ pnpm run front:dev  # frontend sur http://localhost:5173
           {
             slug: 'installation',
             title: 'Installation',
+            tags: ['installation'],
             content: `# Installation
 
 ## Prérequis
@@ -107,6 +128,7 @@ Passez ensuite à la page [Configuration](/pages/documentation/guide-demarrage/c
           {
             slug: 'configuration',
             title: 'Configuration',
+            tags: ['configuration'],
             content: `# Configuration
 
 La configuration se fait via trois fichiers \`.env\` distincts, chacun avec un \`.env.example\` à copier :
@@ -129,6 +151,7 @@ pnpm run front:dev  # frontend sur http://localhost:5173
       {
         slug: 'endpoints',
         title: 'Endpoints',
+        tags: ['api'],
         content: `# Endpoints
 
 La documentation ci-dessous est générée automatiquement à partir des routes réellement exposées par le backend (schéma OpenAPI de \`/api/docs-json\`).
@@ -138,6 +161,7 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
       {
         slug: 'mcp',
         title: 'Intégration MCP',
+        tags: ['mcp'],
         content: `# Intégration MCP
 
 OpenWiki expose un serveur [MCP](https://modelcontextprotocol.io/) (Model Context Protocol) permettant à un assistant IA compatible (Claude Desktop, Claude Code, etc.) de piloter le wiki directement : créer et modifier des pages, gérer des tags, des utilisateurs, uploader des médias et lancer des recherches.
@@ -251,6 +275,7 @@ Chaque appel de tool (succès ou échec) est tracé — clé utilisée, tool, en
       {
         slug: 'notes-de-version',
         title: 'Notes de version',
+        tags: ['changelog'],
         content: `# Notes de version
 
 ## Version 0.15
@@ -695,8 +720,9 @@ const dataSource = new DataSource({
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
+  timezone: 'Z',
   synchronize: false,
-  entities: [User, Page, PageVersion],
+  entities: [User, Page, PageVersion, Tag, PageTag],
 });
 
 async function resolveContentAuthorId(dataSource: DataSource): Promise<string> {
@@ -713,11 +739,56 @@ async function resolveContentAuthorId(dataSource: DataSource): Promise<string> {
   return oldest.id;
 }
 
+async function seedTags(dataSource: DataSource): Promise<Map<string, string>> {
+  const tagRepository = dataSource.getRepository(Tag);
+  const tagIdByName = new Map<string, string>();
+
+  for (const seed of TAG_SEED) {
+    let tag = await tagRepository.findOneBy({ name: seed.name });
+    if (!tag) {
+      tag = await tagRepository.save(
+        tagRepository.create({ name: seed.name, color: seed.color }),
+      );
+      console.log(`Created tag "${seed.name}".`);
+    } else if (tag.color !== seed.color) {
+      tag.color = seed.color;
+      tag = await tagRepository.save(tag);
+      console.log(`Updated color of tag "${seed.name}".`);
+    }
+    tagIdByName.set(seed.name, tag.id);
+  }
+
+  return tagIdByName;
+}
+
+async function seedPageTags(
+  dataSource: DataSource,
+  pageId: string,
+  tagNames: string[],
+  tagIdByName: Map<string, string>,
+): Promise<void> {
+  const pageTagRepository = dataSource.getRepository(PageTag);
+
+  for (const tagName of tagNames) {
+    const tagId = tagIdByName.get(tagName);
+    if (!tagId) {
+      continue;
+    }
+
+    const existing = await pageTagRepository.findOneBy({ pageId, tagId });
+    if (!existing) {
+      await pageTagRepository.save(pageTagRepository.create({ pageId, tagId }));
+      console.log(`Tagged page "${pageId}" with "${tagName}".`);
+    }
+  }
+}
+
 async function seedPage(
   dataSource: DataSource,
   seed: PageSeed,
   parentId: string | null,
   authorId: string,
+  tagIdByName: Map<string, string>,
 ): Promise<Page> {
   const pageRepository = dataSource.getRepository(Page);
   const versionRepository = dataSource.getRepository(PageVersion);
@@ -790,8 +861,12 @@ async function seedPage(
     }
   }
 
+  if (seed.tags?.length) {
+    await seedPageTags(dataSource, page.id, seed.tags, tagIdByName);
+  }
+
   for (const child of seed.children ?? []) {
-    await seedPage(dataSource, child, page.id, authorId);
+    await seedPage(dataSource, child, page.id, authorId, tagIdByName);
   }
 
   return page;
@@ -801,8 +876,9 @@ async function run(): Promise<void> {
   await dataSource.initialize();
 
   const authorId = await resolveContentAuthorId(dataSource);
+  const tagIdByName = await seedTags(dataSource);
   for (const root of PAGE_TREE_SEED) {
-    await seedPage(dataSource, root, null, authorId);
+    await seedPage(dataSource, root, null, authorId, tagIdByName);
   }
 
   await dataSource.destroy();

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { PageTag } from '../entities/page-tag.entity.js';
 import { Tag } from '../entities/tag.entity.js';
 import { TagRepository } from './tag.repository.js';
@@ -45,5 +45,15 @@ export class TypeormTagRepository implements TagRepository {
 
   async deletePageTag(pageId: string, tagId: string): Promise<void> {
     await this.pageTagRepository.delete({ pageId, tagId });
+  }
+
+  async findTagsByPageId(pageId: string): Promise<Tag[]> {
+    const pageTags = await this.pageTagRepository.findBy({ pageId });
+    if (pageTags.length === 0) {
+      return [];
+    }
+    return this.repository.findBy({
+      id: In(pageTags.map((pageTag) => pageTag.tagId)),
+    });
   }
 }

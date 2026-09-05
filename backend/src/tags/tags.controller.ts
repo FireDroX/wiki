@@ -30,6 +30,7 @@ import { Roles } from '../common/decorators/roles.decorator.js';
 import { ErrorResponseDto } from '../common/dto/error-response.dto.js';
 import { ResponseDto } from '../common/dto/response.dto.js';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
+import { OptionalJwtAuthGuard } from '../common/guards/optional-jwt-auth.guard.js';
 import { RolesGuard } from '../common/guards/roles.guard.js';
 import type { AuthenticatedUser } from '../common/strategies/jwt.strategy.js';
 import { CreateTagDto } from './dto/in/create-tag.dto.js';
@@ -113,6 +114,27 @@ export class TagsController {
 @UseFilters(TagsExceptionFilter)
 export class PageTagsController {
   constructor(private readonly tagsService: TagsService) {}
+
+  @Get()
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({ summary: "Lister les tags d'une page" })
+  @ApiParam({ name: 'id', description: 'Identifiant de la page' })
+  @ApiOkResponse({ description: 'Tags associés à la page.' })
+  @ApiForbiddenResponse({
+    description: 'Page privée, accès non autorisé.',
+    type: ErrorResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: "La page n'existe pas.",
+    type: ErrorResponseDto,
+  })
+  async listPageTags(
+    @Param('id') id: string,
+    @CurrentUser() user?: AuthenticatedUser,
+  ): Promise<ResponseDto<TagSummaryDto[]>> {
+    const tags = await this.tagsService.listPageTags(id, user);
+    return TagMapper.toListResponse(tags);
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
