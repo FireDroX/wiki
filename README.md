@@ -565,6 +565,7 @@ Table clé/valeur générique pour les réglages globaux (pas par utilisateur). 
 **BE-090 — Entité Tag/PageTag + endpoints CRUD**
 
 - Description : prérequis manquant du modèle de données initial. `POST /tags`, `GET /tags`, `POST /pages/:id/tags`, `DELETE /pages/:id/tags/:tagId`, `DELETE /tags/:id`.
+- Chaque tag porte une couleur (hex, ex. `#3b82f6`) choisie par son créateur à la création (`color` optionnel dans `POST /tags`, couleur neutre par défaut sinon).
 - AC : nom de tag dupliqué → 409, suppression d'un tag cascade sur `page_tag`.
 
 **BE-091 — Setup serveur MCP (socle)**

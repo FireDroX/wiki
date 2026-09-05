@@ -22,6 +22,7 @@ function setupSwagger(app: INestApplication): void {
       'Admin — Users',
       'Gestion des comptes utilisateurs (réservé aux admins)',
     )
+    .addTag('Tags', 'Gestion des tags et de leur association aux pages')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);

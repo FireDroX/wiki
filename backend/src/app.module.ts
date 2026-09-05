@@ -11,6 +11,7 @@ import { MediaModule } from './media/media.module.js';
 import { PagesModule } from './pages/pages.module.js';
 import { SearchModule } from './search/search.module.js';
 import { StorageModule } from './storage/storage.module.js';
+import { TagsModule } from './tags/tags.module.js';
 import { UsersModule } from './users/users.module.js';
 import { VersionsModule } from './versions/versions.module.js';
 import { typeOrmConfig } from './config/typeorm.config.js';
@@ -32,6 +33,7 @@ import { typeOrmConfig } from './config/typeorm.config.js';
     VersionsModule,
     MediaModule,
     SearchModule,
+    TagsModule,
     AdminModule,
   ],
 })

@@ -140,6 +140,15 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
         title: 'Notes de version',
         content: `# Notes de version
 
+## Version 0.15
+
+<details>
+<summary>0.15.0 — 2026-09-05</summary>
+
+- Entités \`Tag\`/\`PageTag\` + endpoints CRUD : \`POST/GET /tags\`, \`DELETE /tags/:id\` (cascade sur les associations), \`POST/DELETE /pages/:id/tags\`. Chaque tag a une couleur (hex) choisie à la création.
+
+</details>
+
 ## Version 0.14
 
 <details>
