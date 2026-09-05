@@ -25,11 +25,13 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { ErrorResponseDto } from '../common/dto/error-response.dto.js';
 import { ResponseDto } from '../common/dto/response.dto.js';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../common/guards/roles.guard.js';
+import type { AuthenticatedUser } from '../common/strategies/jwt.strategy.js';
 import { CreateTagDto } from './dto/in/create-tag.dto.js';
 import { PageTagResponseDto } from './dto/out/page-tag-response.dto.js';
 import { TagResponseDto, TagSummaryDto } from './dto/out/tag-response.dto.js';
@@ -139,8 +141,9 @@ export class PageTagsController {
   async tagPage(
     @Param('id') id: string,
     @Body() dto: { tagId: string },
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<ResponseDto<PageTagResponseDto>> {
-    const pageTag = await this.tagsService.tagPage(id, dto.tagId);
+    const pageTag = await this.tagsService.tagPage(id, dto.tagId, user);
     return TagMapper.toPageTagResponse(pageTag);
   }
 

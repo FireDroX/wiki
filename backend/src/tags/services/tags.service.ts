@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import type { AuthenticatedUser } from '../../common/strategies/jwt.strategy.js';
 import { PageTagAlreadyExistsException } from '../../common/exceptions/tags/page-tag-already-exists.exception.js';
 import { PageTagNotFoundException } from '../../common/exceptions/tags/page-tag-not-found.exception.js';
 import { TagAlreadyExistsException } from '../../common/exceptions/tags/tag-already-exists.exception.js';
@@ -46,8 +47,12 @@ export class TagsService {
     await this.tagRepository.delete(id);
   }
 
-  async tagPage(pageId: string, tagId: string): Promise<PageTag> {
-    await this.pagesService.getByIdOrFail(pageId);
+  async tagPage(
+    pageId: string,
+    tagId: string,
+    currentUser?: AuthenticatedUser,
+  ): Promise<PageTag> {
+    await this.pagesService.getByIdOrFail(pageId, currentUser);
 
     const tag = await this.tagRepository.findById(tagId);
     if (!tag) {

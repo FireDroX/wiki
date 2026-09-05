@@ -1,7 +1,9 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import type { z, ZodRawShape } from 'zod';
 import { PagesService } from '../../pages/services/pages.service.js';
+import { TagsService } from '../../tags/services/tags.service.js';
 import { buildPagesTools } from '../tools/pages.tools.js';
+import { buildTagsTools } from '../tools/tags.tools.js';
 
 export interface McpToolContext {
   scopes: string[];
@@ -65,9 +67,13 @@ export class McpToolsBootstrapService implements OnModuleInit {
   constructor(
     private readonly registry: McpToolsRegistry,
     private readonly pagesService: PagesService,
+    private readonly tagsService: TagsService,
   ) {}
 
   onModuleInit(): void {
-    this.registry.register(...buildPagesTools(this.pagesService));
+    this.registry.register(
+      ...buildPagesTools(this.pagesService),
+      ...buildTagsTools(this.tagsService),
+    );
   }
 }

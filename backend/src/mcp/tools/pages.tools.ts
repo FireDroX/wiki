@@ -1,19 +1,14 @@
 import { z } from 'zod';
-import type { AuthenticatedUser } from '../../common/strategies/jwt.strategy.js';
 import { PagesService } from '../../pages/services/pages.service.js';
 import { PAGE_VISIBILITIES } from '../../pages/entities/page.entity.js';
 import {
   defineMcpTool,
   McpToolDefinition,
-  McpToolContext,
 } from '../registry/mcp-tools.registry.js';
+import { asFullAccessUser } from './full-access-user.util.js';
 
 const PAGES_READ_SCOPE = 'pages:read';
 const PAGES_WRITE_SCOPE = 'pages:write';
-
-function asFullAccessUser(ctx: McpToolContext): AuthenticatedUser {
-  return { id: ctx.userId, email: '', role: 'editor' };
-}
 
 export function buildPagesTools(
   pagesService: PagesService,
