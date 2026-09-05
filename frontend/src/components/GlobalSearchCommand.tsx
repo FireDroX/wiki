@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { FileText } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import {
   Command,
   CommandDialog,
@@ -22,6 +23,7 @@ const COMMAND_RESULT_LIMIT = 8
 const MIN_QUERY_LENGTH = 2
 
 export function GlobalSearchCommand() {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const navigate = useNavigate()
@@ -73,20 +75,20 @@ export function GlobalSearchCommand() {
     <CommandDialog
       open={open}
       onOpenChange={setOpen}
-      title="Rechercher"
-      description="Rechercher une page dans le wiki"
+      title={t('globalSearch.title')}
+      description={t('globalSearch.description')}
     >
       <Command shouldFilter={false}>
         <CommandInput
-          placeholder="Rechercher dans le wiki..."
+          placeholder={t('globalSearch.placeholder')}
           value={query}
           onValueChange={setQuery}
         />
         <CommandList>
-          {showTooShortHint && <CommandEmpty>Tapez au moins 2 caractères.</CommandEmpty>}
-          {showNoResults && <CommandEmpty>Aucun résultat pour « {trimmed} ».</CommandEmpty>}
+          {showTooShortHint && <CommandEmpty>{t('globalSearch.minChars')}</CommandEmpty>}
+          {showNoResults && <CommandEmpty>{t('globalSearch.noResults', { query: trimmed })}</CommandEmpty>}
           {results.length > 0 && (
-            <CommandGroup heading="Pages">
+            <CommandGroup heading={t('globalSearch.pagesGroup')}>
               {results.map((result) => (
                 <CommandItem
                   key={result.pageId}
@@ -107,7 +109,7 @@ export function GlobalSearchCommand() {
               <CommandSeparator />
               <CommandGroup>
                 <CommandItem value="__view-all-results__" onSelect={goToAllResults}>
-                  Voir tous les résultats pour « {trimmed} »
+                  {t('globalSearch.viewAll', { query: trimmed })}
                 </CommandItem>
               </CommandGroup>
             </>

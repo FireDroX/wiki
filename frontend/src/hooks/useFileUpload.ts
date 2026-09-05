@@ -1,19 +1,21 @@
 import { useCallback, type RefObject } from 'react'
 import { isAxiosError } from 'axios'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import type { MarkdownEditorHandle } from '#components/PageEditor/MarkdownEditor'
 import type { FileUploadVariant } from '#components/PageEditor/FileUploadButton'
 import { uploadFile } from '#api/media'
 import { extractErrorMessage } from '#lib/api-errors'
 
-function uploadErrorMessage(error: unknown): string {
+function uploadErrorMessage(error: unknown, t: TFunction): string {
   if (isAxiosError(error) && error.response?.status === 413) {
-    return 'Fichier trop volumineux (max 20 Mo)'
+    return t('fileUpload.tooLarge')
   }
   if (isAxiosError(error) && error.response?.status === 415) {
-    return 'Type de fichier non supporté'
+    return t('fileUpload.unsupportedType')
   }
-  return extractErrorMessage(error, "Échec de l'upload du fichier.")
+  return extractErrorMessage(error, t('fileUpload.uploadFailed'))
 }
 
 export function useFileUpload(
@@ -21,6 +23,8 @@ export function useFileUpload(
   pageId?: string,
   variant: FileUploadVariant = 'image',
 ) {
+  const { t } = useTranslation()
+
   return useCallback(
     async (files: FileList) => {
       const file = files[0]
@@ -28,7 +32,7 @@ export function useFileUpload(
         return
       }
 
-      const placeholder = `${variant === 'image' ? '!' : ''}[Envoi de ${file.name}...]()`
+      const placeholder = `${variant === 'image' ? '!' : ''}[${t('fileUpload.sending', { filename: file.name })}]()`
       editorRef.current?.insertAtCursor(placeholder)
 
       try {
@@ -37,9 +41,9 @@ export function useFileUpload(
         editorRef.current?.replaceText(placeholder, markdown)
       } catch (error) {
         editorRef.current?.replaceText(placeholder, '')
-        toast.error(uploadErrorMessage(error))
+        toast.error(uploadErrorMessage(error, t))
       }
     },
-    [editorRef, pageId, variant],
+    [editorRef, pageId, variant, t],
   )
 }

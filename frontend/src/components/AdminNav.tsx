@@ -1,15 +1,17 @@
 import { NavLink } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import { cn } from '#lib/utils'
 
-const ADMIN_LINKS = [
-  { to: '/admin/users', label: 'Utilisateurs' },
-  { to: '/admin/settings', label: 'Paramètres' },
-]
-
 export function AdminNav() {
+  const { t } = useTranslation()
+  const links = [
+    { to: '/admin/users', label: t('admin.usersTab') },
+    { to: '/admin/settings', label: t('admin.settingsTab') },
+  ]
+
   return (
     <nav className="flex gap-4 border-b border-border pb-2">
-      {ADMIN_LINKS.map((link) => (
+      {links.map((link) => (
         <NavLink
           key={link.to}
           to={link.to}

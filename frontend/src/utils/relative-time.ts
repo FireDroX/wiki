@@ -1,3 +1,5 @@
+import i18n from '#lib/i18n'
+
 const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ['year', 60 * 60 * 24 * 365],
   ['month', 60 * 60 * 24 * 30],
@@ -6,10 +8,18 @@ const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ['minute', 60],
 ]
 
-const formatter = new Intl.RelativeTimeFormat('fr', { numeric: 'auto' })
+const INTL_LOCALES: Record<string, string> = {
+  fr: 'fr-FR',
+  en: 'en-US',
+}
+
+export function intlLocale(): string {
+  return INTL_LOCALES[i18n.language] ?? INTL_LOCALES.fr
+}
 
 export function formatRelativeTime(isoDate: string): string {
   const elapsedSeconds = (Date.parse(isoDate) - Date.now()) / 1000
+  const formatter = new Intl.RelativeTimeFormat(intlLocale(), { numeric: 'auto' })
 
   for (const [unit, secondsInUnit] of UNITS) {
     if (Math.abs(elapsedSeconds) >= secondsInUnit) {
@@ -21,7 +31,7 @@ export function formatRelativeTime(isoDate: string): string {
 }
 
 export function formatDateTime(isoDate: string): string {
-  return new Date(isoDate).toLocaleString('fr-FR', {
+  return new Date(isoDate).toLocaleString(intlLocale(), {
     dateStyle: 'medium',
     timeStyle: 'short',
   })

@@ -1,5 +1,6 @@
 import { ChevronRight, File, Folder, FolderOpen } from 'lucide-react'
 import { Link } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '#components/ui/collapsible'
 import { cn } from '#lib/utils'
 import type { PageTreeNode } from '#api/pages'
@@ -13,6 +14,7 @@ interface PageTreeItemProps {
 }
 
 export function PageTreeItem({ node, parentPath, activeSlug, isExpanded, onToggle }: PageTreeItemProps) {
+  const { t } = useTranslation()
   const isActive = node.slug === activeSlug
   const hasChildren = node.children.length > 0
   const fullPath = [...parentPath, node.slug]
@@ -24,7 +26,7 @@ export function PageTreeItem({ node, parentPath, activeSlug, isExpanded, onToggl
       {hasChildren ? (
         <CollapsibleTrigger className="flex size-6 shrink-0 items-center justify-center rounded-md text-sidebar-foreground hover:bg-sidebar-accent">
           <ChevronRight className={cn('size-4 transition-transform', expanded && 'rotate-90')} />
-          <span className="sr-only">Basculer {node.title}</span>
+          <span className="sr-only">{t('pageTree.toggle', { title: node.title })}</span>
         </CollapsibleTrigger>
       ) : (
         <span className="size-6 shrink-0" />

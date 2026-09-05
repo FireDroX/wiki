@@ -140,6 +140,38 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
         title: 'Notes de version',
         content: `# Notes de version
 
+## Version 0.14
+
+<details>
+<summary>0.14.3 — 2026-09-05</summary>
+
+- La langue de l'interface suit désormais le réglage global (\`GET /settings\`, sans authentification) au chargement de l'application, pour tous les visiteurs — aucune préférence par utilisateur, pas de \`localStorage\`.
+- Depuis le panel admin, changer la langue (FE-064) retraduit désormais réellement l'UI de l'admin immédiatement ; les autres visiteurs l'appliquent à leur prochain chargement.
+
+</details>
+
+<details>
+<summary>0.14.2 — 2026-09-05</summary>
+
+- Intégration \`react-i18next\` : toute la chrome applicative (menus, formulaires, messages, dates relatives) passe désormais par \`useTranslation()\`/\`t()\`, avec des dictionnaires FR/EN complets — le contenu markdown des pages reste, lui, jamais traduit automatiquement.
+
+</details>
+
+<details>
+<summary>0.14.1 — 2026-09-05</summary>
+
+- \`GET /settings\` (public, sans authentification) : réglages système exposés à plat (ex. \`{ "locale": "fr" }\`), nécessaire pour les visiteurs non connectés.
+- \`PATCH /admin/settings/:key\` (admin) : modifie un réglage, validation dépendant de la clé (\`locale\` limité à \`fr\`/\`en\` pour l'instant) → \`400\` sinon.
+
+</details>
+
+<details>
+<summary>0.14.0 — 2026-09-05</summary>
+
+- Entité \`SystemSetting\` (clé/valeur) + migration : socle des réglages système globaux, seedée avec \`locale=fr\`.
+
+</details>
+
 ## Version 0.13
 
 <details>

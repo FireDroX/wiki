@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router'
 import { useMemo } from 'react'
 import { History, Pencil } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { UserRole } from '#api/auth'
 import { Button } from '#components/ui/button'
 import { MarkdownRenderer } from '#components/MarkdownRenderer'
@@ -31,18 +32,20 @@ interface PageStatusMessageProps {
 }
 
 function PageStatusMessage({ title, description }: PageStatusMessageProps) {
+  const { t } = useTranslation()
   return (
     <div className="flex max-w-3xl flex-col items-start gap-4 p-8">
       <h1 className="text-2xl font-semibold">{title}</h1>
       <p className="text-muted-foreground">{description}</p>
       <Button asChild>
-        <Link to="/">Retour à l'accueil</Link>
+        <Link to="/">{t('pageView.backHome')}</Link>
       </Button>
     </div>
   )
 }
 
 export function PageView() {
+  const { t } = useTranslation()
   const params = useParams()
   const pathSegments = useMemo(() => (params['*'] ?? '').split('/').filter(Boolean), [params])
   const { status, page } = usePage(pathSegments)
@@ -56,8 +59,8 @@ export function PageView() {
   if (status === 'notFound') {
     return (
       <PageStatusMessage
-        title="Page introuvable"
-        description="Cette page n'existe pas ou a été supprimée."
+        title={t('pageView.notFoundTitle')}
+        description={t('pageView.notFoundDescription')}
       />
     )
   }
@@ -65,8 +68,8 @@ export function PageView() {
   if (status === 'forbidden') {
     return (
       <PageStatusMessage
-        title="Accès refusé"
-        description="Vous n'avez pas les droits nécessaires pour consulter cette page."
+        title={t('pageView.forbiddenTitle')}
+        description={t('pageView.forbiddenDescription')}
       />
     )
   }
@@ -74,8 +77,8 @@ export function PageView() {
   if (status === 'error' || !page) {
     return (
       <PageStatusMessage
-        title="Une erreur est survenue"
-        description="Impossible de charger cette page pour le moment."
+        title={t('pageView.errorTitle')}
+        description={t('pageView.errorDescription')}
       />
     )
   }
@@ -87,13 +90,13 @@ export function PageView() {
         <div className="flex shrink-0 gap-2">
           <Button variant="outline" size="sm" asChild>
             <Link to={`/history/${pathSegments.join('/')}`}>
-              <History /> Historique
+              <History /> {t('pageView.history')}
             </Link>
           </Button>
           {canEdit && (
             <Button variant="outline" size="sm" asChild>
               <Link to={`/edit/${pathSegments.join('/')}`}>
-                <Pencil /> Modifier
+                <Pencil /> {t('pageView.edit')}
               </Link>
             </Button>
           )}

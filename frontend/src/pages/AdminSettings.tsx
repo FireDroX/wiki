@@ -1,19 +1,21 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { AdminNav } from '#components/AdminNav'
 import { Field, FieldLabel } from '#components/ui/field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '#components/ui/select'
 import { updateSetting } from '#api/settings'
 import { extractErrorMessage } from '#lib/api-errors'
-
-const LOCALES = [
-  { value: 'fr', label: 'Français' },
-  { value: 'en', label: 'English' },
-]
+import i18n from '#lib/i18n'
 
 export function AdminSettings() {
-  const [locale, setLocale] = useState('fr')
+  const { t } = useTranslation()
+  const [locale, setLocale] = useState(i18n.language)
   const [pending, setPending] = useState(false)
+  const locales = [
+    { value: 'fr', label: t('admin.settings.localeFr') },
+    { value: 'en', label: t('admin.settings.localeEn') },
+  ]
 
   async function handleLocaleChange(value: string) {
     const previous = locale
@@ -21,10 +23,11 @@ export function AdminSettings() {
     setPending(true)
     try {
       await updateSetting('locale', value)
-      toast.success('Langue mise à jour.')
+      await i18n.changeLanguage(value)
+      toast.success(i18n.t('admin.settings.localeUpdated'))
     } catch (error) {
       setLocale(previous)
-      toast.error(extractErrorMessage(error, 'Échec de la mise à jour de la langue.'))
+      toast.error(extractErrorMessage(error, i18n.t('admin.settings.localeUpdateFailed')))
     } finally {
       setPending(false)
     }
@@ -34,23 +37,20 @@ export function AdminSettings() {
     <div className="p-8">
       <AdminNav />
       <Field className="mt-5 max-w-sm">
-        <FieldLabel>Langue de l'interface</FieldLabel>
+        <FieldLabel>{t('admin.settings.localeLabel')}</FieldLabel>
         <Select value={locale} onValueChange={handleLocaleChange} disabled={pending}>
           <SelectTrigger className="w-48">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {LOCALES.map((option) => (
+            {locales.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <p className="text-sm text-muted-foreground">
-          Réglage global appliqué à tous les visiteurs. Vous verrez le changement immédiatement, les autres à leur
-          prochain chargement.
-        </p>
+        <p className="text-sm text-muted-foreground">{t('admin.settings.localeHelp')}</p>
       </Field>
     </div>
   )

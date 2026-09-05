@@ -1,6 +1,6 @@
 {
   "name": "openwiki",
-  "version": "0.13.1",
+  "version": "0.14.3",
   "private": true,
   "packageManager": "pnpm@11.24.0",
   "scripts": {

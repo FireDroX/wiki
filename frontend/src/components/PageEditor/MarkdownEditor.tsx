@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from 'react'
 import { Bold, Code, Eye, Italic, Link2, Pencil } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { MarkdownRenderer } from '#components/MarkdownRenderer'
 import { Button } from '#components/ui/button'
 import { Separator } from '#components/ui/separator'
@@ -36,6 +37,7 @@ interface MarkdownEditorProps {
 
 export const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
   function MarkdownEditor({ value, onChange, onSave, toolbarExtra, onFilesDropped }, ref) {
+    const { t } = useTranslation()
     const [mobileView, setMobileView] = useState<'edit' | 'preview'>('edit')
     const [isDraggingOver, setIsDraggingOver] = useState(false)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -76,7 +78,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorPro
 
     function insertLink() {
       const { start, end } = currentSelection()
-      const selected = value.slice(start, end) || 'texte du lien'
+      const selected = value.slice(start, end) || t('markdownEditor.linkPlaceholder')
       const snippet = `[${selected}](url)`
       onChange(value.slice(0, start) + snippet + value.slice(end))
       const urlStart = start + selected.length + 3
@@ -119,16 +121,16 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorPro
       <div className="flex min-h-0 flex-1 flex-col">
         <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
           <div className="flex items-center gap-0.5">
-            <Button type="button" variant="ghost" size="icon-sm" title="Gras" onClick={() => wrapSelection('**')}>
+            <Button type="button" variant="ghost" size="icon-sm" title={t('markdownEditor.bold')} onClick={() => wrapSelection('**')}>
               <Bold />
             </Button>
-            <Button type="button" variant="ghost" size="icon-sm" title="Italique" onClick={() => wrapSelection('_')}>
+            <Button type="button" variant="ghost" size="icon-sm" title={t('markdownEditor.italic')} onClick={() => wrapSelection('_')}>
               <Italic />
             </Button>
-            <Button type="button" variant="ghost" size="icon-sm" title="Code" onClick={() => wrapSelection('`')}>
+            <Button type="button" variant="ghost" size="icon-sm" title={t('markdownEditor.code')} onClick={() => wrapSelection('`')}>
               <Code />
             </Button>
-            <Button type="button" variant="ghost" size="icon-sm" title="Lien" onClick={insertLink}>
+            <Button type="button" variant="ghost" size="icon-sm" title={t('markdownEditor.link')} onClick={insertLink}>
               <Link2 />
             </Button>
             {toolbarExtra && (
@@ -145,7 +147,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorPro
               size="sm"
               onClick={() => setMobileView('edit')}
             >
-              <Pencil /> Édition
+              <Pencil /> {t('markdownEditor.editTab')}
             </Button>
             <Button
               type="button"
@@ -153,7 +155,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorPro
               size="sm"
               onClick={() => setMobileView('preview')}
             >
-              <Eye /> Aperçu
+              <Eye /> {t('markdownEditor.previewTab')}
             </Button>
           </div>
         </div>
@@ -175,7 +177,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorPro
               ref={textareaRef}
               value={value}
               onChange={(event) => onChange(event.target.value)}
-              placeholder="Rédigez votre contenu en markdown, ou glissez-déposez une image..."
+              placeholder={t('markdownEditor.contentPlaceholder')}
               className="field-sizing-fixed h-full min-h-[60vh] resize-none rounded-none border-0 px-5 py-4 font-mono text-sm shadow-none focus-visible:ring-0"
             />
           </div>

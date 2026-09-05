@@ -1,5 +1,6 @@
 import { useSearchParams } from 'react-router'
 import { Search } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '#components/ui/button'
 import { Skeleton } from '#components/ui/skeleton'
 import { SearchResultsList } from '#components/SearchResults/SearchResultsList'
@@ -11,6 +12,7 @@ function parsePage(raw: string | null): number {
 }
 
 export function SearchResults() {
+  const { t } = useTranslation()
   const [searchParams, setSearchParams] = useSearchParams()
   const q = searchParams.get('q') ?? ''
   const page = parsePage(searchParams.get('page'))
@@ -27,17 +29,15 @@ export function SearchResults() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 p-8">
       <div>
-        <h1 className="text-xl font-semibold">Résultats de recherche</h1>
+        <h1 className="text-xl font-semibold">{t('search.resultsTitle')}</h1>
         {trimmed.length >= 2 && (
           <p className="text-sm text-muted-foreground">
-            {total} résultat{total > 1 ? 's' : ''} pour « {trimmed} »
+            {t('search.resultsCount', { count: total, query: trimmed })}
           </p>
         )}
       </div>
 
-      {trimmed.length < 2 && (
-        <p className="text-sm text-muted-foreground">Tapez au moins 2 caractères pour rechercher.</p>
-      )}
+      {trimmed.length < 2 && <p className="text-sm text-muted-foreground">{t('search.minChars')}</p>}
 
       {status === 'loading' && items.length === 0 && (
         <div className="space-y-3">
@@ -47,12 +47,12 @@ export function SearchResults() {
         </div>
       )}
 
-      {status === 'error' && <p className="text-sm text-destructive">Impossible d'effectuer la recherche.</p>}
+      {status === 'error' && <p className="text-sm text-destructive">{t('search.error')}</p>}
 
       {status === 'success' && items.length === 0 && (
         <div className="flex flex-col items-center gap-2 py-12 text-center text-muted-foreground">
           <Search className="size-8" />
-          <p>Aucun résultat pour « {trimmed} ».</p>
+          <p>{t('search.noResults', { query: trimmed })}</p>
         </div>
       )}
 
@@ -61,11 +61,9 @@ export function SearchResults() {
       {total > SEARCH_RESULTS_LIMIT && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <Button type="button" variant="outline" size="sm" disabled={page <= 1} onClick={() => goToPage(page - 1)}>
-            Précédent
+            {t('common.previous')}
           </Button>
-          <span>
-            Page {page} / {totalPages}
-          </span>
+          <span>{t('common.pageOf', { page, total: totalPages })}</span>
           <Button
             type="button"
             variant="outline"
@@ -73,7 +71,7 @@ export function SearchResults() {
             disabled={page >= totalPages}
             onClick={() => goToPage(page + 1)}
           >
-            Suivant
+            {t('common.next')}
           </Button>
         </div>
       )}

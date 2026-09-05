@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { ChevronRight, Lock } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import {
   Collapsible,
   CollapsibleContent,
@@ -50,13 +52,13 @@ function schemaTypeLabel(schema: OpenApiSchema | undefined): string {
   return schema.nullable ? `${type} | null` : type;
 }
 
-function groupByTag(paths: OpenApiDocument["paths"]): [string, RouteEntry[]][] {
+function groupByTag(paths: OpenApiDocument["paths"], t: TFunction): [string, RouteEntry[]][] {
   const groups = new Map<string, RouteEntry[]>();
   for (const [path, methods] of Object.entries(paths)) {
     for (const method of HTTP_METHODS) {
       const operation = methods[method];
       if (!operation) continue;
-      const tag = operation.tags?.[0] ?? "Autres";
+      const tag = operation.tags?.[0] ?? t("apiReference.other");
       const entries = groups.get(tag) ?? [];
       entries.push({ method, path, operation });
       groups.set(tag, entries);
@@ -72,6 +74,7 @@ interface SchemaFieldsProps {
 }
 
 function SchemaFields({ schema, schemas, depth = 0 }: SchemaFieldsProps) {
+  const { t } = useTranslation();
   const resolved = resolveRef(schema, schemas);
   if (!resolved?.properties) return null;
 
@@ -91,7 +94,7 @@ function SchemaFields({ schema, schemas, depth = 0 }: SchemaFieldsProps) {
               </span>
               {resolved.required?.includes(name) && (
                 <span className="text-[10px] tracking-wide text-muted-foreground/70 uppercase">
-                  requis
+                  {t("apiReference.required")}
                 </span>
               )}
             </div>
@@ -117,6 +120,7 @@ interface OperationRowProps {
 }
 
 function OperationRow({ method, path, operation, schemas }: OperationRowProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const requestSchema =
     operation.requestBody?.content?.["application/json"]?.schema;
@@ -160,7 +164,7 @@ function OperationRow({ method, path, operation, schemas }: OperationRowProps) {
         {parameters.length > 0 && (
           <div>
             <h4 className="mb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              Paramètres
+              {t("apiReference.parameters")}
             </h4>
             <div className="space-y-1">
               {parameters.map((parameter) => (
@@ -190,14 +194,14 @@ function OperationRow({ method, path, operation, schemas }: OperationRowProps) {
         {requestSchema && (
           <div>
             <h4 className="mb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              Corps de la requête
+              {t("apiReference.requestBody")}
             </h4>
             <SchemaFields schema={requestSchema} schemas={schemas} />
           </div>
         )}
         <div>
           <h4 className="mb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-            Réponses
+            {t("apiReference.responses")}
           </h4>
           <div className="space-y-2">
             {responseEntries.map(([status, response]) => (
@@ -222,6 +226,7 @@ function OperationRow({ method, path, operation, schemas }: OperationRowProps) {
 }
 
 export function ApiReferenceViewer() {
+  const { t } = useTranslation();
   const [openApiDoc, setOpenApiDoc] = useState<OpenApiDocument | null>(null);
   const [error, setError] = useState(false);
 
@@ -244,7 +249,7 @@ export function ApiReferenceViewer() {
   if (error) {
     return (
       <p className="text-sm text-destructive">
-        Impossible de charger la documentation de l'API.
+        {t("apiReference.loadError")}
       </p>
     );
   }
@@ -260,7 +265,7 @@ export function ApiReferenceViewer() {
   }
 
   const schemas = openApiDoc.components?.schemas ?? {};
-  const groups = groupByTag(openApiDoc.paths);
+  const groups = groupByTag(openApiDoc.paths, t);
 
   return (
     <div className="space-y-6">

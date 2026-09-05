@@ -1,25 +1,30 @@
 import { z } from 'zod'
+import type { TFunction } from 'i18next'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const MIN_PASSWORD_LENGTH = 8
 const DISPLAY_NAME_MIN_LENGTH = 2
 const DISPLAY_NAME_MAX_LENGTH = 100
 
-export const loginSchema = z.object({
-  email: z.string().regex(EMAIL_REGEX, 'Adresse e-mail invalide'),
-  password: z.string().min(1, 'Le mot de passe est requis'),
-})
+export function createLoginSchema(t: TFunction) {
+  return z.object({
+    email: z.string().regex(EMAIL_REGEX, t('auth.validation.emailInvalid')),
+    password: z.string().min(1, t('auth.validation.passwordRequired')),
+  })
+}
 
-export const registerSchema = z.object({
-  email: z.string().regex(EMAIL_REGEX, 'Adresse e-mail invalide'),
-  password: z
-    .string()
-    .min(MIN_PASSWORD_LENGTH, `Le mot de passe doit contenir au moins ${MIN_PASSWORD_LENGTH} caractères`),
-  displayName: z
-    .string()
-    .min(DISPLAY_NAME_MIN_LENGTH, `Le nom doit contenir au moins ${DISPLAY_NAME_MIN_LENGTH} caractères`)
-    .max(DISPLAY_NAME_MAX_LENGTH, `Le nom ne peut pas dépasser ${DISPLAY_NAME_MAX_LENGTH} caractères`),
-})
+export function createRegisterSchema(t: TFunction) {
+  return z.object({
+    email: z.string().regex(EMAIL_REGEX, t('auth.validation.emailInvalid')),
+    password: z
+      .string()
+      .min(MIN_PASSWORD_LENGTH, t('auth.validation.passwordMinLength', { count: MIN_PASSWORD_LENGTH })),
+    displayName: z
+      .string()
+      .min(DISPLAY_NAME_MIN_LENGTH, t('auth.validation.displayNameMinLength', { count: DISPLAY_NAME_MIN_LENGTH }))
+      .max(DISPLAY_NAME_MAX_LENGTH, t('auth.validation.displayNameMaxLength', { count: DISPLAY_NAME_MAX_LENGTH })),
+  })
+}
 
-export type LoginFormValues = z.infer<typeof loginSchema>
-export type RegisterFormValues = z.infer<typeof registerSchema>
+export type LoginFormValues = z.infer<ReturnType<typeof createLoginSchema>>
+export type RegisterFormValues = z.infer<ReturnType<typeof createRegisterSchema>>

@@ -1,5 +1,6 @@
 import { Fragment } from 'react'
 import { Link } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -16,6 +17,7 @@ interface PageBreadcrumbProps {
 }
 
 export function PageBreadcrumb({ title, parentId }: PageBreadcrumbProps) {
+  const { t } = useTranslation()
   const ancestors = usePageAncestors(parentId)
 
   if (!parentId) {
@@ -35,7 +37,7 @@ export function PageBreadcrumb({ title, parentId }: PageBreadcrumbProps) {
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <Link to="/">Accueil</Link>
+            <Link to="/">{t('common.home')}</Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
         {ancestors.map((ancestor, index) => {
