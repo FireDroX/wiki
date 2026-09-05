@@ -143,6 +143,20 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
 ## Version 0.15
 
 <details>
+<summary>0.15.10 — 2026-09-05</summary>
+
+- Page journal d'activité MCP (\`/admin/mcp/audit-log\`, réservée admin) : historique paginé des appels d'outils, filtrable par clé API (\`?apiKeyId=\`, conservé dans l'URL), détail complet (input/output JSON, message d'erreur) au clic sur une ligne.
+
+</details>
+
+<details>
+<summary>0.15.9 — 2026-09-05</summary>
+
+- Page de gestion des clés API MCP (\`/admin/mcp/api-keys\`, réservée admin) : création avec sélection des scopes, révélation unique de la clé en clair (confirmation demandée si fermeture sans avoir copié), révocation confirmée par boîte de dialogue (clé grisée plutôt que supprimée de la liste).
+
+</details>
+
+<details>
 <summary>0.15.8 — 2026-09-05</summary>
 
 - Journal d'audit des actions MCP : chaque appel de tool (succès ou échec) est tracé (\`McpAuditLog\` : clé API, tool, input/output tronqués à 500 car., succès, message d'erreur), via un wrapper générique autour du dispatch des tools — rien à ajouter dans chaque tool. \`lastUsedAt\` de la clé API est mis à jour à chaque appel réussi. \`GET /admin/mcp/audit-log\` (admin, filtrable par clé, paginé) alimente FE-071.

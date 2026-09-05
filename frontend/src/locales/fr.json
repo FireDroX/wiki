@@ -8,7 +8,8 @@
     "previous": "Précédent",
     "next": "Suivant",
     "pageOf": "Page {{page}} / {{total}}",
-    "loading": "Chargement..."
+    "loading": "Chargement...",
+    "close": "Fermer"
   },
   "auth": {
     "appTagline": "La base de connaissance de l'équipe",
@@ -154,6 +155,8 @@
   "admin": {
     "usersTab": "Utilisateurs",
     "settingsTab": "Paramètres",
+    "mcpKeysTab": "Clés API MCP",
+    "mcpAuditTab": "Journal MCP",
     "users": {
       "filterPlaceholder": "Filtrer les utilisateurs...",
       "loadError": "Échec du chargement des utilisateurs.",
@@ -180,6 +183,55 @@
       "localeHelp": "Réglage global appliqué à tous les visiteurs. Vous verrez le changement immédiatement, les autres à leur prochain chargement.",
       "localeUpdated": "Langue mise à jour.",
       "localeUpdateFailed": "Échec de la mise à jour de la langue."
+    },
+    "mcpKeys": {
+      "description": "Clés API utilisées par les IA connectées via MCP pour piloter le wiki.",
+      "createButton": "Nouvelle clé",
+      "createTitle": "Créer une clé API MCP",
+      "createDescription": "Choisissez un nom et les scopes accordés à cette clé.",
+      "nameLabel": "Nom",
+      "namePlaceholder": "ex. Claude Desktop",
+      "scopesLabel": "Scopes",
+      "createSubmit": "Créer",
+      "created": "Clé créée.",
+      "createFailed": "Échec de la création de la clé.",
+      "loadError": "Échec du chargement des clés.",
+      "columnName": "Nom",
+      "columnScopes": "Scopes",
+      "columnLastUsed": "Dernière utilisation",
+      "columnStatus": "Statut",
+      "neverUsed": "Jamais utilisée",
+      "statusActive": "Active",
+      "statusRevoked": "Révoquée",
+      "revokeSr": "Révoquer {{name}}",
+      "revokeConfirmTitle": "Révoquer cette clé ?",
+      "revokeConfirmDescription": "{{name}} sera immédiatement révoquée. Cette action est irréversible ; il faudra créer une nouvelle clé.",
+      "revokeConfirmAction": "Révoquer",
+      "revoked": "Clé révoquée.",
+      "revokeFailed": "Échec de la révocation.",
+      "reveal": {
+        "title": "Clé API créée",
+        "description": "Copiez cette clé maintenant : elle ne sera plus jamais affichée.",
+        "warning": "Cette clé ne sera plus jamais affichée.",
+        "confirmCloseWarning": "Vous n'avez pas copié la clé. Fermer maintenant la rendra définitivement inaccessible.",
+        "copyButton": "Copier",
+        "copiedButton": "Copié",
+        "copiedToast": "Clé copiée dans le presse-papiers.",
+        "closeAnyway": "Fermer quand même"
+      }
+    },
+    "mcpAudit": {
+      "allKeys": "Toutes les clés",
+      "loadError": "Échec du chargement du journal.",
+      "empty": "Aucune action enregistrée.",
+      "columnKey": "Clé API",
+      "columnTool": "Tool appelé",
+      "columnStatus": "Statut",
+      "columnDate": "Date",
+      "statusSuccess": "Succès",
+      "statusFailure": "Échec",
+      "detailInput": "Entrée",
+      "detailOutput": "Sortie"
     }
   },
   "permissions": {
