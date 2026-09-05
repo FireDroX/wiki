@@ -75,7 +75,9 @@ export function UsersTable({ users, currentUserId, pendingUserId, onRoleChange, 
               </TableCell>
               <TableCell className="text-muted-foreground">{formatJoinDate(user.createdAt)}</TableCell>
               <TableCell>
-                <DeleteUserDialog user={user} disabled={isSelf} pending={isPending} onConfirm={() => onDelete(user)} />
+                <div className="flex justify-end">
+                  <DeleteUserDialog user={user} disabled={isSelf} pending={isPending} onConfirm={() => onDelete(user)} />
+                </div>
               </TableCell>
             </TableRow>
           )

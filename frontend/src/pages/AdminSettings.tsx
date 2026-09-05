@@ -31,10 +31,9 @@ export function AdminSettings() {
   }
 
   return (
-    <div className="space-y-4 p-6">
+    <div className="p-8">
       <AdminNav />
-      <h1 className="text-xl font-semibold">Paramètres</h1>
-      <Field>
+      <Field className="mt-5 max-w-sm">
         <FieldLabel>Langue de l'interface</FieldLabel>
         <Select value={locale} onValueChange={handleLocaleChange} disabled={pending}>
           <SelectTrigger className="w-48">

@@ -75,23 +75,24 @@ export function AdminUsers() {
     : users
 
   return (
-    <div className="space-y-4 p-6">
+    <div className="p-8">
       <AdminNav />
-      <h1 className="text-xl font-semibold">Utilisateurs</h1>
-      {status === 'loading' && <p className="text-sm text-muted-foreground">Chargement...</p>}
-      {status === 'error' && <p className="text-sm text-destructive">Échec du chargement des utilisateurs.</p>}
+      {status === 'loading' && <p className="mt-5 text-sm text-muted-foreground">Chargement...</p>}
+      {status === 'error' && <p className="mt-5 text-sm text-destructive">Échec du chargement des utilisateurs.</p>}
       {status === 'ready' && (
         <>
-          <InputGroup className="max-w-sm">
-            <InputGroupAddon>
-              <Search />
-            </InputGroupAddon>
-            <InputGroupInput
-              placeholder="Filtrer les utilisateurs..."
-              value={filter}
-              onChange={(event) => setFilter(event.target.value)}
-            />
-          </InputGroup>
+          <div className="mt-5 mb-4 flex items-center gap-3">
+            <InputGroup className="max-w-[280px]">
+              <InputGroupAddon>
+                <Search />
+              </InputGroupAddon>
+              <InputGroupInput
+                placeholder="Filtrer les utilisateurs..."
+                value={filter}
+                onChange={(event) => setFilter(event.target.value)}
+              />
+            </InputGroup>
+          </div>
           <UsersTable
             users={filteredUsers}
             currentUserId={currentUser?.id}
