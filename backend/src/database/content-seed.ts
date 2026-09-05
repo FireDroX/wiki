@@ -177,7 +177,14 @@ Un tool nécessitant un scope absent de la clé n'apparaît même pas dans \`too
 
 Le serveur écoute sur \`POST/GET/DELETE /api/mcp\` (transport HTTP streamable, avec gestion de session via l'en-tête \`Mcp-Session-Id\`) et attend la clé API en en-tête \`Authorization: Bearer <clé>\`.
 
-Exemple de configuration pour un client supportant un serveur MCP distant en HTTP (adapter la syntaxe exacte au client utilisé) :
+**Avec Claude Code** (CLI \`claude mcp add\`) :
+
+\`\`\`bash
+claude mcp add --transport http openwiki http://localhost:3000/api/mcp \\
+  --header "Authorization: Bearer <votre-clé-api-mcp>"
+\`\`\`
+
+**Avec un autre client** supportant un serveur MCP distant en HTTP (Claude Desktop, etc.), via un fichier de configuration (adapter la syntaxe exacte au client utilisé) :
 
 \`\`\`json
 {
@@ -247,6 +254,13 @@ Chaque appel de tool (succès ou échec) est tracé — clé utilisée, tool, en
         content: `# Notes de version
 
 ## Version 0.15
+
+<details>
+<summary>0.15.12 — 2026-09-05</summary>
+
+- Page "Intégration MCP" : ajout d'un exemple de connexion via le CLI Claude Code (\`claude mcp add --transport http ...\`), en complément de l'exemple de configuration JSON générique.
+
+</details>
 
 <details>
 <summary>0.15.11 — 2026-09-05</summary>
