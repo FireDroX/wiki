@@ -62,9 +62,11 @@ export function Topbar({ onOpenSidebar }: TopbarProps) {
               Profil
             </DropdownMenuItem>
             {user?.role === UserRole.Admin && (
-              <DropdownMenuItem>
-                <Shield />
-                Administration
+              <DropdownMenuItem asChild>
+                <Link to="/admin/users">
+                  <Shield />
+                  Administration
+                </Link>
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />

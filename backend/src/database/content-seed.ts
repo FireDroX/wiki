@@ -140,6 +140,16 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
         title: 'Notes de version',
         content: `# Notes de version
 
+## Version 0.13
+
+<details>
+<summary>0.13.0 — 2026-09-05</summary>
+
+- Page d'administration des utilisateurs (\`/admin/users\`, réservée admin) : liste, changement de rôle inline et suppression (confirmée par boîte de dialogue) — un admin ne peut ni se rétrograder ni se supprimer lui-même (action désactivée sur sa propre ligne).
+- Lien "Administration" du menu utilisateur relié à cette page.
+
+</details>
+
 ## Version 0.12
 
 <details>
