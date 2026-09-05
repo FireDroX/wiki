@@ -6,4 +6,5 @@ export interface UserResponseDto {
   displayName: string;
   role: UserRole;
   avatarUrl: string | null;
+  createdAt: Date;
 }

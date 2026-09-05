@@ -11,6 +11,7 @@ export class UserMapper {
       displayName: entity.displayName,
       role: entity.role,
       avatarUrl: entity.avatarUrl,
+      createdAt: entity.createdAt,
     };
   }
 

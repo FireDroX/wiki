@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
+import { Search } from 'lucide-react'
 import { toast } from 'sonner'
 import { AdminNav } from '#components/AdminNav'
 import { UsersTable } from '#components/AdminUsers/UsersTable'
+import { InputGroup, InputGroupAddon, InputGroupInput } from '#components/ui/input-group'
 import { deleteUser, listUsers, updateRole, type AdminUser } from '#api/users'
 import type { UserRole } from '#api/auth'
 import { useAuth } from '#hooks/useAuth'
@@ -14,6 +16,7 @@ export function AdminUsers() {
   const [users, setUsers] = useState<AdminUser[]>([])
   const [status, setStatus] = useState<Status>('loading')
   const [pendingUserId, setPendingUserId] = useState<string | null>(null)
+  const [filter, setFilter] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -64,6 +67,13 @@ export function AdminUsers() {
     }
   }
 
+  const query = filter.trim().toLowerCase()
+  const filteredUsers = query
+    ? users.filter(
+        (user) => user.displayName.toLowerCase().includes(query) || user.email.toLowerCase().includes(query),
+      )
+    : users
+
   return (
     <div className="space-y-4 p-6">
       <AdminNav />
@@ -71,13 +81,25 @@ export function AdminUsers() {
       {status === 'loading' && <p className="text-sm text-muted-foreground">Chargement...</p>}
       {status === 'error' && <p className="text-sm text-destructive">Échec du chargement des utilisateurs.</p>}
       {status === 'ready' && (
-        <UsersTable
-          users={users}
-          currentUserId={currentUser?.id}
-          pendingUserId={pendingUserId}
-          onRoleChange={handleRoleChange}
-          onDelete={handleDelete}
-        />
+        <>
+          <InputGroup className="max-w-sm">
+            <InputGroupAddon>
+              <Search />
+            </InputGroupAddon>
+            <InputGroupInput
+              placeholder="Filtrer les utilisateurs..."
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+            />
+          </InputGroup>
+          <UsersTable
+            users={filteredUsers}
+            currentUserId={currentUser?.id}
+            pendingUserId={pendingUserId}
+            onRoleChange={handleRoleChange}
+            onDelete={handleDelete}
+          />
+        </>
       )}
     </div>
   )

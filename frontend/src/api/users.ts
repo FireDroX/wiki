@@ -13,6 +13,7 @@ export interface AdminUser {
   displayName: string
   role: UserRole
   avatarUrl: string | null
+  createdAt: string
 }
 
 export interface PaginatedUsers {
