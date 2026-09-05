@@ -8,18 +8,22 @@ import type { CallToolResult, Tool } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 import { InsufficientScopeException } from '../../common/exceptions/mcp/insufficient-scope.exception.js';
 import { ValidationException } from '../../common/exceptions/validation.exception.js';
-import type { McpAuthContext } from './api-keys.service.js';
+import { McpAuditInterceptor } from '../interceptors/mcp-audit.interceptor.js';
 import {
   McpToolDefinition,
   McpToolsRegistry,
 } from '../registry/mcp-tools.registry.js';
+import type { McpAuthContext } from './api-keys.service.js';
 
 const SERVER_NAME = 'openwiki-mcp';
 const SERVER_VERSION = '1.0.0';
 
 @Injectable()
 export class McpServerService {
-  constructor(private readonly toolsRegistry: McpToolsRegistry) {}
+  constructor(
+    private readonly toolsRegistry: McpToolsRegistry,
+    private readonly auditInterceptor: McpAuditInterceptor,
+  ) {}
 
   createServer(auth: McpAuthContext): McpServer {
     const server = new McpServer({
@@ -52,32 +56,45 @@ export class McpServerService {
     auth: McpAuthContext,
   ): Promise<CallToolResult> {
     try {
-      const tool = this.toolsRegistry.findByName(name);
-      if (!tool) {
-        throw new ValidationException(`Unknown tool: ${name}`);
-      }
-
-      if (!McpServerService.hasRequiredScope(tool, auth.scopes)) {
-        throw new InsufficientScopeException(tool.requiredScopes);
-      }
-
-      const parsed = z.object(tool.inputSchema).safeParse(args);
-      if (!parsed.success) {
-        throw new ValidationException(
-          `Invalid input: ${parsed.error.issues.map((issue) => issue.message).join(', ')}`,
-        );
-      }
-
-      const output = await tool.handler(parsed.data, {
-        scopes: auth.scopes,
-        userId: auth.createdById,
-      });
+      const output = await this.auditInterceptor.wrap(
+        auth.apiKeyId,
+        name,
+        args,
+        () => this.executeTool(name, args, auth),
+      );
       return { content: [{ type: 'text', text: JSON.stringify(output) }] };
     } catch (error) {
       return McpServerService.errorResult(
         error instanceof Error ? error.message : 'Unexpected error',
       );
     }
+  }
+
+  private async executeTool(
+    name: string,
+    args: Record<string, unknown>,
+    auth: McpAuthContext,
+  ): Promise<unknown> {
+    const tool = this.toolsRegistry.findByName(name);
+    if (!tool) {
+      throw new ValidationException(`Unknown tool: ${name}`);
+    }
+
+    if (!McpServerService.hasRequiredScope(tool, auth.scopes)) {
+      throw new InsufficientScopeException(tool.requiredScopes);
+    }
+
+    const parsed = z.object(tool.inputSchema).safeParse(args);
+    if (!parsed.success) {
+      throw new ValidationException(
+        `Invalid input: ${parsed.error.issues.map((issue) => issue.message).join(', ')}`,
+      );
+    }
+
+    return tool.handler(parsed.data, {
+      scopes: auth.scopes,
+      userId: auth.createdById,
+    });
   }
 
   private static hasRequiredScope(
