@@ -143,6 +143,14 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
 ## Version 0.14
 
 <details>
+<summary>0.14.1 — 2026-09-05</summary>
+
+- \`GET /settings\` (public, sans authentification) : réglages système exposés à plat (ex. \`{ "locale": "fr" }\`), nécessaire pour les visiteurs non connectés.
+- \`PATCH /admin/settings/:key\` (admin) : modifie un réglage, validation dépendant de la clé (\`locale\` limité à \`fr\`/\`en\` pour l'instant) → \`400\` sinon.
+
+</details>
+
+<details>
 <summary>0.14.0 — 2026-09-05</summary>
 
 - Entité \`SystemSetting\` (clé/valeur) + migration : socle des réglages système globaux, seedée avec \`locale=fr\`.

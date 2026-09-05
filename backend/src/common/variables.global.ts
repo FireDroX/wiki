@@ -30,3 +30,4 @@ export const ALLOWED_ATTACHMENT_MIME_TYPES = [
   'application/zip',
 ];
 export const MEDIA_PRESIGNED_URL_EXPIRY_SECONDS = 3600;
+export const SUPPORTED_LOCALES = ['fr', 'en'];
