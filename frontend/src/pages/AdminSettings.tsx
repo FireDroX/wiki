@@ -6,10 +6,11 @@ import { Field, FieldLabel } from '#components/ui/field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '#components/ui/select'
 import { updateSetting } from '#api/settings'
 import { extractErrorMessage } from '#lib/api-errors'
+import i18n from '#lib/i18n'
 
 export function AdminSettings() {
   const { t } = useTranslation()
-  const [locale, setLocale] = useState('fr')
+  const [locale, setLocale] = useState(i18n.language)
   const [pending, setPending] = useState(false)
   const locales = [
     { value: 'fr', label: t('admin.settings.localeFr') },
@@ -22,10 +23,11 @@ export function AdminSettings() {
     setPending(true)
     try {
       await updateSetting('locale', value)
-      toast.success(t('admin.settings.localeUpdated'))
+      await i18n.changeLanguage(value)
+      toast.success(i18n.t('admin.settings.localeUpdated'))
     } catch (error) {
       setLocale(previous)
-      toast.error(extractErrorMessage(error, t('admin.settings.localeUpdateFailed')))
+      toast.error(extractErrorMessage(error, i18n.t('admin.settings.localeUpdateFailed')))
     } finally {
       setPending(false)
     }
