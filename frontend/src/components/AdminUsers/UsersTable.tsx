@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Avatar, AvatarFallback } from '#components/ui/avatar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '#components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '#components/ui/table'
@@ -5,15 +6,10 @@ import { DeleteUserDialog } from '#components/AdminUsers/DeleteUserDialog'
 import { UserRole } from '#api/auth'
 import type { AdminUser } from '#api/users'
 import { toInitials } from '#utils/initials'
-
-const ROLE_LABELS: Record<UserRole, string> = {
-  [UserRole.Admin]: 'Admin',
-  [UserRole.Editor]: 'Éditeur',
-  [UserRole.Reader]: 'Lecteur',
-}
+import { intlLocale } from '#utils/relative-time'
 
 function formatJoinDate(createdAt: string): string {
-  return new Date(createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+  return new Date(createdAt).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 interface UsersTableProps {
@@ -25,13 +21,20 @@ interface UsersTableProps {
 }
 
 export function UsersTable({ users, currentUserId, pendingUserId, onRoleChange, onDelete }: UsersTableProps) {
+  const { t } = useTranslation()
+  const roleLabels: Record<UserRole, string> = {
+    [UserRole.Admin]: t('admin.users.roleAdmin'),
+    [UserRole.Editor]: t('admin.users.roleEditor'),
+    [UserRole.Reader]: t('admin.users.roleReader'),
+  }
+
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Utilisateur</TableHead>
-          <TableHead>Rôle</TableHead>
-          <TableHead>Inscrit le</TableHead>
+          <TableHead>{t('admin.users.columnUser')}</TableHead>
+          <TableHead>{t('admin.users.columnRole')}</TableHead>
+          <TableHead>{t('admin.users.columnJoined')}</TableHead>
           <TableHead className="w-10" />
         </TableRow>
       </TableHeader>
@@ -60,14 +63,14 @@ export function UsersTable({ users, currentUserId, pendingUserId, onRoleChange, 
                 >
                   <SelectTrigger
                     size="sm"
-                    title={isSelf ? 'Vous ne pouvez pas modifier votre propre rôle.' : undefined}
+                    title={isSelf ? t('admin.users.selfRoleTooltip') : undefined}
                   >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {Object.values(UserRole).map((role) => (
                       <SelectItem key={role} value={role}>
-                        {ROLE_LABELS[role]}
+                        {roleLabels[role]}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { Plus, Search } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { UserRole } from '#api/auth'
 import { Button } from '#components/ui/button'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '#components/ui/input-group'
@@ -12,6 +13,7 @@ import { cn } from '#lib/utils'
 const EDITOR_ROLES: UserRole[] = [UserRole.Editor, UserRole.Admin]
 
 function SidebarNav() {
+  const { t } = useTranslation()
   const [filter, setFilter] = useState('')
   const { user } = useAuth()
   const canCreate = !!user && EDITOR_ROLES.includes(user.role)
@@ -23,7 +25,7 @@ function SidebarNav() {
           <Search className="size-4" />
         </InputGroupAddon>
         <InputGroupInput
-          placeholder="Filtrer les pages..."
+          placeholder={t('sidebar.filterPlaceholder')}
           value={filter}
           onChange={(event) => setFilter(event.target.value)}
         />
@@ -37,7 +39,7 @@ function SidebarNav() {
         >
           <Link to="/new">
             <Plus className="size-4" />
-            Nouvelle page
+            {t('sidebar.newPage')}
           </Link>
         </Button>
       )}
@@ -52,6 +54,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps) {
+  const { t } = useTranslation()
+
   return (
     <>
       <aside
@@ -66,7 +70,7 @@ export function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps) {
           side="left"
           className="w-[280px] border-sidebar-border bg-sidebar p-0 sm:max-w-[280px]"
         >
-          <SheetTitle className="sr-only">Navigation</SheetTitle>
+          <SheetTitle className="sr-only">{t('sidebar.navLabel')}</SheetTitle>
           <SidebarNav />
         </SheetContent>
       </Sheet>

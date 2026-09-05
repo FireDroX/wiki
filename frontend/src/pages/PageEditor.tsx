@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { EditorLayout } from '#components/PageEditor/EditorLayout'
 import { FileUploadButton } from '#components/PageEditor/FileUploadButton'
 import { MarkdownEditor, type MarkdownEditorHandle } from '#components/PageEditor/MarkdownEditor'
@@ -21,7 +22,7 @@ import { usePage } from '#hooks/usePage'
 import { usePageTree } from '#hooks/usePageTree'
 import { extractErrorMessage } from '#lib/api-errors'
 import { findPathToNode } from '#utils/page-tree'
-import { pageMetadataSchema, type PageMetadataFormValues } from '#schemas/page-metadata.schema'
+import { createPageMetadataSchema, type PageMetadataFormValues } from '#schemas/page-metadata.schema'
 
 function pathFromParam(param: string | undefined): string[] {
   return (param ?? '').split('/').filter(Boolean)
@@ -38,6 +39,7 @@ function PageEditorSkeleton() {
 }
 
 export function PageEditor() {
+  const { t } = useTranslation()
   const params = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -53,9 +55,10 @@ export function PageEditor() {
   const [pendingAction, setPendingAction] = useState<'draft' | 'publish' | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [currentParentId, setCurrentParentId] = useState<string | null>(null)
+  const schema = useMemo(() => createPageMetadataSchema(t), [t])
 
   const { control, setValue, watch, getValues, reset } = useForm<PageMetadataFormValues>({
-    resolver: zodResolver(pageMetadataSchema),
+    resolver: zodResolver(schema),
     defaultValues: { title: '', slug: '', visibility: 'private', parentId: null },
   })
 
@@ -85,10 +88,10 @@ export function PageEditor() {
       await movePage(page.id, newParentId)
       await refresh()
       setCurrentParentId(newParentId)
-      toast.success('Page déplacée.')
+      toast.success(t('pageEditor.pageMoved'))
     } catch (error) {
       setValue('parentId', currentParentId)
-      toast.error(extractErrorMessage(error, "Échec du déplacement de la page."))
+      toast.error(extractErrorMessage(error, t('pageEditor.moveFailed')))
     }
   }
 
@@ -108,7 +111,7 @@ export function PageEditor() {
         await publishPage(page.id, true)
       }
       editor.markSaved()
-      toast.success(action === 'publish' ? 'Page publiée.' : 'Page sauvegardée.')
+      toast.success(action === 'publish' ? t('pageEditor.pagePublished') : t('pageEditor.pageSaved'))
       navigate(returnPath)
     } catch (error) {
       setSaveError(extractErrorMessage(error))
@@ -118,7 +121,7 @@ export function PageEditor() {
   }
 
   function handleCancel() {
-    if (editor.isDirty && !window.confirm('Abandonner les modifications non sauvegardées ?')) {
+    if (editor.isDirty && !window.confirm(t('pageEditor.discardConfirmEdit'))) {
       return
     }
     navigate(returnPath)
@@ -131,9 +134,9 @@ export function PageEditor() {
   if (status !== 'success' || !page) {
     return (
       <div className="max-w-3xl space-y-4 p-8">
-        <h1 className="text-2xl font-semibold">Page introuvable</h1>
-        <p className="text-muted-foreground">Impossible de charger cette page pour édition.</p>
-        <Button onClick={() => navigate('/')}>Retour à l'accueil</Button>
+        <h1 className="text-2xl font-semibold">{t('pageEditor.notFoundTitle')}</h1>
+        <p className="text-muted-foreground">{t('pageEditor.notFoundDescription')}</p>
+        <Button onClick={() => navigate('/')}>{t('pageView.backHome')}</Button>
       </div>
     )
   }
@@ -141,11 +144,11 @@ export function PageEditor() {
   return (
     <EditorLayout
       backTo={returnPath}
-      title={`Modifier : ${page.title}`}
+      title={t('pageEditor.editTitle', { title: page.title })}
       actions={
         <>
           <Button type="button" variant="ghost" onClick={handleCancel}>
-            Annuler
+            {t('common.cancel')}
           </Button>
           <Button
             type="button"
@@ -153,10 +156,10 @@ export function PageEditor() {
             onClick={() => submitSave('draft')}
             disabled={pendingAction !== null}
           >
-            {pendingAction === 'draft' ? 'Enregistrement...' : 'Enregistrer le brouillon'}
+            {pendingAction === 'draft' ? t('pageEditor.saving') : t('pageEditor.saveDraft')}
           </Button>
           <Button type="button" onClick={() => submitSave('publish')} disabled={pendingAction !== null}>
-            {pendingAction === 'publish' ? 'Publication...' : 'Publier'}
+            {pendingAction === 'publish' ? t('pageEditor.publishing') : t('pageEditor.publish')}
           </Button>
         </>
       }
@@ -171,12 +174,12 @@ export function PageEditor() {
             onParentChange={handleParentChange}
           />
           <Field className="mt-5">
-            <FieldLabel htmlFor="change-summary">Résumé de la modification</FieldLabel>
+            <FieldLabel htmlFor="change-summary">{t('pageEditor.changeSummaryLabel')}</FieldLabel>
             <Textarea
               id="change-summary"
               value={changeSummary}
               onChange={(event) => setChangeSummary(event.target.value)}
-              placeholder="Décrivez votre modification..."
+              placeholder={t('pageEditor.changeSummaryPlaceholder')}
               rows={3}
             />
           </Field>

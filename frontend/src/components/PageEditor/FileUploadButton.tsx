@@ -1,8 +1,14 @@
 import { useRef } from 'react'
 import { ImagePlus, Paperclip } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '#components/ui/button'
 
 export type FileUploadVariant = 'image' | 'attachment'
+
+const VARIANT_CONFIG: Record<FileUploadVariant, { icon: typeof ImagePlus; accept: string; labelKey: string }> = {
+  image: { icon: ImagePlus, accept: 'image/*', labelKey: 'fileUpload.insertImage' },
+  attachment: { icon: Paperclip, accept: '*/*', labelKey: 'fileUpload.attachFile' },
+}
 
 interface FileUploadButtonProps {
   variant: FileUploadVariant
@@ -10,14 +16,11 @@ interface FileUploadButtonProps {
   disabled?: boolean
 }
 
-const VARIANT_CONFIG: Record<FileUploadVariant, { icon: typeof ImagePlus; accept: string; label: string }> = {
-  image: { icon: ImagePlus, accept: 'image/*', label: 'Insérer une image' },
-  attachment: { icon: Paperclip, accept: '*/*', label: 'Joindre un fichier' },
-}
-
 export function FileUploadButton({ variant, onFilesSelected, disabled }: FileUploadButtonProps) {
+  const { t } = useTranslation()
   const inputRef = useRef<HTMLInputElement>(null)
-  const { icon: Icon, accept, label } = VARIANT_CONFIG[variant]
+  const { icon: Icon, accept, labelKey } = VARIANT_CONFIG[variant]
+  const label = t(labelKey)
 
   return (
     <>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Search } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { AdminNav } from '#components/AdminNav'
 import { UsersTable } from '#components/AdminUsers/UsersTable'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '#components/ui/input-group'
@@ -12,6 +13,7 @@ import { extractErrorMessage } from '#lib/api-errors'
 type Status = 'loading' | 'ready' | 'error'
 
 export function AdminUsers() {
+  const { t } = useTranslation()
   const { user: currentUser } = useAuth()
   const [users, setUsers] = useState<AdminUser[]>([])
   const [status, setStatus] = useState<Status>('loading')
@@ -46,9 +48,9 @@ export function AdminUsers() {
     try {
       const updated = await updateRole(user.id, role)
       setUsers((current) => current.map((item) => (item.id === updated.id ? updated : item)))
-      toast.success('Rôle mis à jour.')
+      toast.success(t('admin.users.roleUpdated'))
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Échec de la mise à jour du rôle.'))
+      toast.error(extractErrorMessage(error, t('admin.users.roleUpdateFailed')))
     } finally {
       setPendingUserId(null)
     }
@@ -59,9 +61,9 @@ export function AdminUsers() {
     try {
       await deleteUser(user.id)
       setUsers((current) => current.filter((item) => item.id !== user.id))
-      toast.success('Utilisateur supprimé.')
+      toast.success(t('admin.users.userDeleted'))
     } catch (error) {
-      toast.error(extractErrorMessage(error, "Échec de la suppression de l'utilisateur."))
+      toast.error(extractErrorMessage(error, t('admin.users.userDeleteFailed')))
     } finally {
       setPendingUserId(null)
     }
@@ -77,8 +79,8 @@ export function AdminUsers() {
   return (
     <div className="p-8">
       <AdminNav />
-      {status === 'loading' && <p className="mt-5 text-sm text-muted-foreground">Chargement...</p>}
-      {status === 'error' && <p className="mt-5 text-sm text-destructive">Échec du chargement des utilisateurs.</p>}
+      {status === 'loading' && <p className="mt-5 text-sm text-muted-foreground">{t('common.loading')}</p>}
+      {status === 'error' && <p className="mt-5 text-sm text-destructive">{t('admin.users.loadError')}</p>}
       {status === 'ready' && (
         <>
           <div className="mt-5 mb-4 flex items-center gap-3">
@@ -87,7 +89,7 @@ export function AdminUsers() {
                 <Search />
               </InputGroupAddon>
               <InputGroupInput
-                placeholder="Filtrer les utilisateurs..."
+                placeholder={t('admin.users.filterPlaceholder')}
                 value={filter}
                 onChange={(event) => setFilter(event.target.value)}
               />

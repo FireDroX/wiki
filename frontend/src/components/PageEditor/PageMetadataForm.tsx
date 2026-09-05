@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Controller, type Control, type UseFormSetValue, type UseFormWatch } from 'react-hook-form'
 import { FolderTree, Lock, Globe } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '#components/ui/button'
 import {
   Command,
@@ -35,6 +36,7 @@ export function PageMetadataForm({
   excludePageId,
   onParentChange,
 }: PageMetadataFormProps) {
+  const { t } = useTranslation()
   const [slugTouched, setSlugTouched] = useState(false)
   const [parentPickerOpen, setParentPickerOpen] = useState(false)
   const { tree } = usePageTree()
@@ -43,7 +45,7 @@ export function PageMetadataForm({
   const parentOptions = flattenTree(tree).filter((node) => !excludedIds.includes(node.id))
   const parentId = watch('parentId')
   const parentPath = parentId ? findPathToNode(tree, (node) => node.id === parentId) : null
-  const parentLabel = parentPath ? parentPath.map((node) => node.title).join(' / ') : 'Aucune (racine)'
+  const parentLabel = parentPath ? parentPath.map((node) => node.title).join(' / ') : t('pageMetadataForm.none')
   const pathPrefix = parentPath ? `/${parentPath.map((node) => node.slug).join('/')}/` : '/'
 
   function selectParent(nextParentId: string | null) {
@@ -61,7 +63,7 @@ export function PageMetadataForm({
         name="title"
         render={({ field, fieldState }) => (
           <Field data-invalid={!!fieldState.error}>
-            <FieldLabel htmlFor="page-title">Titre</FieldLabel>
+            <FieldLabel htmlFor="page-title">{t('pageMetadataForm.titleLabel')}</FieldLabel>
             <Input
               {...field}
               id="page-title"
@@ -81,7 +83,7 @@ export function PageMetadataForm({
         name="slug"
         render={({ field, fieldState }) => (
           <Field data-invalid={!!fieldState.error}>
-            <FieldLabel htmlFor="page-slug">Chemin</FieldLabel>
+            <FieldLabel htmlFor="page-slug">{t('pageMetadataForm.pathLabel')}</FieldLabel>
             {mode === 'create' ? (
               <div className="flex h-8 items-center gap-1 rounded-lg border border-input bg-transparent px-2.5 has-[input:focus-visible]:border-ring has-[input:focus-visible]:ring-3 has-[input:focus-visible]:ring-ring/50">
                 <span className="shrink-0 text-sm text-muted-foreground">{pathPrefix}</span>
@@ -102,12 +104,12 @@ export function PageMetadataForm({
               </p>
             )}
             {fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}
-            {mode === 'edit' && <FieldDescription>Le chemin ne peut pas être modifié après la création.</FieldDescription>}
+            {mode === 'edit' && <FieldDescription>{t('pageMetadataForm.pathImmutable')}</FieldDescription>}
           </Field>
         )}
       />
       <Field>
-        <FieldLabel>Page parente</FieldLabel>
+        <FieldLabel>{t('pageMetadataForm.parentLabel')}</FieldLabel>
         <Button
           type="button"
           variant="outline"
@@ -123,7 +125,7 @@ export function PageMetadataForm({
         render={({ field }) =>
           mode === 'create' ? (
             <Field>
-              <FieldLabel>Visibilité</FieldLabel>
+              <FieldLabel>{t('pageMetadataForm.visibilityLabel')}</FieldLabel>
               <div className="flex gap-2">
                 <Button
                   type="button"
@@ -131,7 +133,7 @@ export function PageMetadataForm({
                   size="sm"
                   onClick={() => field.onChange('private')}
                 >
-                  <Lock /> Privée
+                  <Lock /> {t('pageMetadataForm.private')}
                 </Button>
                 <Button
                   type="button"
@@ -139,30 +141,30 @@ export function PageMetadataForm({
                   size="sm"
                   onClick={() => field.onChange('public')}
                 >
-                  <Globe /> Publique
+                  <Globe /> {t('pageMetadataForm.public')}
                 </Button>
               </div>
             </Field>
           ) : (
             <Field>
-              <FieldLabel>Visibilité</FieldLabel>
+              <FieldLabel>{t('pageMetadataForm.visibilityLabel')}</FieldLabel>
               <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 {field.value === 'private' ? <Lock className="size-4" /> : <Globe className="size-4" />}
-                {field.value === 'private' ? 'Privée' : 'Publique'}
+                {field.value === 'private' ? t('pageMetadataForm.private') : t('pageMetadataForm.public')}
               </p>
-              <FieldDescription>La visibilité ne peut pas être modifiée après la création.</FieldDescription>
+              <FieldDescription>{t('pageMetadataForm.visibilityImmutable')}</FieldDescription>
             </Field>
           )
         }
       />
-      <CommandDialog open={parentPickerOpen} onOpenChange={setParentPickerOpen} title="Choisir la page parente">
+      <CommandDialog open={parentPickerOpen} onOpenChange={setParentPickerOpen} title={t('pageMetadataForm.choosePage')}>
         <Command>
-          <CommandInput placeholder="Rechercher une page..." />
+          <CommandInput placeholder={t('pageMetadataForm.searchPage')} />
           <CommandList>
-            <CommandEmpty>Aucune page trouvée.</CommandEmpty>
+            <CommandEmpty>{t('pageMetadataForm.noPageFound')}</CommandEmpty>
             <CommandGroup>
-              <CommandItem value="Aucune (racine)" onSelect={() => selectParent(null)}>
-                Aucune (racine)
+              <CommandItem value={t('pageMetadataForm.none')} onSelect={() => selectParent(null)}>
+                {t('pageMetadataForm.none')}
               </CommandItem>
               {parentOptions.map((node) => (
                 <CommandItem key={node.id} value={node.path} onSelect={() => selectParent(node.id)}>

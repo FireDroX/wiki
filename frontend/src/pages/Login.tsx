@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { FormError } from '#components/FormError'
 import { Button } from '#components/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '#components/ui/field'
@@ -9,24 +10,21 @@ import { Input } from '#components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#components/ui/tabs'
 import { useAuth } from '#hooks/useAuth'
 import { extractErrorMessage } from '#lib/api-errors'
-import {
-  loginSchema,
-  registerSchema,
-  type LoginFormValues,
-  type RegisterFormValues,
-} from '#schemas/auth.schema'
+import { createLoginSchema, createRegisterSchema, type LoginFormValues, type RegisterFormValues } from '#schemas/auth.schema'
 
 function LoginForm() {
+  const { t } = useTranslation()
   const { login } = useAuth()
   const navigate = useNavigate()
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const schema = useMemo(() => createLoginSchema(t), [t])
 
   const {
     control,
     handleSubmit,
     formState: { isSubmitting },
   } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(schema),
     defaultValues: { email: '', password: '' },
   })
 
@@ -48,7 +46,7 @@ function LoginForm() {
           name="email"
           render={({ field, fieldState }) => (
             <Field data-invalid={!!fieldState.error}>
-              <FieldLabel htmlFor="login-email">Adresse e-mail</FieldLabel>
+              <FieldLabel htmlFor="login-email">{t('auth.emailLabel')}</FieldLabel>
               <Input {...field} id="login-email" type="email" autoComplete="email" />
               {fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}
             </Field>
@@ -59,7 +57,7 @@ function LoginForm() {
           name="password"
           render={({ field, fieldState }) => (
             <Field data-invalid={!!fieldState.error}>
-              <FieldLabel htmlFor="login-password">Mot de passe</FieldLabel>
+              <FieldLabel htmlFor="login-password">{t('auth.passwordLabel')}</FieldLabel>
               <Input {...field} id="login-password" type="password" autoComplete="current-password" />
               {fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}
             </Field>
@@ -67,7 +65,7 @@ function LoginForm() {
         />
         <FormError message={submitError} />
         <Button type="submit" disabled={isSubmitting} className="w-full">
-          Se connecter
+          {t('auth.signIn')}
         </Button>
       </FieldGroup>
     </form>
@@ -75,16 +73,18 @@ function LoginForm() {
 }
 
 function RegisterForm() {
+  const { t } = useTranslation()
   const { register } = useAuth()
   const navigate = useNavigate()
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const schema = useMemo(() => createRegisterSchema(t), [t])
 
   const {
     control,
     handleSubmit,
     formState: { isSubmitting },
   } = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
+    resolver: zodResolver(schema),
     defaultValues: { email: '', password: '', displayName: '' },
   })
 
@@ -106,7 +106,7 @@ function RegisterForm() {
           name="displayName"
           render={({ field, fieldState }) => (
             <Field data-invalid={!!fieldState.error}>
-              <FieldLabel htmlFor="register-display-name">Nom affiché</FieldLabel>
+              <FieldLabel htmlFor="register-display-name">{t('auth.displayNameLabel')}</FieldLabel>
               <Input {...field} id="register-display-name" autoComplete="name" />
               {fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}
             </Field>
@@ -117,7 +117,7 @@ function RegisterForm() {
           name="email"
           render={({ field, fieldState }) => (
             <Field data-invalid={!!fieldState.error}>
-              <FieldLabel htmlFor="register-email">Adresse e-mail</FieldLabel>
+              <FieldLabel htmlFor="register-email">{t('auth.emailLabel')}</FieldLabel>
               <Input {...field} id="register-email" type="email" autoComplete="email" />
               {fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}
             </Field>
@@ -128,7 +128,7 @@ function RegisterForm() {
           name="password"
           render={({ field, fieldState }) => (
             <Field data-invalid={!!fieldState.error}>
-              <FieldLabel htmlFor="register-password">Mot de passe</FieldLabel>
+              <FieldLabel htmlFor="register-password">{t('auth.passwordLabel')}</FieldLabel>
               <Input {...field} id="register-password" type="password" autoComplete="new-password" />
               {fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}
             </Field>
@@ -136,7 +136,7 @@ function RegisterForm() {
         />
         <FormError message={submitError} />
         <Button type="submit" disabled={isSubmitting} className="w-full">
-          Créer un compte
+          {t('auth.createAccount')}
         </Button>
       </FieldGroup>
     </form>
@@ -144,6 +144,7 @@ function RegisterForm() {
 }
 
 export function Login() {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const defaultTab = searchParams.get('tab') === 'register' ? 'register' : 'login'
 
@@ -151,13 +152,13 @@ export function Login() {
     <div className="flex min-h-svh items-center justify-center bg-muted/30 p-4">
       <div className="w-full max-w-sm rounded-lg border border-border bg-card p-6 shadow-sm">
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-semibold">OpenWiki</h1>
-          <p className="text-sm text-muted-foreground">La base de connaissance de l'équipe</p>
+          <h1 className="text-2xl font-semibold">{t('common.appName')}</h1>
+          <p className="text-sm text-muted-foreground">{t('auth.appTagline')}</p>
         </div>
         <Tabs defaultValue={defaultTab}>
           <TabsList className="w-full">
-            <TabsTrigger value="login">Connexion</TabsTrigger>
-            <TabsTrigger value="register">Inscription</TabsTrigger>
+            <TabsTrigger value="login">{t('auth.loginTab')}</TabsTrigger>
+            <TabsTrigger value="register">{t('auth.registerTab')}</TabsTrigger>
           </TabsList>
           <TabsContent value="login" className="pt-4">
             <LoginForm />

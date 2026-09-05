@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { ArrowLeft } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '#components/ui/button'
 
 interface EditorLayoutProps {
@@ -12,13 +13,14 @@ interface EditorLayoutProps {
 }
 
 export function EditorLayout({ backTo, title, actions, sidebar, children }: EditorLayoutProps) {
+  const { t } = useTranslation()
   return (
     <div className="flex h-svh flex-col bg-background">
       <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-4 sm:px-6">
         <Button variant="ghost" size="icon" asChild>
           <Link to={backTo}>
             <ArrowLeft />
-            <span className="sr-only">Retour</span>
+            <span className="sr-only">{t('common.back')}</span>
           </Link>
         </Button>
         <h1 className="min-w-0 flex-1 truncate font-heading text-base font-semibold">{title}</h1>

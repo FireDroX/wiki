@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Eye } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogContent,
@@ -20,6 +21,7 @@ interface VersionContentDialogProps {
 }
 
 export function VersionContentDialog({ pageId, versionId }: VersionContentDialogProps) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [version, setVersion] = useState<VersionDetail | null>(null)
 
@@ -41,12 +43,12 @@ export function VersionContentDialog({ pageId, versionId }: VersionContentDialog
       <DialogTrigger asChild>
         <Button type="button" variant="ghost" size="icon-sm">
           <Eye />
-          <span className="sr-only">Voir cette version</span>
+          <span className="sr-only">{t('pageHistory.viewVersionSr')}</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{version?.title ?? 'Contenu de la version'}</DialogTitle>
+          <DialogTitle>{version?.title ?? t('pageHistory.versionContentTitle')}</DialogTitle>
           {version && <DialogDescription>{formatDateTime(version.createdAt)}</DialogDescription>}
         </DialogHeader>
         {version ? (

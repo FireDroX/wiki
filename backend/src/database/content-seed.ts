@@ -143,6 +143,13 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
 ## Version 0.14
 
 <details>
+<summary>0.14.2 — 2026-09-05</summary>
+
+- Intégration \`react-i18next\` : toute la chrome applicative (menus, formulaires, messages, dates relatives) passe désormais par \`useTranslation()\`/\`t()\`, avec des dictionnaires FR/EN complets — le contenu markdown des pages reste, lui, jamais traduit automatiquement.
+
+</details>
+
+<details>
 <summary>0.14.1 — 2026-09-05</summary>
 
 - \`GET /settings\` (public, sans authentification) : réglages système exposés à plat (ex. \`{ "locale": "fr" }\`), nécessaire pour les visiteurs non connectés.

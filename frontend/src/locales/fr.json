@@ -1,0 +1,213 @@
+{
+  "common": {
+    "appName": "OpenWiki",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "back": "Retour",
+    "home": "Accueil",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "pageOf": "Page {{page}} / {{total}}",
+    "loading": "Chargement..."
+  },
+  "auth": {
+    "appTagline": "La base de connaissance de l'équipe",
+    "loginTab": "Connexion",
+    "registerTab": "Inscription",
+    "emailLabel": "Adresse e-mail",
+    "passwordLabel": "Mot de passe",
+    "displayNameLabel": "Nom affiché",
+    "signIn": "Se connecter",
+    "createAccount": "Créer un compte",
+    "validation": {
+      "emailInvalid": "Adresse e-mail invalide",
+      "passwordRequired": "Le mot de passe est requis",
+      "passwordMinLength": "Le mot de passe doit contenir au moins {{count}} caractères",
+      "displayNameMinLength": "Le nom doit contenir au moins {{count}} caractères",
+      "displayNameMaxLength": "Le nom ne peut pas dépasser {{count}} caractères"
+    }
+  },
+  "topbar": {
+    "openSidebar": "Ouvrir la navigation",
+    "searchPlaceholder": "Rechercher dans le wiki...",
+    "profile": "Profil",
+    "administration": "Administration",
+    "logout": "Déconnexion"
+  },
+  "sidebar": {
+    "filterPlaceholder": "Filtrer les pages...",
+    "newPage": "Nouvelle page",
+    "navLabel": "Navigation"
+  },
+  "pageTree": {
+    "loadError": "Impossible de charger les pages.",
+    "noMatch": "Aucune page ne correspond.",
+    "toggle": "Basculer {{title}}"
+  },
+  "home": {
+    "getStarted": "Commencer"
+  },
+  "pageView": {
+    "history": "Historique",
+    "edit": "Modifier",
+    "notFoundTitle": "Page introuvable",
+    "notFoundDescription": "Cette page n'existe pas ou a été supprimée.",
+    "forbiddenTitle": "Accès refusé",
+    "forbiddenDescription": "Vous n'avez pas les droits nécessaires pour consulter cette page.",
+    "errorTitle": "Une erreur est survenue",
+    "errorDescription": "Impossible de charger cette page pour le moment.",
+    "backHome": "Retour à l'accueil"
+  },
+  "pageEditor": {
+    "newPageTitle": "Nouvelle page",
+    "editTitle": "Modifier : {{title}}",
+    "saveDraft": "Enregistrer le brouillon",
+    "saving": "Enregistrement...",
+    "publish": "Publier",
+    "publishing": "Publication...",
+    "discardConfirmCreate": "Abandonner cette page sans la créer ?",
+    "discardConfirmEdit": "Abandonner les modifications non sauvegardées ?",
+    "notFoundTitle": "Page introuvable",
+    "notFoundDescription": "Impossible de charger cette page pour édition.",
+    "changeSummaryLabel": "Résumé de la modification",
+    "changeSummaryPlaceholder": "Décrivez votre modification...",
+    "pageMoved": "Page déplacée.",
+    "moveFailed": "Échec du déplacement de la page.",
+    "pagePublished": "Page publiée.",
+    "pageSaved": "Page sauvegardée."
+  },
+  "pageMetadataForm": {
+    "titleLabel": "Titre",
+    "titleRequired": "Le titre est requis",
+    "titleTooLong": "Le titre ne peut pas dépasser {{count}} caractères",
+    "slugRequired": "Le slug est requis",
+    "slugTooLong": "Le slug ne peut pas dépasser {{count}} caractères",
+    "slugInvalid": "Le slug ne peut contenir que des lettres minuscules, chiffres et tirets",
+    "pathLabel": "Chemin",
+    "pathImmutable": "Le chemin ne peut pas être modifié après la création.",
+    "parentLabel": "Page parente",
+    "none": "Aucune (racine)",
+    "visibilityLabel": "Visibilité",
+    "private": "Privée",
+    "public": "Publique",
+    "visibilityImmutable": "La visibilité ne peut pas être modifiée après la création.",
+    "choosePage": "Choisir la page parente",
+    "searchPage": "Rechercher une page...",
+    "noPageFound": "Aucune page trouvée."
+  },
+  "markdownEditor": {
+    "bold": "Gras",
+    "italic": "Italique",
+    "code": "Code",
+    "link": "Lien",
+    "linkPlaceholder": "texte du lien",
+    "editTab": "Édition",
+    "previewTab": "Aperçu",
+    "contentPlaceholder": "Rédigez votre contenu en markdown, ou glissez-déposez une image..."
+  },
+  "fileUpload": {
+    "insertImage": "Insérer une image",
+    "attachFile": "Joindre un fichier",
+    "sending": "Envoi de {{filename}}...",
+    "tooLarge": "Fichier trop volumineux (max 20 Mo)",
+    "unsupportedType": "Type de fichier non supporté",
+    "uploadFailed": "Échec de l'upload du fichier."
+  },
+  "pageHistory": {
+    "title": "Historique des versions",
+    "notFoundTitle": "Page introuvable",
+    "notFoundDescription": "Impossible de charger l'historique de cette page.",
+    "selectTwoVersions": "Sélectionnez deux versions dans la liste pour les comparer.",
+    "diffError": "Impossible de comparer ces deux versions.",
+    "restoreConfirmTitle": "Restaurer cette version ?",
+    "restoreConfirmDescription": "Restaurer cette version créera une nouvelle entrée dans l'historique. Continuer ?",
+    "restore": "Restaurer",
+    "restoreSr": "Restaurer cette version",
+    "restored": "Version restaurée.",
+    "restoreFailed": "Échec de la restauration.",
+    "viewVersionSr": "Voir cette version",
+    "versionContentTitle": "Contenu de la version",
+    "columnAuthor": "Auteur",
+    "columnDate": "Date",
+    "columnSummary": "Résumé",
+    "columnActions": "Actions",
+    "you": "Vous",
+    "noSummary": "—"
+  },
+  "search": {
+    "resultsTitle": "Résultats de recherche",
+    "resultsCount_one": "{{count}} résultat pour « {{query}} »",
+    "resultsCount_other": "{{count}} résultats pour « {{query}} »",
+    "minChars": "Tapez au moins 2 caractères pour rechercher.",
+    "error": "Impossible d'effectuer la recherche.",
+    "noResults": "Aucun résultat pour « {{query}} »."
+  },
+  "globalSearch": {
+    "title": "Rechercher",
+    "description": "Rechercher une page dans le wiki",
+    "placeholder": "Rechercher dans le wiki...",
+    "minChars": "Tapez au moins 2 caractères.",
+    "noResults": "Aucun résultat pour « {{query}} ».",
+    "pagesGroup": "Pages",
+    "viewAll": "Voir tous les résultats pour « {{query}} »"
+  },
+  "admin": {
+    "usersTab": "Utilisateurs",
+    "settingsTab": "Paramètres",
+    "users": {
+      "filterPlaceholder": "Filtrer les utilisateurs...",
+      "loadError": "Échec du chargement des utilisateurs.",
+      "columnUser": "Utilisateur",
+      "columnRole": "Rôle",
+      "columnJoined": "Inscrit le",
+      "roleAdmin": "Admin",
+      "roleEditor": "Éditeur",
+      "roleReader": "Lecteur",
+      "selfRoleTooltip": "Vous ne pouvez pas modifier votre propre rôle.",
+      "selfDeleteTooltip": "Vous ne pouvez pas supprimer votre propre compte.",
+      "deleteSr": "Supprimer {{name}}",
+      "deleteConfirmTitle": "Supprimer cet utilisateur ?",
+      "deleteConfirmDescription": "{{name}} ({{email}}) sera définitivement supprimé. Cette action est irréversible.",
+      "roleUpdated": "Rôle mis à jour.",
+      "roleUpdateFailed": "Échec de la mise à jour du rôle.",
+      "userDeleted": "Utilisateur supprimé.",
+      "userDeleteFailed": "Échec de la suppression de l'utilisateur."
+    },
+    "settings": {
+      "localeLabel": "Langue de l'interface",
+      "localeFr": "Français",
+      "localeEn": "English",
+      "localeHelp": "Réglage global appliqué à tous les visiteurs. Vous verrez le changement immédiatement, les autres à leur prochain chargement.",
+      "localeUpdated": "Langue mise à jour.",
+      "localeUpdateFailed": "Échec de la mise à jour de la langue."
+    }
+  },
+  "permissions": {
+    "title": "Droits d'édition",
+    "none": "Aucun droit accordé sur cette page.",
+    "revokeSr": "Révoquer ce droit",
+    "revokeConfirmTitle": "Révoquer ce droit ?",
+    "revokeConfirmDescription": "{{name}} perdra son droit d'édition sur cette page (et sa sous-arborescence, sauf autre grant plus proche).",
+    "thisUser": "Cet utilisateur",
+    "revoke": "Révoquer",
+    "addEditor": "Ajouter un éditeur",
+    "grantDialogTitle": "Accorder un droit d'édition",
+    "searchUserPlaceholder": "Rechercher un utilisateur...",
+    "noUserFound": "Aucun utilisateur trouvé.",
+    "granted": "Droit accordé.",
+    "grantFailed": "Échec de l'ajout du droit.",
+    "revoked": "Droit révoqué.",
+    "revokeFailed": "Échec de la révocation."
+  },
+  "apiReference": {
+    "other": "Autres",
+    "required": "requis",
+    "parameters": "Paramètres",
+    "requestBody": "Corps de la requête",
+    "responses": "Réponses",
+    "loadError": "Impossible de charger la documentation de l'API."
+  },
+  "errors": {
+    "generic": "Une erreur est survenue, veuillez réessayer."
+  }
+}

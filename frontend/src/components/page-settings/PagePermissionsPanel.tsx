@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { UserPlus, X } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,6 +35,7 @@ interface PagePermissionsPanelProps {
 type Status = 'loading' | 'ready' | 'error'
 
 export function PagePermissionsPanel({ pageId }: PagePermissionsPanelProps) {
+  const { t } = useTranslation()
   const [permissions, setPermissions] = useState<PagePermission[]>([])
   const [users, setUsers] = useState<AdminUser[]>([])
   const [status, setStatus] = useState<Status>('loading')
@@ -73,9 +75,9 @@ export function PagePermissionsPanel({ pageId }: PagePermissionsPanelProps) {
     try {
       const permission = await grantPermission(pageId, userId)
       setPermissions((current) => [...current, permission])
-      toast.success('Droit accordé.')
+      toast.success(t('permissions.granted'))
     } catch (error) {
-      toast.error(extractErrorMessage(error, "Échec de l'ajout du droit."))
+      toast.error(extractErrorMessage(error, t('permissions.grantFailed')))
     } finally {
       setPendingUserId(null)
     }
@@ -86,9 +88,9 @@ export function PagePermissionsPanel({ pageId }: PagePermissionsPanelProps) {
     try {
       await revokePermission(pageId, userId)
       setPermissions((current) => current.filter((permission) => permission.userId !== userId))
-      toast.success('Droit révoqué.')
+      toast.success(t('permissions.revoked'))
     } catch (error) {
-      toast.error(extractErrorMessage(error, 'Échec de la révocation.'))
+      toast.error(extractErrorMessage(error, t('permissions.revokeFailed')))
     } finally {
       setPendingUserId(null)
     }
@@ -100,11 +102,11 @@ export function PagePermissionsPanel({ pageId }: PagePermissionsPanelProps) {
 
   return (
     <Field>
-      <FieldLabel>Droits d'édition</FieldLabel>
+      <FieldLabel>{t('permissions.title')}</FieldLabel>
       <div className="space-y-1.5">
-        {status === 'loading' && <p className="text-sm text-muted-foreground">Chargement...</p>}
+        {status === 'loading' && <p className="text-sm text-muted-foreground">{t('common.loading')}</p>}
         {status === 'ready' && permissions.length === 0 && (
-          <p className="text-sm text-muted-foreground">Aucun droit accordé sur cette page.</p>
+          <p className="text-sm text-muted-foreground">{t('permissions.none')}</p>
         )}
         {permissions.map((permission) => {
           const user = usersById.get(permission.userId)
@@ -123,20 +125,23 @@ export function PagePermissionsPanel({ pageId }: PagePermissionsPanelProps) {
                     disabled={pendingUserId === permission.userId}
                   >
                     <X />
-                    <span className="sr-only">Révoquer ce droit</span>
+                    <span className="sr-only">{t('permissions.revokeSr')}</span>
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Révoquer ce droit ?</AlertDialogTitle>
+                    <AlertDialogTitle>{t('permissions.revokeConfirmTitle')}</AlertDialogTitle>
                     <AlertDialogDescription>
-                      {user?.displayName ?? 'Cet utilisateur'} perdra son droit d'édition sur cette page (et sa
-                      sous-arborescence, sauf autre grant plus proche).
+                      {t('permissions.revokeConfirmDescription', {
+                        name: user?.displayName ?? t('permissions.thisUser'),
+                      })}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Annuler</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => handleRevoke(permission.userId)}>Révoquer</AlertDialogAction>
+                    <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => handleRevoke(permission.userId)}>
+                      {t('permissions.revoke')}
+                    </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
@@ -152,13 +157,13 @@ export function PagePermissionsPanel({ pageId }: PagePermissionsPanelProps) {
         onClick={() => setPickerOpen(true)}
         disabled={status !== 'ready'}
       >
-        <UserPlus /> Ajouter un éditeur
+        <UserPlus /> {t('permissions.addEditor')}
       </Button>
-      <CommandDialog open={pickerOpen} onOpenChange={setPickerOpen} title="Accorder un droit d'édition">
+      <CommandDialog open={pickerOpen} onOpenChange={setPickerOpen} title={t('permissions.grantDialogTitle')}>
         <Command>
-          <CommandInput placeholder="Rechercher un utilisateur..." />
+          <CommandInput placeholder={t('permissions.searchUserPlaceholder')} />
           <CommandList>
-            <CommandEmpty>Aucun utilisateur trouvé.</CommandEmpty>
+            <CommandEmpty>{t('permissions.noUserFound')}</CommandEmpty>
             <CommandGroup>
               {grantableUsers.map((user) => (
                 <CommandItem

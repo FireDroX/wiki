@@ -1,4 +1,5 @@
 import { Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +22,7 @@ interface DeleteUserDialogProps {
 }
 
 export function DeleteUserDialog({ user, disabled, pending, onConfirm }: DeleteUserDialogProps) {
+  const { t } = useTranslation()
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
@@ -29,23 +31,23 @@ export function DeleteUserDialog({ user, disabled, pending, onConfirm }: DeleteU
           variant="ghost"
           size="icon-sm"
           disabled={disabled || pending}
-          title={disabled ? 'Vous ne pouvez pas supprimer votre propre compte.' : undefined}
+          title={disabled ? t('admin.users.selfDeleteTooltip') : undefined}
         >
           <Trash2 />
-          <span className="sr-only">Supprimer {user.displayName}</span>
+          <span className="sr-only">{t('admin.users.deleteSr', { name: user.displayName })}</span>
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Supprimer cet utilisateur ?</AlertDialogTitle>
+          <AlertDialogTitle>{t('admin.users.deleteConfirmTitle')}</AlertDialogTitle>
           <AlertDialogDescription>
-            {user.displayName} ({user.email}) sera définitivement supprimé. Cette action est irréversible.
+            {t('admin.users.deleteConfirmDescription', { name: user.displayName, email: user.email })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
           <AlertDialogAction variant="destructive" onClick={onConfirm}>
-            Supprimer
+            {t('common.delete')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

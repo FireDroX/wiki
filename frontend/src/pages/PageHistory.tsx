@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { ArrowLeft } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { UserRole } from '#api/auth'
 import { diffVersions, type DiffChange } from '#api/versions'
 import { Button } from '#components/ui/button'
@@ -19,6 +20,7 @@ function pathFromParam(param: string | undefined): string[] {
 }
 
 export function PageHistory() {
+  const { t } = useTranslation()
   const params = useParams()
   const pathSegments = pathFromParam(params['*'])
   const { status, page } = usePage(pathSegments)
@@ -90,10 +92,10 @@ export function PageHistory() {
   if (status !== 'success' || !page) {
     return (
       <div className="space-y-4 p-8">
-        <h1 className="text-2xl font-semibold">Page introuvable</h1>
-        <p className="text-muted-foreground">Impossible de charger l'historique de cette page.</p>
+        <h1 className="text-2xl font-semibold">{t('pageHistory.notFoundTitle')}</h1>
+        <p className="text-muted-foreground">{t('pageHistory.notFoundDescription')}</p>
         <Button asChild>
-          <Link to="/">Retour à l'accueil</Link>
+          <Link to="/">{t('pageView.backHome')}</Link>
         </Button>
       </div>
     )
@@ -107,11 +109,11 @@ export function PageHistory() {
         <Button variant="ghost" size="icon" asChild>
           <Link to={returnPath}>
             <ArrowLeft />
-            <span className="sr-only">Retour</span>
+            <span className="sr-only">{t('common.back')}</span>
           </Link>
         </Button>
         <div>
-          <h1 className="text-xl font-semibold">Historique des versions</h1>
+          <h1 className="text-xl font-semibold">{t('pageHistory.title')}</h1>
           <p className="text-sm text-muted-foreground">{page.title}</p>
         </div>
       </div>
@@ -144,10 +146,13 @@ export function PageHistory() {
                     disabled={versions.page <= 1}
                     onClick={() => versions.setPage(versions.page - 1)}
                   >
-                    Précédent
+                    {t('common.previous')}
                   </Button>
                   <span>
-                    Page {versions.page} / {Math.max(1, Math.ceil(versions.total / versions.limit))}
+                    {t('common.pageOf', {
+                      page: versions.page,
+                      total: Math.max(1, Math.ceil(versions.total / versions.limit)),
+                    })}
                   </span>
                   <Button
                     type="button"
@@ -156,7 +161,7 @@ export function PageHistory() {
                     disabled={versions.page * versions.limit >= versions.total}
                     onClick={() => versions.setPage(versions.page + 1)}
                   >
-                    Suivant
+                    {t('common.next')}
                   </Button>
                 </div>
               )}
@@ -166,9 +171,7 @@ export function PageHistory() {
 
         <div className="min-h-0 flex-1 overflow-y-auto rounded-md border border-border bg-muted/20 p-4">
           {selectedVersions.length < 2 ? (
-            <p className="text-sm text-muted-foreground">
-              Sélectionnez deux versions dans la liste pour les comparer.
-            </p>
+            <p className="text-sm text-muted-foreground">{t('pageHistory.selectTwoVersions')}</p>
           ) : (
             <div className="flex h-full flex-col gap-3">
               <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -183,9 +186,7 @@ export function PageHistory() {
                   <Skeleton className="h-4 w-5/6" />
                 </div>
               )}
-              {diffStatus === 'error' && (
-                <p className="text-sm text-destructive">Impossible de comparer ces deux versions.</p>
-              )}
+              {diffStatus === 'error' && <p className="text-sm text-destructive">{t('pageHistory.diffError')}</p>}
               {diffChanges && <VersionDiffView changes={diffChanges} />}
             </div>
           )}

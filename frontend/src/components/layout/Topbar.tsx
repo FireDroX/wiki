@@ -1,5 +1,6 @@
 import { LogOut, Menu, Search, Shield, User } from 'lucide-react'
 import { Link } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import { Avatar, AvatarFallback } from '#components/ui/avatar'
 import { Button } from '#components/ui/button'
 import {
@@ -20,6 +21,7 @@ interface TopbarProps {
 }
 
 export function Topbar({ onOpenSidebar }: TopbarProps) {
+  const { t } = useTranslation()
   const user = useCurrentUser()
   const { status, logout } = useAuth()
 
@@ -27,10 +29,10 @@ export function Topbar({ onOpenSidebar }: TopbarProps) {
     <header className="flex h-14 w-full shrink-0 items-center gap-3 border-b border-border bg-background px-4">
       <Button variant="ghost" size="icon" className="md:hidden" onClick={onOpenSidebar}>
         <Menu />
-        <span className="sr-only">Ouvrir la navigation</span>
+        <span className="sr-only">{t('topbar.openSidebar')}</span>
       </Button>
       <Link to="/" className="flex shrink-0 items-center">
-        <img src="/openwiki-logo.svg" alt="OpenWiki" className="h-7 w-auto" />
+        <img src="/openwiki-logo.svg" alt={t('common.appName')} className="h-7 w-auto" />
       </Link>
       <button
         type="button"
@@ -41,7 +43,7 @@ export function Topbar({ onOpenSidebar }: TopbarProps) {
           <InputGroupAddon>
             <Search />
           </InputGroupAddon>
-          <InputGroupInput placeholder="Rechercher dans le wiki..." readOnly tabIndex={-1} />
+          <InputGroupInput placeholder={t('topbar.searchPlaceholder')} readOnly tabIndex={-1} />
           <InputGroupAddon align="inline-end">
             <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
               Ctrl K
@@ -59,30 +61,30 @@ export function Topbar({ onOpenSidebar }: TopbarProps) {
           <DropdownMenuContent align="end">
             <DropdownMenuItem>
               <User />
-              Profil
+              {t('topbar.profile')}
             </DropdownMenuItem>
             {user?.role === UserRole.Admin && (
               <DropdownMenuItem asChild>
                 <Link to="/admin/users">
                   <Shield />
-                  Administration
+                  {t('topbar.administration')}
                 </Link>
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onClick={logout}>
               <LogOut />
-              Déconnexion
+              {t('topbar.logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
         <div className="ml-auto flex items-center gap-2">
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/login">Connexion</Link>
+            <Link to="/login">{t('auth.loginTab')}</Link>
           </Button>
           <Button size="sm" asChild>
-            <Link to="/login?tab=register">Inscription</Link>
+            <Link to="/login?tab=register">{t('auth.registerTab')}</Link>
           </Button>
         </div>
       )}

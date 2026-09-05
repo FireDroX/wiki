@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useParams } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import { usePageTree } from '#hooks/usePageTree'
 import { PageTreeItem } from '#components/layout/PageTreeItem'
 import { filterTree, findPathToNode } from '#utils/page-tree'
@@ -9,6 +10,7 @@ interface PageTreeProps {
 }
 
 export function PageTree({ filter = '' }: PageTreeProps) {
+  const { t } = useTranslation()
   const params = useParams()
   const slug = params['*']?.split('/').filter(Boolean).pop()
   const { tree, status } = usePageTree()
@@ -44,11 +46,11 @@ export function PageTree({ filter = '' }: PageTreeProps) {
   }
 
   if (status === 'error') {
-    return <p className="px-2.5 py-1.5 text-sm text-destructive">Impossible de charger les pages.</p>
+    return <p className="px-2.5 py-1.5 text-sm text-destructive">{t('pageTree.loadError')}</p>
   }
 
   if (isFiltering && visibleTree.length === 0) {
-    return <p className="px-2.5 py-1.5 text-sm text-muted-foreground">Aucune page ne correspond.</p>
+    return <p className="px-2.5 py-1.5 text-sm text-muted-foreground">{t('pageTree.noMatch')}</p>
   }
 
   return (

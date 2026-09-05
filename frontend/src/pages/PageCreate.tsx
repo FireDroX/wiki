@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { EditorLayout } from '#components/PageEditor/EditorLayout'
 import { FileUploadButton } from '#components/PageEditor/FileUploadButton'
 import { MarkdownEditor, type MarkdownEditorHandle } from '#components/PageEditor/MarkdownEditor'
@@ -14,9 +15,10 @@ import { useFileUpload } from '#hooks/useFileUpload'
 import { usePageTree } from '#hooks/usePageTree'
 import { extractErrorMessage } from '#lib/api-errors'
 import { findPathToNode } from '#utils/page-tree'
-import { pageMetadataSchema, type PageMetadataFormValues } from '#schemas/page-metadata.schema'
+import { createPageMetadataSchema, type PageMetadataFormValues } from '#schemas/page-metadata.schema'
 
 export function PageCreate() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { tree, refresh } = usePageTree()
   const editor = useEditorState()
@@ -25,9 +27,10 @@ export function PageCreate() {
   const handleAttachmentUpload = useFileUpload(editorRef, undefined, 'attachment')
   const [pendingAction, setPendingAction] = useState<'draft' | 'publish' | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const schema = useMemo(() => createPageMetadataSchema(t), [t])
 
   const { control, setValue, watch, handleSubmit } = useForm<PageMetadataFormValues>({
-    resolver: zodResolver(pageMetadataSchema),
+    resolver: zodResolver(schema),
     defaultValues: { title: '', slug: '', visibility: 'private', parentId: null },
   })
 
@@ -56,7 +59,7 @@ export function PageCreate() {
   }
 
   function handleCancel() {
-    if (editor.isDirty && !window.confirm('Abandonner cette page sans la créer ?')) {
+    if (editor.isDirty && !window.confirm(t('pageEditor.discardConfirmCreate'))) {
       return
     }
     navigate('/')
@@ -65,11 +68,11 @@ export function PageCreate() {
   return (
     <EditorLayout
       backTo="/"
-      title="Nouvelle page"
+      title={t('pageEditor.newPageTitle')}
       actions={
         <>
           <Button type="button" variant="ghost" onClick={handleCancel}>
-            Annuler
+            {t('common.cancel')}
           </Button>
           <Button
             type="button"
@@ -77,10 +80,10 @@ export function PageCreate() {
             onClick={submitAs('draft')}
             disabled={pendingAction !== null}
           >
-            {pendingAction === 'draft' ? 'Enregistrement...' : 'Enregistrer le brouillon'}
+            {pendingAction === 'draft' ? t('pageEditor.saving') : t('pageEditor.saveDraft')}
           </Button>
           <Button type="button" onClick={submitAs('publish')} disabled={pendingAction !== null}>
-            {pendingAction === 'publish' ? 'Publication...' : 'Publier'}
+            {pendingAction === 'publish' ? t('pageEditor.publishing') : t('pageEditor.publish')}
           </Button>
         </>
       }
