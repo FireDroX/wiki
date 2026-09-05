@@ -75,6 +75,14 @@ export class TagsService {
     await this.tagRepository.deletePageTag(pageId, tagId);
   }
 
+  async listPageTags(
+    pageId: string,
+    currentUser?: AuthenticatedUser,
+  ): Promise<Tag[]> {
+    await this.pagesService.getByIdOrFail(pageId, currentUser);
+    return this.tagRepository.findTagsByPageId(pageId);
+  }
+
   private validateName(name: string): void {
     if (!name || name.length > TAG_NAME_MAX_LENGTH) {
       throw new ValidationException(

@@ -7,17 +7,31 @@ import { Button } from '#components/ui/button'
 import { MarkdownRenderer } from '#components/MarkdownRenderer'
 import { Skeleton } from '#components/ui/skeleton'
 import { PageBreadcrumb } from '#components/layout/PageBreadcrumb'
+import { PageTagList } from '#components/PageView/PageTagList'
 import { useAuth } from '#hooks/useAuth'
 import { usePage } from '#hooks/usePage'
+import { usePageTags } from '#hooks/usePageTags'
 
 const EDITOR_ROLES: UserRole[] = [UserRole.Editor, UserRole.Admin]
 
 function PageViewSkeleton() {
   return (
     <div className="space-y-6 p-8">
-      <Skeleton className="h-4 w-40" />
-      <Skeleton className="h-8 w-2/3" />
       <div className="space-y-2">
+        <div className="flex items-start justify-between gap-4">
+          <Skeleton className="h-4 w-40" />
+          <div className="flex shrink-0 gap-2">
+            <Skeleton className="h-8 w-24" />
+            <Skeleton className="h-8 w-20" />
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Skeleton className="h-5 w-16 rounded-full" />
+          <Skeleton className="h-5 w-12 rounded-full" />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-2/3" />
         <Skeleton className="h-4 w-full" />
         <Skeleton className="h-4 w-full" />
         <Skeleton className="h-4 w-5/6" />
@@ -49,6 +63,7 @@ export function PageView() {
   const params = useParams()
   const pathSegments = useMemo(() => (params['*'] ?? '').split('/').filter(Boolean), [params])
   const { status, page } = usePage(pathSegments)
+  const { tags, status: tagsStatus } = usePageTags(page?.id)
   const { user } = useAuth()
   const canEdit = !!user && EDITOR_ROLES.includes(user.role)
 
@@ -83,24 +98,31 @@ export function PageView() {
     )
   }
 
+  if (tagsStatus === 'loading') {
+    return <PageViewSkeleton />
+  }
+
   return (
     <article className="space-y-6 p-8">
-      <div className="flex items-start justify-between gap-4">
-        <PageBreadcrumb title={page.title} parentId={page.parentId} />
-        <div className="flex shrink-0 gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link to={`/history/${pathSegments.join('/')}`}>
-              <History /> {t('pageView.history')}
-            </Link>
-          </Button>
-          {canEdit && (
+      <div className="space-y-2">
+        <div className="flex items-start justify-between gap-4">
+          <PageBreadcrumb title={page.title} parentId={page.parentId} />
+          <div className="flex shrink-0 gap-2">
             <Button variant="outline" size="sm" asChild>
-              <Link to={`/edit/${pathSegments.join('/')}`}>
-                <Pencil /> {t('pageView.edit')}
+              <Link to={`/history/${pathSegments.join('/')}`}>
+                <History /> {t('pageView.history')}
               </Link>
             </Button>
-          )}
+            {canEdit && (
+              <Button variant="outline" size="sm" asChild>
+                <Link to={`/edit/${pathSegments.join('/')}`}>
+                  <Pencil /> {t('pageView.edit')}
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
+        <PageTagList tags={tags} />
       </div>
       <MarkdownRenderer content={page.content} />
     </article>

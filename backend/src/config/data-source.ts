@@ -14,6 +14,7 @@ export default new DataSource({
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
+  timezone: 'Z',
   synchronize: false,
   entities: [`${import.meta.dirname}/../**/*.entity.ts`],
   migrations: [`${import.meta.dirname}/../database/migrations/*.ts`],

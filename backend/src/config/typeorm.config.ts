@@ -17,6 +17,7 @@ export function typeOrmConfig(config: ConfigService): TypeOrmModuleOptions {
     username: config.get<string>('DB_USERNAME'),
     password: config.get<string>('DB_PASSWORD'),
     database: config.get<string>('DB_DATABASE'),
+    timezone: 'Z',
     synchronize: false,
     entities: [`${import.meta.dirname}/../**/*.entity.js`],
     migrations: [`${import.meta.dirname}/../database/migrations/*.js`],

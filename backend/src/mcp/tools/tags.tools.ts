@@ -66,5 +66,15 @@ export function buildTagsTools(tagsService: TagsService): McpToolDefinition[] {
         return { success: true };
       },
     }),
+    defineMcpTool({
+      name: 'wiki_delete_tag',
+      description: 'Supprimer un tag (cascade sur les pages liées)',
+      inputSchema: { tagId: z.string() },
+      requiredScopes: [TAGS_WRITE_SCOPE],
+      handler: async (input) => {
+        await tagsService.deleteTag(input.tagId);
+        return { success: true };
+      },
+    }),
   ];
 }
