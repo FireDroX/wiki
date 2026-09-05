@@ -13,6 +13,7 @@ export interface AdminUser {
   displayName: string
   role: UserRole
   avatarUrl: string | null
+  createdAt: string
 }
 
 export interface PaginatedUsers {
@@ -27,4 +28,13 @@ export async function listUsers(page = 1, limit = 100): Promise<PaginatedUsers> 
     params: { page, limit },
   })
   return data.data
+}
+
+export async function updateRole(id: string, role: UserRole): Promise<AdminUser> {
+  const { data } = await apiClient.patch<ResponseDto<AdminUser>>(`/admin/users/${id}/role`, { role })
+  return data.data
+}
+
+export async function deleteUser(id: string): Promise<void> {
+  await apiClient.delete(`/admin/users/${id}`)
 }

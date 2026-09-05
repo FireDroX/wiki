@@ -140,6 +140,24 @@ La documentation ci-dessous est générée automatiquement à partir des routes 
         title: 'Notes de version',
         content: `# Notes de version
 
+## Version 0.13
+
+<details>
+<summary>0.13.1 — 2026-09-05</summary>
+
+- Sélecteur de langue FR/EN dans les paramètres d'administration (\`/admin/settings\`), appelle \`PATCH /admin/settings/locale\`. Réglage global, pas par utilisateur.
+- ⚠️ Le socle i18n et l'endpoint \`/admin/settings/:key\` restent à livrer par EPIC-21 : ce sélecteur appellera un endpoint pas encore implémenté tant qu'EPIC-21 n'est pas posé.
+
+</details>
+
+<details>
+<summary>0.13.0 — 2026-09-05</summary>
+
+- Page d'administration des utilisateurs (\`/admin/users\`, réservée admin) : liste, changement de rôle inline et suppression (confirmée par boîte de dialogue) — un admin ne peut ni se rétrograder ni se supprimer lui-même (action désactivée sur sa propre ligne).
+- Lien "Administration" du menu utilisateur relié à cette page.
+
+</details>
+
 ## Version 0.12
 
 <details>
